@@ -77,7 +77,7 @@
             )
             .join(
               "",
-            )}</select></label><label>Quantità<input name="amount" type="number" inputmode="numeric" min="1" max="9999" step="1" value="10" required></label><button type="submit">Simula contributo</button></form><p class="hint">Da 1 a 9999 unità. Ogni contributo assegna max(1, ⌊quantità / 5⌋) XP di gilda, fino al livello 20.</p></section><section><div class="section-title"><h2>Membri</h2><span>${g.members.length}</span></div><div class="guild-members">${g.members.map((m) => `<article data-guild-member="${m.id}"><span class="guild-avatar" aria-hidden="true">${esc(m.name.charAt(0))}</span><div><strong>${esc(m.name)}</strong><small>${esc(GuildData.roles[m.role])} · Liv. ${m.simulated ? m.level : playerLevel}</small><small>${m.simulated ? "Membro demo · simulato" : "Il tuo personaggio · profilo locale"}</small></div><div class="guild-member-contribution"><b>${number(m.contribution)}</b><small>unità contribuite</small></div></article>`).join("")}</div></section>`;
+            )}</select></label><label>Quantità<input name="amount" type="number" inputmode="numeric" min="1" max="9999" step="1" value="10" required></label><button type="submit">Simula contributo</button></form><p class="hint">Da 1 a 9999 unità. Ogni contributo assegna max(1, ⌊quantità / 5⌋) XP di gilda, fino al livello 20.</p></section><section><div class="section-title"><h2>Membri</h2><span>${g.members.length}</span></div><div class="guild-members">${g.members.map((m) => `<article data-guild-member="${m.id}"><span class="guild-avatar" aria-hidden="true">${esc(m.name.charAt(0))}</span><div><strong>${esc(m.name)}</strong><small>${esc(GuildData.roles[m.role])} · Liv. ${m.simulated ? m.level : playerLevel}</small><small>${m.simulated ? "Membro demo · simulato" : "Il tuo personaggio · profilo locale"}</small></div><div class="guild-member-contribution"><b>${number(m.contribution)}</b><small>unità contribuite</small></div></article>`).join("")}</div></section><div id="guild-projects-root"></div>`;
       }
       if (draft) {
         for (const input of root.querySelectorAll("input, select")) {
@@ -88,6 +88,7 @@
           }
         }
       }
+      document.dispatchEvent(new Event("guild-rendered"));
     }
     root
       .querySelectorAll('button[type="submit"]')
