@@ -1987,3 +1987,21 @@ body { min-height: 100dvh; }
 #guild-contribute { display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:10px;align-items:end; }
 #guild-contribute button { grid-column:1/-1; }
 #guild-status { min-height:24px;font-size:12px;line-height:1.5;overflow-wrap:anywhere; }
+
+/* M7.1 Guild Projects */
+.guild-projects{margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+.guild-project{margin:12px 0;padding:14px;background:#172b32;border:1px solid #344b51;border-radius:8px}
+.guild-project.is-complete{border-color:#8e8768}
+.guild-project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.guild-project-head h3{font:20px Georgia,serif;margin:3px 0}
+.guild-project-head small,.guild-project-head>strong{font-size:10px;letter-spacing:.7px;color:var(--muted)}
+.guild-project>p{font-size:12px;line-height:1.55}
+.guild-project-needs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0}
+.guild-project-needs span{padding:8px;background:#13252b;border:1px solid #30444a;border-radius:5px;text-align:center}
+.guild-project-needs b,.guild-project-needs small{display:block;font-size:11px}.guild-project-needs small{color:var(--muted);margin-top:3px}
+.guild-project-needs .done{border-color:#7e8668}
+.guild-project-reward{color:#d8c396}.guild-project-complete{color:#c9d3b0}
+.guild-project-form{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:8px;align-items:end}
+.guild-project-form button{grid-column:1/-1}
+.guild-project-form input,.guild-project-form select{width:100%;min-height:44px;margin-top:5px;padding:8px;background:#152831;color:var(--ink);border:1px solid #526860;border-radius:6px;font-size:16px}
+#guild-project-status{min-height:22px;font-size:12px}
