@@ -2013,3 +2013,12 @@ body { min-height: 100dvh; }
 .world-update-card h2{font:25px Georgia,serif;margin:12px 0}
 .world-update-card p{color:var(--muted);font-size:12px;line-height:1.7;margin-bottom:20px}
 .world-update-card button{min-height:46px;width:100%;border:1px solid var(--accent);border-radius:7px;background:var(--accent);color:#182b31}
+
+/* M7.3 Professions */
+.profession-head{padding:18px 0 8px}.profession-list,.profession-actions{display:grid;gap:8px;margin:12px 0 20px}
+.profession-card{padding:13px;background:#172a33;border:1px solid var(--line);border-radius:8px}.profession-card>div:first-child{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.profession-card strong,.profession-actions strong{font:14px Georgia,serif}.profession-card small,.profession-actions small{font-size:9px;color:var(--muted)}.profession-card .xp-bar{margin-top:10px}
+.profession-actions button{min-height:58px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;background:#172a33;color:var(--ink);border:1px solid var(--line);border-radius:8px}.profession-actions button:active{border-color:var(--accent)}
+.profession-materials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0 18px}.profession-materials span{padding:10px;background:#13262e;border:1px solid var(--line);border-radius:7px}.profession-materials strong{display:block;font:18px Georgia,serif;color:var(--accent)}.profession-materials small{font-size:8px;color:var(--muted)}
+.profession-discovery{padding:13px;border:1px solid var(--accent);border-radius:8px;background:#2b3939;line-height:1.5}.profession-discovery small{color:var(--muted)}
+
+.world-professions{margin-top:16px}.world-professions button{width:100%;min-height:58px;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:11px 12px;background:#172a33;color:var(--ink);border:1px solid var(--accent);border-radius:8px}.world-professions button span{display:grid;gap:4px}.world-professions button small{font-size:9px;color:var(--muted)}.profession-actions button:disabled{opacity:.45;cursor:not-allowed}

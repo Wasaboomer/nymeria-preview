@@ -4,6 +4,9 @@ const assert = require("node:assert/strict");
 const { chromium } = require("playwright");
 const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
 const modules = [
+  "profession-data.js",
+  "profession-system.js",
+  "profession-ui.js",
   "guild-data.js",
   "guild-system.js",
   "guild-ui.js",
@@ -96,9 +99,9 @@ const modules = [
         );
       }
       const assets = requests.filter((url) => /\.(js|css)$/.test(url.pathname));
-      assert.equal(assets.length, 46);
+      assert.equal(assets.length, 49);
       assert.ok(
-        assets.every((url) => url.searchParams.get("v") === "m72-review-1"),
+        assets.every((url) => url.searchParams.get("v") === "m73-review-1"),
       );
       console.log(
         `PASS ${name}: panel visibility + hidden + aria-selected; versioned assets`,
