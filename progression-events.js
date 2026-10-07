@@ -14,7 +14,7 @@ const ProgressionEvents = (() => {
     for (const id of added(before.unlockedContent, after.unlockedContent)) {
       if (id.startsWith("world:")) {
         const location = world.location(id.slice(6));
-        if (location) events.push({ type: "areaUnlocked", payload: { id, name: location.name } });
+        if (location && !location.discoveryType) events.push({ type: "areaUnlocked", payload: { id, name: location.name } });
       }
     }
     for (const id of added(before.frontier?.discoveries, after.frontier?.discoveries)) {

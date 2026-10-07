@@ -32,6 +32,7 @@ const WorldUI = (() => {
       return { ok: false };
     } finally { busy = false; render(); }
   }
+  const discovery = id => typeof WorldDiscovery !== "undefined" && WorldDiscovery?.accessible(id);
   function render() {
     const state = ProgressionStore.state, frontier = state.frontier;
     node("panel-world").setAttribute("aria-busy", String(busy));
@@ -39,7 +40,7 @@ const WorldUI = (() => {
     node("world-zone-story").textContent = WorldData.zone.description;
     const main = QuestData.quests.filter(q => q.type === "main");
     node("world-summary").innerHTML = `<span>Livello <b>${state.level}</b> · ${state.currentXP}/${state.requiredXP || "MAX"} XP</span><span><b>${state.crowns}</b> Corone</span><small>Storia ${main.filter(q => frontier.quests[q.id].status === "claimed").length}/${main.length}</small>`;
-    node("world-storage").textContent = ProgressionStore.error;
+    node("world-storage").textContent = [ProgressionStore.error, typeof WorldDiscovery !== "undefined" && WorldDiscovery?.storageIssue ? "Salvataggio discovery non disponibile. Il progetto resta conservato; riprova riaprendo la pagina." : ""].filter(Boolean).join(" ");
     for (const b of document.querySelectorAll("[data-world-view]")) b.setAttribute("aria-pressed", String(b.dataset.worldView === view));
     for (const [id, value] of [["world-places", "places"], ["world-journal", "journal"], ["world-discoveries", "discoveries"]]) node(id).hidden = value === "places" ? !["places", "overview"].includes(view) : value === "journal" ? !["journal", "quest"].includes(view) : view !== value;
     node("world-tracked").innerHTML = QuestUI.tracker(state);
@@ -53,11 +54,12 @@ const WorldUI = (() => {
     const selectedQuest = QuestData.get(NymeriaNavigation.route.questId);
     node("quest-detail").innerHTML = selectedQuest ? QuestUI.card(selectedQuest, state) : "";
     node("journal-badge").textContent = Object.values(frontier.quests).filter(q => q.status === "completed").length || "";
-    node("world-locations").innerHTML = WorldData.locations.map(location => {
-      const unlocked = state.unlockedContent.includes(`world:${location.id}`), current = location.id === frontier.location;
+    node("world-locations").innerHTML = WorldData.locations.filter(location => !location.discoveryType || discovery(location.id)).map(location => {
+      const unlocked = location.discoveryType ? discovery(location.id) : state.unlockedContent.includes(`world:${location.id}`), current = location.id === frontier.location;
       return `<button class="world-node ${current ? "world-node-current" : ""}" data-world-enter="${location.id}" aria-pressed="${current}" ${!unlocked || frontier.activeEncounter || busy ? "disabled" : ""}>${mark(location.mark)}<span><strong>${escape(location.name)}</strong><small>${unlocked ? current ? "Ti trovi qui" : `Esplora · Liv. indicativo ${location.level}` : escape(location.unlockHint)}</small></span><b aria-hidden="true">${unlocked ? '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3 9 9 3M3 3H9V9" fill="none" stroke="currentColor"/></svg>' : '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6 1 11 6 6 11 1 6Z" fill="none" stroke="currentColor"/></svg>'}</b></button>`;
     }).join("");
-    const location = WorldData.location(frontier.location);
+    const savedLocation = WorldData.location(frontier.location);
+    const location = savedLocation.discoveryType && !discovery(savedLocation.id) ? WorldData.location("veyra") : savedLocation;
     node("world-current").hidden = view !== "places";
     node("world-current").innerHTML = `<div class="world-place-heading">${mark(location.mark)}<h1>${escape(location.name)}</h1></div><p>${escape(location.description)}</p>`;
     if (talkedLocation !== location.id) { talked = null; talkedLocation = location.id; }
@@ -73,8 +75,8 @@ const WorldUI = (() => {
       const enemy = WorldData.enemy(id);
       return `<article class="world-enemy enemy-${enemy.kind}"><div><small>${enemy.kind === "boss" ? "BOSS" : enemy.kind === "miniboss" ? "MINIBOSS" : "INCONTRO"} · LIV. ${enemy.level}</small><h4>${escape(enemy.name)}</h4><p>${estimates[id]} · ${enemy.rewards.xp} XP · ${enemy.rewards.crowns} Corone</p><small>${enemy.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ") || "Nessun oggetto di missione"}</small></div><button data-world-fight="${id}" ${frontier.activeEncounter ? "disabled" : ""}>Combatti</button></article>`;
     }).join("")}</div>${location.enemies.length && !ClassSystem.kitRequirement(Equipment.equipped("mainHand"), Equipment.equipped("support")) ? '<p class="compatibility">Prepara il kit della classe prima degli incontri.</p><button data-world-equipment>Prepara equipaggiamento</button>' : ""}`;
-    node("world-location-detail").innerHTML += `<section class="world-destinations"><h4>Destinazioni</h4>${WorldData.connections[location.id].map(id => {
-      const destination = WorldData.location(id), unlocked = state.unlockedContent.includes(`world:${id}`);
+    node("world-location-detail").innerHTML += `<section class="world-destinations"><h4>Destinazioni</h4>${(WorldData.connections[location.id] || []).concat(location.id === "veyra" && discovery("vesper-outpost") ? ["vesper-outpost"] : []).map(id => {
+      const destination = WorldData.location(id), unlocked = destination.discoveryType ? discovery(id) : state.unlockedContent.includes(`world:${id}`);
       return `<button data-world-enter="${id}" ${!unlocked || frontier.activeEncounter || busy ? "disabled" : ""}><span><strong>${escape(destination.name)}</strong>${!unlocked ? `<small>Bloccato · ${escape(destination.unlockHint)}</small>` : ""}</span><b aria-hidden="true">${unlocked ? "→" : "🔒"}</b></button>`;
     }).join("")}</section>`;
     // Objective markers are semantic UI hints, never quest-engine branches.
@@ -232,6 +234,7 @@ const WorldUI = (() => {
   document.addEventListener("nymeria:navigation", event => {
     if (event.detail.screen === "world") { view = event.detail.view || "places"; render(); }
   });
+  if (typeof WorldDiscovery !== "undefined" && WorldDiscovery) WorldDiscovery.subscribe(render);
   ProgressionStore.subscribe(render); Equipment.subscribe(render); ClassSystem.subscribe(render);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && engine?.status === "running") { engine.pause(); stopClock(); renderBattle(); }

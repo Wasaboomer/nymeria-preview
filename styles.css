@@ -2005,3 +2005,11 @@ body { min-height: 100dvh; }
 .guild-project-form button{grid-column:1/-1}
 .guild-project-form input,.guild-project-form select{width:100%;min-height:44px;margin-top:5px;padding:8px;background:#152831;color:var(--ink);border:1px solid #526860;border-radius:6px;font-size:16px}
 #guild-project-status{min-height:22px;font-size:12px}
+
+/* M7.2 World Update */
+.world-update{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:22px;background:#06121be8}
+.world-update-card{width:min(420px,100%);padding:26px 22px;border:1px solid var(--accent);border-radius:14px;background:#16262e;box-shadow:0 20px 70px #0009;text-align:center}
+.world-update-card small{color:var(--accent);letter-spacing:2px;font-size:9px}
+.world-update-card h2{font:25px Georgia,serif;margin:12px 0}
+.world-update-card p{color:var(--muted);font-size:12px;line-height:1.7;margin-bottom:20px}
+.world-update-card button{min-height:46px;width:100%;border:1px solid var(--accent);border-radius:7px;background:var(--accent);color:#182b31}

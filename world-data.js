@@ -12,12 +12,14 @@ const WorldData = (() => {
     { id: "elar-ruins", name: "Rovine di Elar", level: 3, mark: "ruins", description: "Pietre anteriori ai nomi. I guardiani proteggono un ricordo.", unlockHint: "Concludi Luci senza fiamma", enemies: ["elar-sentinel"], points: [{ id: "tablet_of_elar", name: "Tavoletta di Elar", text: "Le incisioni sembrano formare una lingua dimenticata.", discovery: "tablet_of_elar" }, { id: "lit-window", name: "Finestra illuminata", text: "Dietro la pietra murata, una luce saluta. Non c'è nessuna stanza." }] },
     { id: "vesper-ford", name: "Guado del Vespro", level: 4, mark: "ford", description: "Il passaggio è chiuso. Dall'altra riva si vede la Torre.", unlockHint: "Concludi Pietre che ricordano", enemies: ["ford-reaver", "ford-commander"], points: [{ id: "far-bank", name: "Riva opposta", text: "Il sentiero verso la Torre è finalmente libero.", requiresDefeat: "ford-commander" }] },
     { id: "silent-tower", name: "Torre Silente", level: 7, mark: "tower", description: "Un'ombra sulla soglia. Il silenzio, qui, ha un custode.", unlockHint: "Concludi Il Guado", enemies: ["silent-shade", "silence-keeper"], points: [] },
+    { id: "vesper-outpost", name: "Vesper Outpost", level: 1, mark: "haven", description: "The beacon burns above the restored walls. A guild foothold now holds the frontier road.", unlockHint: "Guild Project · Vesper Beacon", discoveryType: "GUILD_PROJECT", enemies: [], points: [{ id: "outpost-board", name: "Frontier Board", text: "Scouts report movement along the Northern Trail. More of the frontier remains uncharted." }] },
   ];
   // Travel presentation graph; existing unlock/visit rules remain in WorldEngine.
   const connections = {
     veyra: ["broken-path"], "broken-path": ["veyra", "lantern-wood"],
     "lantern-wood": ["broken-path", "elar-ruins"], "elar-ruins": ["lantern-wood", "vesper-ford"],
     "vesper-ford": ["elar-ruins", "silent-tower"], "silent-tower": ["vesper-ford"],
+    "vesper-outpost": ["veyra"],
   };
   const npcs = [
     { id: "serah", name: "Capitana Serah Venn", role: "Comandante", location: "veyra", dialogues: [{ text: "Non chiedo promesse. Vai al Sentiero e dimmi cosa resta della pattuglia." }, { after: "mq02", text: "Quei distintivi... conoscevo ogni nome. Il Bosco ci deve una risposta." }, { after: "mq06", text: "Hai tenuto aperta la Frontiera. Ma il segnale non si è spento." }] },

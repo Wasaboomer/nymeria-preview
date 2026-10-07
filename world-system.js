@@ -18,13 +18,14 @@ const WorldEngine = (() => {
     const health = probes.reduce((sum, e) => sum + e.player.hp / e.player.maxHp, 0) / probes.length;
     return wins === probes.length ? health >= 0.5 ? "Facile" : "Adeguato" : wins ? "Difficile" : "Pericoloso";
   }
-  function create({ store, progression, now = () => Date.now(), random = Math.random, testMode = false }) {
-    const unlocked = (state, id) => state.unlockedContent.includes(`world:${id}`);
+  function create({ store, progression, now = () => Date.now(), random = Math.random, testMode = false, discovery = null }) {
+    const unlocked = (state, id) => data.location(id)?.discoveryType ? !!discovery?.accessible(id) : state.unlockedContent.includes(`world:${id}`);
     const available = state => !state.frontier.activeEncounter;
     function enter(id) {
       return store.transact(state => {
         if (!data.location(id) || !unlocked(state, id)) return { ok: false, message: "Questo luogo non è ancora accessibile." };
         if (!available(state)) return { ok: false, message: "Termina l'incontro prima di viaggiare." };
+        if (data.location(id).discoveryType && !state.unlockedContent.includes(`world:${id}`)) state.unlockedContent.push(`world:${id}`);
         state.frontier.location = id;
         events.dispatch(state, { type: "visit", target: id });
         return { ok: true, message: data.location(id).name };
@@ -33,7 +34,7 @@ const WorldEngine = (() => {
     function talk(id) {
       return store.transact(state => {
         const npc = data.npcs.find(x => x.id === id);
-        if (!npc || npc.location !== state.frontier.location || !available(state)) return { ok: false, message: "Raggiungi il personaggio nel suo luogo." };
+        if (!unlocked(state, state.frontier.location) || !npc || npc.location !== state.frontier.location || !available(state)) return { ok: false, message: "Raggiungi il personaggio nel suo luogo." };
         events.dispatch(state, { type: "talk", target: id });
         const dialogue = npc.dialogues.filter(d => !d.after || state.frontier.quests[d.after]?.status === "claimed").pop();
         return { ok: true, message: `${npc.name}: ${dialogue.text}` };
@@ -41,6 +42,7 @@ const WorldEngine = (() => {
     }
     function explore(id) {
       return store.transact(state => {
+        if (!unlocked(state, state.frontier.location)) return { ok: false, message: "Luogo non accessibile." };
         const point = data.location(state.frontier.location).points.find(x => x.id === id);
         if (!point || !available(state)) return { ok: false, message: "Punto d'interesse non accessibile." };
         if (point.requiresDefeat && !state.frontier.defeatedEnemies.includes(point.requiresDefeat))
@@ -127,6 +129,7 @@ const WorldEngine = (() => {
 if (typeof module !== "undefined" && module.exports) module.exports = WorldEngine;
 const WorldSystem = typeof window !== "undefined" ? WorldEngine.create({
   store: ProgressionStore, progression: ProgressionSystem,
+  discovery: typeof WorldDiscovery !== "undefined" ? WorldDiscovery : null,
   testMode: new URLSearchParams(location.search).get("test") === "1",
 }) : null;
 const QuestSystem = typeof window !== "undefined" ? QuestEngine.create({

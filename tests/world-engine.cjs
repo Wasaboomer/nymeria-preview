@@ -47,8 +47,8 @@ async function storyline(f) {
   return claim(f,'mq06');
 }
 (async()=>{
- await check('data: six places, five NPCs, six normal enemies, two minibosses, final boss; six objective kinds',()=>{
-  assert.equal(World.locations.length,6); assert.equal(World.npcs.length,5);
+ await check('data: six base places plus guild discovery, five NPCs, six normal enemies, two minibosses, final boss; six objective kinds',()=>{
+  assert.equal(World.locations.length,7); assert.equal(World.locations.filter(l=>!l.discoveryType).length,6); assert.equal(World.npcs.length,5);
   assert.equal(World.enemies.filter(e=>e.kind==='normal').length,6);
   assert.equal(World.enemies.filter(e=>e.kind==='miniboss').length,2);
   assert.equal(World.enemies.filter(e=>e.kind==='boss').length,1);
@@ -101,7 +101,7 @@ async function storyline(f) {
   await check(`${cls}: full main chain, real kills/drops/minibosses/boss, unlocks, discovery, XP/materials, Personal Loot/Advisor/title/epilogue`,async()=>{
    const f=fixture(); f.kit(cls); const receipt=await storyline(f);
    assert.ok(Quests.quests.filter(q=>q.type==='main').every(q=>status(f,q.id)==='claimed'));
-   assert.ok(World.locations.every(l=>f.store.state.unlockedContent.includes('world:'+l.id)));
+   assert.ok(World.locations.filter(l=>!l.discoveryType).every(l=>f.store.state.unlockedContent.includes('world:'+l.id)));
    assert.deepEqual(f.store.state.frontier.discoveries,['tablet_of_elar']);assert.equal(World.discoveries[0].requirement,'Richiede Archeologia 10');
    assert.ok(f.store.state.frontier.achievements.includes('frontier-conqueror'));
    const item=Gear.items.find(i=>i.id===receipt.loot[0].itemId);

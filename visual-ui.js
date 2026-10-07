@@ -75,6 +75,7 @@ const VisualUI = (() => {
     const state = ProgressionStore.state,
       frontier = state.frontier,
       container = node("world-locations");
+    const currentLocation = WorldData.location(frontier.location)?.discoveryType && !(typeof WorldDiscovery !== "undefined" && WorldDiscovery?.accessible(frontier.location)) ? "veyra" : frontier.location;
     const quest = QuestData.get(frontier.trackedQuest),
       entry = quest && frontier.quests[quest.id];
     const objectives = new Set(
@@ -88,11 +89,11 @@ const VisualUI = (() => {
     container.classList.add("visual-world-map");
     container.innerHTML =
       '<p class="map-title">FRONTIERA DEL VESPRO</p>' +
-      WorldData.locations
+      WorldData.locations.filter(location => VisualManifest.mapNodes[location.id])
         .map((location) => {
           const [x, y] = VisualManifest.mapNodes[location.id],
             unlocked = state.unlockedContent.includes("world:" + location.id),
-            current = frontier.location === location.id,
+            current = currentLocation === location.id,
             target = objectives.has(location.id);
           const available = QuestData.quests.some(
             (q) =>
@@ -105,6 +106,17 @@ const VisualUI = (() => {
         })
         .join("") +
       '<p class="map-legend">● Luogo corrente · ◆ Obiettivo · ! Missione</p>';
+    // Guild discoveries have no approved geographic coordinates: keep the six-node
+    // map unchanged and offer their real travel action alongside it.
+    let discovered = node("world-discovered-locations");
+    if (!discovered) {
+      discovered = document.createElement("div");
+      discovered.id = "world-discovered-locations"; discovered.className = "world-locations";
+      container.insertAdjacentElement("afterend", discovered);
+    }
+    const locations = WorldData.locations.filter(location => location.discoveryType && typeof WorldDiscovery !== "undefined" && WorldDiscovery?.accessible(location.id));
+    discovered.hidden = container.hidden || !locations.length;
+    discovered.innerHTML = locations.map(location => `<button class="world-node ${frontier.location === location.id ? "world-node-current" : ""}" data-world-enter="${location.id}" ${frontier.activeEncounter || node("panel-world").getAttribute("aria-busy") === "true" ? "disabled" : ""} aria-pressed="${frontier.location === location.id}">${WorldUI.mark(location.mark)}<span><strong>${escape(location.name)}</strong><small>${frontier.location === location.id ? "Ti trovi qui" : "Scoperto · Esplora →"}</small></span></button>`).join("");
   }
   function battle() {
     const ticket = ProgressionStore.state.frontier.activeEncounter;

@@ -10,6 +10,8 @@ const modules = [
   "guild-project-data.js",
   "guild-project-system.js",
   "guild-project-ui.js",
+  "world-discovery.js",
+  "world-discovery-ui.js",
   "equipment-data.js",
   "equipment.js",
   "character.js",
@@ -94,9 +96,9 @@ const modules = [
         );
       }
       const assets = requests.filter((url) => /\.(js|css)$/.test(url.pathname));
-      assert.equal(assets.length, 44);
+      assert.equal(assets.length, 46);
       assert.ok(
-        assets.every((url) => url.searchParams.get("v") === "m71-review-1"),
+        assets.every((url) => url.searchParams.get("v") === "m72-review-1"),
       );
       console.log(
         `PASS ${name}: panel visibility + hidden + aria-selected; versioned assets`,
