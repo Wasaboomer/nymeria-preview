@@ -39,13 +39,13 @@ const WorldData = (() => {
     };
   }
   const enemies = [
-    enemy("vesper-raider", "Predone del Vespro", 1, 240, 16, 8, 0.9, "normal", 16, 2, ["patrol-badge"]),
-    enemy("corrupt-hound", "Segugio Corrotto", 2, 330, 22, 5, 1.25, "normal", 24, 3, ["corrupt-sample"]),
+    enemy("vesper-raider", "Predone del Vespro", 1, 320, 18, 8, 0.9, "normal", 16, 2, ["patrol-badge"]),
+    enemy("corrupt-hound", "Segugio Corrotto", 2, 420, 26, 5, 1.25, "normal", 24, 3, ["corrupt-sample"]),
     enemy("lantern-spider", "Ragno delle Lanterne", 2, 290, 20, 15, 1.4, "normal", 22, 3, ["corrupt-sample"]),
     enemy("elar-sentinel", "Sentinella di Elar", 3, 550, 28, 42, 0.8, "normal", 36, 4, ["elar-fragment"]),
     enemy("ford-reaver", "Razziatore del Guado", 4, 630, 32, 24, 1.05, "normal", 44, 5),
     enemy("silent-shade", "Ombra Silente", 6, 850, 43, 12, 1.45, "normal", 65, 7),
-    enemy("twilight-stag", "Cervo del Crepuscolo", 3, 780, 30, 20, 1.15, "miniboss", 70, 8, ["corrupt-sample"]),
+    enemy("twilight-stag", "Cervo del Crepuscolo", 3, 1250, 42, 20, 1.15, "miniboss", 70, 8, ["corrupt-sample"]),
     enemy("ford-commander", "Comandante del Guado", 5, 1120, 40, 38, 0.95, "miniboss", 110, 12),
     enemy("silence-keeper", "Custode del Silenzio", 8, 1800, 50, 45, 1.05, "boss", 180, 20),
   ];
