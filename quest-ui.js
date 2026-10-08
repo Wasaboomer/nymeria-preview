@@ -23,7 +23,11 @@ const QuestUI = (() => {
     const ids = receipt?.id === id ? receipt.loot.map(row => row.itemId)
       : entry.lootPolicy ? ProgressionSystem.personalItems(quest.rewards.personalLoot, entry.lootPolicy) : [];
     const item = ids.map(id => Equipment.state.inventory.find(item => item.id === id)).find(Boolean);
-    if (!item) return "";
+    if (!item || Object.values(Equipment.state.equipment).some(slot => slot.equippedItem === item.id)) return "";
+    const slot = Equipment.compatibleSlots(item)[0];
+    if (!slot || Equipment.canEquip(item.id, slot)) return "";
+    const advice = BuildSystem.advise(item, slot, ClassSystem.state.classId, ClassSystem.build().id, Equipment);
+    if (!advice?.improvement) return "";
     return `<section class="quest-next-step"><strong>Ricompensa · ${escape(item.name)}</strong><small>Confrontala con l’equipaggiamento attuale. Decidi tu se equipaggiarla.</small><button data-quest-compare="${escape(item.id)}" class="quest-primary">${id === "mq04" ? "Confronta la nuova arma" : "Confronta la nuova corazza"} →</button></section>`;
   }
   function actions(quest, entry, state) {

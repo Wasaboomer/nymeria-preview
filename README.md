@@ -818,3 +818,61 @@ quest shortcut, Back, categories, non-mutating comparison and inline completion
 feedback; existing journey/reward tests cover the actual combat path. Real Safari
 and physical iPhone are unavailable here: scrolling/focus, safe-area on device and
 resume from suspension remain physical validation items. No manual DEV deployment.
+
+### Sprint 1.1 — fixed-screen mobile interface (DEV)
+
+`fixed-screens.js` is a presentation adapter loaded after the existing UI modules.
+It retains the real DOM nodes and their listeners, measures the current visual
+viewport, reserves space for safe areas, navigation and creator actions, then
+paginates the rendered content. No engine, reward, XP curve, save schema or frozen
+character asset/renderer changes are involved. The shell uses `dvh` with a
+`visualViewport.height` fallback/update for browser bars and the software keyboard.
+Overflow is constrained only after content is split into accessible pages; it is
+not used to discard content. Back, the four navigation destinations, and page
+controls remain outside the content pages. In a short viewport, Back and the
+mission shortcut share a row and decorative navigation glyphs are omitted while
+labels and targets remain available.
+
+Converted content includes initial World/locations and map, creator/character,
+main/side/profession quest journal, profession activities, inventory categories,
+equipment and item comparison dialog, class/build/strategy, expeditions, Guild
+and Menu. Quest categories have separate tabs; inventory keeps its actual category
+filters. Long logs and expanded details are paginated rather than internally
+scrolled. World combat keeps player/enemy HP, class resource and all existing
+controls together; optional arena art/history occupy additional pages. Results,
+quest receipts and progression data use the same page system. Form validation
+reveals the page containing the invalid field, and input focus is retained across
+viewport resize. Creator confirmation is visible only in Character and still
+uses the existing persistence/lock implementation.
+
+The latest equipment reward prompt is now shown only for an owned, unequipped,
+class-compatible item which the existing Gear Advisor considers an improvement.
+It disappears when equipped or superseded; nothing equips automatically and
+comparison does not write game state. The next-quest receipt names the existing
+quest giver and location, explains the current action, and opens the real quest
+with its existing travel/interaction controls. It adds no destinations or NPCs.
+
+Run a static server from the repository and use `NYMERIA_TEST_URL` for another
+origin or subpath. The five behavior suites are:
+
+- `node tests/fixed-screens-browser.cjs`: 320/375/390/430 × 568/667/844;
+  every page, readable content/control bounds, quest categories, strategy,
+  new/existing Guild, comparison modal, invalid form, 375px keyboard viewport,
+  browser-height contraction/expansion, console/runtime errors and asset requests.
+- `node tests/fixed-battle-browser.cjs`: four widths × 375/508/568/667/844;
+  simultaneous essential combat information/controls and no content overflow.
+- `node tests/fixed-feedback-browser.cjs`: creator confirmation/reload, category
+  filtering without save writes and level feedback in the five tested heights.
+- `node tests/fixed-reward-prompts.cjs`: useful upgrade shown, equipped/incompatible
+  items suppressed, state/storage unchanged.
+- `node tests/fixed-screens-journey.cjs`: four widths × Custode/Cacciatore;
+  normal mode Veyra/Bram → gathering/crafting/delivery → reward/equipment →
+  story combats → Cervo at level 2 → Elar unlock → reload. Test-only engine
+  advancement skips waiting for automatic combat; it changes no production rules.
+
+All fourteen existing engine suites are also run. Legacy browser tests which
+assume every long-page control is simultaneously visible need the pagination
+fixture when reused; their direct-scroll assumptions are not a fixed-screen test.
+Chromium touch emulation is available; real Safari/iPhone and WebKit are not.
+Physical validation remains required for actual browser chrome/keyboard,
+safe-area insets, focus and suspend/resume. No manual deployment is performed.

@@ -162,7 +162,14 @@ const WorldUI = (() => {
       const unlocked = (quest?.contentUnlocks || []).filter(id=>state.unlockedContent.includes(`world:${id}`)).map(id=>WorldData.location(id)?.name).filter(Boolean);
       const next = quest?.nextQuest && QuestData.get(quest.nextQuest);
       const level = reward.levelUps?.length ? `<p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(reward))}</p>` : "";
-      const nextStep = next ? `<p class="hint">Prossimo passo: ${escape(next.title)}</p><button data-quest-open="${next.id}" class="quest-primary">Scopri la prossima missione →</button>` : '<p class="hint">Continua a esplorare la Frontiera.</p>';
+      const nextNPC = next && WorldData.npcs.find(n => n.id === next.giver);
+      const nextLocation = next && WorldData.location(next.location);
+      const nextEntry = next && frontier.quests[next.id];
+      const instruction = nextEntry?.status === "available" ? "incontra e accetta la missione"
+        : nextEntry?.status === "active" ? "prosegui gli obiettivi della missione"
+        : nextEntry?.status === "completed" ? "riscuoti le ricompense della missione"
+        : "consulta i requisiti della missione";
+      const nextStep = next ? `<p class="hint">${escape(next.title)} · ${escape(nextLocation.name)} · ${escape(nextNPC.name)}: ${instruction} per proseguire la storia.</p><button data-quest-open="${next.id}" class="quest-primary">${escape(nextNPC.name)} · ${escape(next.title)} →</button>` : '<p class="hint">Continua a esplorare la Frontiera.</p>';
       node("world-quest-reward").innerHTML = `<span class="world-eyebrow">MISSIONE COMPLETATA · RICOMPENSE RISCOSSE</span><h3>${escape(reward.title)}</h3><div class="quest-receipt-gains"><strong>+${earned.xp || 0} XP</strong><strong>+${earned.crowns || 0} Corone</strong>${materials.join("")}</div>${level}${unlocked.length ? `<p class="quest-receipt-unlock">Nuova area sbloccata: <strong>${unlocked.map(escape).join(", ")}</strong></p>` : ""}${reward.loot.map(row => `<small>${escape(GearData.items.find(x => x.id === row.itemId)?.name || row.itemId)}${row.duplicate ? " · duplicato convertito in 2 Ferro" : " · aggiunto all'inventario"}</small>`).join("")}${view === "places" ? "" : QuestUI.rewardComparison(reward.id, state)}${nextStep}`;
     }
     if (frontier.activeEncounter) {

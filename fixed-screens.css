@@ -1,0 +1,101 @@
+/* Fixed viewport shell. Page selection, not clipping, limits the content. */
+html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; }
+body .app { box-sizing:border-box; display:flex; flex-direction:column; width:100%; max-width:640px; height:var(--fixed-vh,100dvh); margin:0 auto; padding:max(6px,env(safe-area-inset-top)) 12px 0; overflow:hidden; }
+.app > .mobile-topbar { flex:none; margin-bottom:6px; padding-bottom:6px; }
+.app > .context-bar { flex:none; margin-bottom:4px; }
+.app > [id^="panel-"] { flex:none; height:var(--fixed-content-height); min-height:0; margin:0; padding:6px; overflow:visible; }
+.app > footer { display:none; }
+.app > .bottom-nav { position:static; flex:none; width:100%; max-width:none; transform:none; margin:0; order:100; padding-bottom:max(6px,env(safe-area-inset-bottom)); }
+.fixed-pager { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 0; flex:none; min-height:52px; }
+.fixed-pager button { min-height:44px; min-width:72px; padding:8px; }
+.fixed-pager output { font:13px/1.4 system-ui; text-align:center; min-width:0; }
+.fixed-off, .fixed-empty { display:none!important; }
+body .stage { height:min(260px,var(--fixed-content-height)); min-height:0; margin:0; }
+body .stage > svg { height:100%; max-height:100%; }
+body .visual-equipment-stage { min-height:0; height:auto; }
+body #equipment-character { max-height:160px; height:160px; }
+body .world-battle-stage { height:90px; min-height:0; }
+body .world-battle-stage svg, body .world-battle-stage img { max-height:90px; }
+body .world-fighters { gap:8px; }
+body .world-fighters p { margin:3px 0; }
+body .world-battle-controls { display:flex; flex-wrap:wrap; gap:4px; }
+body .world-battle-controls button { min-height:44px; padding:7px; flex:1; font-size:13px; }
+body #world-resource { margin:5px 0; }
+body #world-battle .section-title h3 { font-size:16px; margin:2px 0; }
+body .inventory-toolbar, body .filters { flex-wrap:wrap; }
+body button, body select, body input { max-width:100%; }
+body #creator-actions { position:static; flex:none; padding:4px; order:90; margin:0; }
+body #creator-actions button { min-height:44px; }
+body #item-dialog { box-sizing:border-box; width:calc(100% - 24px); max-width:520px; height:calc(var(--fixed-vh,100dvh) - 24px); max-height:none; margin:12px auto; padding:12px; overflow:hidden; }
+body #item-dialog[open] { display:flex; flex-direction:column; }
+body #item-dialog .detail-header { flex:none; }
+body #detail-body { height:var(--fixed-dialog-height); flex:none; overflow:visible; min-height:0; }
+body #item-dialog .fixed-pager { margin-top:auto; }
+body .detail-stats, body .comparison dl { gap:4px; }
+body .world-result, body .quest-card, body .quest-tracker { padding:10px; }
+body .world-result p, body .quest-next-step p { line-height:1.4; }
+body .fixed-tabs { display:flex; gap:4px; flex-wrap:wrap; margin:4px 0; }
+body .fixed-tabs button { min-height:44px; flex:1; padding:6px; font-size:13px; }
+body .fixed-tabs button[aria-pressed="true"] { border:2px solid #dac28a; }
+body .fixed-unavailable { color:#e9c788; font:14px/1.5 system-ui; }
+@supports not (height:100dvh) { body .app { height:var(--fixed-vh,100vh); } }
+body .stage { height:min(240px,calc(var(--fixed-content-height) - 24px)); }
+body .equipment-stage { height:auto; min-height:0; border-radius:8px; }
+body #equipment-character { position:static; display:block; transform:none; width:auto; max-width:100%; height:140px; margin:auto; }
+body #equipment-grid { height:auto; padding:4px; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+body #equipment-grid .slot-card { min-height:70px; padding:8px; }
+body #equipment-grid .slot-card small { font-size:13px; line-height:1.4; }
+body #equipment-grid .slot-card strong, body #equipment-grid .slot-card em { position:static; width:auto; height:auto; overflow:visible; clip-path:none; font-size:13px; line-height:1.4; }
+body .visual-world-map { height:auto; overflow:visible; padding:8px; }
+body #world-locations .map-node { position:static; width:100%; transform:none; min-height:60px; margin:6px 0; }
+body .map-title, body .map-legend { position:static; font-size:13px; }
+body .map-node-label strong { font-size:14px; } body .map-node-label small { font-size:13px; }
+body .visual-battle-arena { height:100px; }
+body .visual-battle-arena > .visual-character, body .visual-battle-arena > .visual-enemy { height:90px; }
+body #world-battle-log, body #world-battle-history { max-height:none; overflow:visible; font-size:13px; }
+body #fixed-battle-essential { padding:3px; }
+body #fixed-battle-essential .world-fighters { margin:6px 0; }
+body #equipment-character { height:min(140px,calc(var(--fixed-content-height) - 32px)); }
+body .kaelith-original-figure { height:min(180px,calc(var(--fixed-content-height) - 70px)); width:auto; }
+body .stage .equipment { top:8px; }
+body .stage .equipment button { height:44px; min-height:44px; }
+body:has(#creator-actions:not([hidden]))[data-screen="character"] .app { padding-bottom:0; }
+body .app { padding-bottom:0!important; }
+body.fixed-compact .mobile-topbar .brand { display:none; }
+body.fixed-compact #context-title { display:none; }
+body.fixed-compact .fixed-pager { min-height:44px; padding:0; }
+body.fixed-compact .bottom-nav { padding-top:0; }
+body.fixed-compact .bottom-nav button { padding-top:3px; padding-bottom:3px; }
+body #panel-debug svg, body #panel-debug img { max-height:min(220px,calc(var(--fixed-content-height) - 24px)); max-width:100%; object-fit:contain; }
+body .world-fighters strong, body .world-fighters p { font-size:14px; }
+body .guild-empty { padding:4px 0; }
+body #guild-create > label { margin:5px 0; }
+body #world-battle { padding:4px; }
+body #fixed-battle-essential .section-title { margin:0; }
+body #fixed-battle-essential .world-fighters > div { padding:5px; }
+body #fixed-battle-essential .world-resource { padding:5px; margin:5px 0; }
+body #fixed-battle-essential .world-battle-controls { margin:4px 0; }
+body #fixed-battle-essential .world-fighters strong { min-height:20px; }
+body #fixed-battle-essential .world-fighters { margin:3px 0; }
+body #world-battle { margin:0; }
+body #world-battle .world-battle-controls button { padding:7px; font-size:13px; line-height:1.3; min-height:44px; }
+/* Moving creator actions into the shell must retain their original screen scope. */
+body:not([data-screen="character"]) #creator-actions { display:none!important; }
+body.fixed-compact #fixed-battle-essential .world-fighters strong,
+body.fixed-compact #fixed-battle-essential .world-fighters p { line-height:1.2; }
+body.fixed-compact #fixed-battle-essential .world-fighters > div { padding:3px; }
+body.fixed-compact #fixed-battle-essential .world-resource { padding:3px; margin:3px 0; }
+body.fixed-compact #fixed-battle-essential .world-resource-label { margin-bottom:3px; }
+body.fixed-compact #fixed-battle-essential .world-resource-track { height:6px; }
+body.fixed-compact #fixed-battle-essential .world-battle-controls button { padding:4px; }
+/* In the smallest visual viewport, Back and the mission shortcut share one row. */
+body .app { position:relative; }
+body.fixed-compact:has(#context-bar:not([hidden])) .mobile-topbar { position:absolute; top:max(6px,env(safe-area-inset-top)); right:12px; width:140px; padding:0; margin:0; border:0; justify-content:flex-end; }
+body.fixed-compact:has(#context-bar:not([hidden])) #topbar-context { display:none; }
+body.fixed-compact #context-bar { max-width:calc(100% - 148px); }
+body.fixed-compact .screen-tabs.bottom-nav button,
+body.fixed-compact .screen-tabs.bottom-nav #tab-world { min-height:44px; font-size:13px; }
+body.fixed-compact .bottom-nav button > span:first-child { display:none; }
+body.fixed-compact #world-battle { padding:2px; }
+body.fixed-compact #fixed-battle-essential { padding:2px; }
+body #creator-actions { transform:none; left:auto; right:auto; bottom:auto; width:100%; box-sizing:border-box; }
