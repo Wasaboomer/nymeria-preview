@@ -120,7 +120,7 @@ const WorldUI = (() => {
     if (result) node("world-result").innerHTML = `<span class="world-eyebrow">${escape(result.enemyName)}</span><h3>${result.outcome === "victory" ? "VITTORIA" : "SCONFITTA"}</h3><p>+${result.rewards.xp} XP · +${result.rewards.crowns} Corone</p><p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(result))}</p>${result.drops.length ? `<small>${result.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ")}</small>` : ""}${result.outcome === "defeat" ? '<p class="hint">Ritorno a Veyra. Nessuna perdita di livello o equipaggiamento. Nessuna penalità permanente.</p>' : ""}<button data-world-continue class="quest-primary">Continua →</button>${WorldData.enemy(result.enemyId)?.kind === "boss" && result.outcome === "victory" ? `<p>${escape(WorldData.zone.epilogue)}</p><button data-world-view="journal">Apri il Diario · riscuoti la missione</button>` : ""}`;
     const reward = frontier.lastQuestClaim;
     node("world-quest-reward").hidden = !reward || !["quest", "journal"].includes(view);
-    if (reward) node("world-quest-reward").innerHTML = `<span class="world-eyebrow">RICOMPENSA SALVATA</span><h4>${escape(reward.title)}</h4><p>${QuestUI.rewards(reward.rewards)}</p>${reward.loot.map(row => `<small>${escape(GearData.items.find(x => x.id === row.itemId)?.name || row.itemId)}${row.duplicate ? " · duplicato convertito in 2 Ferro" : " · aggiunto all'inventario"}</small>`).join("")}<p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(reward))}</p>`;
+    if (reward) node("world-quest-reward").innerHTML = `<span class="world-eyebrow">RICOMPENSA SALVATA</span><h4>${escape(reward.title)}</h4><p>${QuestUI.rewards(reward.rewards)}</p>${reward.loot.map(row => `<small>${escape(GearData.items.find(x => x.id === row.itemId)?.name || row.itemId)}${row.duplicate ? " · duplicato convertito in 2 Ferro" : " · aggiunto all'inventario"}</small>`).join("")}<p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(reward))}</p>${QuestUI.rewardComparison(reward.id, state)}`;
     if (frontier.activeEncounter) {
       if (ticketId !== frontier.activeEncounter.id) {
         stopClock(); engine = null; ticketId = frontier.activeEncounter.id;
@@ -200,6 +200,12 @@ const WorldUI = (() => {
     const b = event.target.closest("button");
     if (!b || b.disabled) return;
     if (b.hasAttribute('data-quest-professions')) { NymeriaNavigation.open('professions'); return; }
+    if (b.dataset.questCompare) {
+      if (!Equipment.state.inventory.some(item => item.id === b.dataset.questCompare)) return;
+      NymeriaNavigation.open('inventory');
+      InventoryUI.openItem(b.dataset.questCompare);
+      return;
+    }
     if (b.hasAttribute('data-quest-inventory')) { NymeriaNavigation.open('inventory'); return; }
     if (b.dataset.questDeliver) { await action(() => QuestSystem.deliver(b.dataset.questDeliver)); return; }
     if (b.hasAttribute("data-quest-expedition")) { NymeriaNavigation.root("expeditions"); return; }

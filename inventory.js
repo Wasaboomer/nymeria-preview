@@ -224,6 +224,7 @@ const InventoryUI = (() => {
     render,
     filterForSlot,
     openSlot,
+    openItem,
     visibleItems,
     close() {
       dialog.close();

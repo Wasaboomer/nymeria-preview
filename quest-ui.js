@@ -10,6 +10,17 @@ const QuestUI = (() => {
     if (reward.achievements?.length) parts.push("Titolo: Conquistatore della Frontiera");
     return parts.map(escape).join(" · ");
   }
+  function rewardComparison(id, state) {
+    if (!["mq04", "mq05"].includes(id)) return "";
+    const quest = QuestData.get(id), entry = state.frontier.quests[id];
+    if (entry?.status !== "claimed") return "";
+    const receipt = state.frontier.lastQuestClaim;
+    const ids = receipt?.id === id ? receipt.loot.map(row => row.itemId)
+      : entry.lootPolicy ? ProgressionSystem.personalItems(quest.rewards.personalLoot, entry.lootPolicy) : [];
+    const item = ids.map(id => Equipment.state.inventory.find(item => item.id === id)).find(Boolean);
+    if (!item) return "";
+    return `<section class="quest-next-step"><strong>Ricompensa · ${escape(item.name)}</strong><small>Confrontala con l’equipaggiamento attuale. Decidi tu se equipaggiarla.</small><button data-quest-compare="${escape(item.id)}" class="quest-primary">${id === "mq04" ? "Confronta la nuova arma" : "Confronta la nuova corazza"} →</button></section>`;
+  }
   function actions(quest, entry, state) {
     if (entry.status === "available") return state.frontier.location === quest.location
       ? `<button data-quest-accept="${quest.id}">Accetta e segui missione</button>`
@@ -73,7 +84,7 @@ const QuestUI = (() => {
     const entry = state.frontier.quests[quest.id];
     const npc = WorldData.npcs.find(x => x.id === quest.giver);
     const unlocks = quest.contentUnlocks.map(id => WorldData.location(id).name);
-    return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) || (entry.status === "claimed" && quest.objectives.some(o => o.type === "professionDelivery")) ? "open" : ""}><summary><span><small>${quest.type === "main" ? "MISSIONE PRINCIPALE" : "MISSIONE SECONDARIA"} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b>${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
+    return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) || (entry.status === "claimed" && (quest.objectives.some(o => o.type === "professionDelivery") || rewardComparison(quest.id, state))) ? "open" : ""}><summary><span><small>${quest.type === "main" ? "MISSIONE PRINCIPALE" : "MISSIONE SECONDARIA"} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b>${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}${rewardComparison(quest.id, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
   }
   function journal(state) {
     return [["main", "Principale"], ["side", "Secondarie"]].map(([type, title]) =>
@@ -93,7 +104,7 @@ const QuestUI = (() => {
     const quest = QuestData.get(state.frontier.trackedQuest) || QuestData.quests.find(q => state.frontier.quests[q.id].status === "completed") || QuestData.quests.find(q => state.frontier.quests[q.id].status === "active");
     if (!quest) {
       const next = QuestData.quests.find(q => q.type === "main" && state.frontier.quests[q.id].status === "available");
-      return next ? `<span class="world-eyebrow">PROSSIMA MISSIONE</span><strong>${escape(next.title)}</strong><small>Incontra ${escape(WorldData.npcs.find(n => n.id === next.giver).name)} · ${escape(WorldData.location(next.location).name)}</small>${actions(next, state.frontier.quests[next.id], state)}` : '<span class="world-eyebrow">LA FRONTIERA TI ATTENDE</span><small>Esplora il luogo o consulta il Diario.</small>';
+      return next ? `${rewardComparison(state.frontier.lastQuestClaim?.id, state)}<span class="world-eyebrow">PROSSIMA MISSIONE</span><strong>${escape(next.title)}</strong><small>Incontra ${escape(WorldData.npcs.find(n => n.id === next.giver).name)} · ${escape(WorldData.location(next.location).name)}</small>${actions(next, state.frontier.quests[next.id], state)}` : '<span class="world-eyebrow">LA FRONTIERA TI ATTENDE</span><small>Esplora il luogo o consulta il Diario.</small>';
     }
     const entry = state.frontier.quests[quest.id];
     const pending = quest.objectives.map((o, i) => ({o, i})).filter(({o, i}) => entry.progress[i] < o.count);
@@ -102,5 +113,5 @@ const QuestUI = (() => {
       return `<li><span>${escape(o.label)}${destination && destination !== state.frontier.location ? `<small>${destination === "activities" ? "Attività → Spedizioni" : escape(WorldData.location(destination).name)}</small>` : ""}</span><b>${entry.progress[i]}/${o.count}</b></li>`;
     }).join("")}</ul>${entry.status === "completed" ? actions(quest, entry, state) : ""}`;
   }
-  return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance };
+  return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison };
 })();
