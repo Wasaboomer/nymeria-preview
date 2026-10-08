@@ -10,6 +10,8 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
   if (!process.env.NYMERIA_WORLD_DEBUG_ONLY) for(const width of [320,390,430]) for(const cls of ['warden','hunter']) {
    const context=await browser.newContext({viewport:{width,height:844},hasTouch:true,isMobile:true});
    let page=await context.newPage();const errors=[];
+   // Use reproducible combat seeds to test progression rather than random encounter luck.
+   await page.addInitScript(()=>{Math.random=()=>1/4294967296;});
    const attach=p=>p.on('pageerror',e=>errors.push(e.message));attach(page);
    await page.clock.install({time:new Date('2026-10-06T12:00:00Z')});await page.clock.pauseAt(new Date('2026-10-06T12:00:01Z'));
    await page.goto(base);
