@@ -113,7 +113,7 @@ const QuestUI = (() => {
       const next = entry.status === "available" ? actions(main, entry, state) : entry.status === "completed" ? actions(main, entry, state) : guidance(main, state);
       return `<section class="main-quest-panel" aria-label="Missione principale"><span class="world-eyebrow">STORIA PRINCIPALE · ${statusNames[entry.status]}</span><button class="tracker-title" data-quest-open="${main.id}">${escape(main.title)} →</button>${count}<p class="main-quest-destination">Destinazione: <strong>${escape(locationName)}</strong></p>${next}</section>`;
     })() : '<section class="main-quest-panel"><span class="world-eyebrow">STORIA PRINCIPALE</span><strong>Storia della Frontiera completata</strong><p>Esplora il mondo o consulta il Diario.</p></section>';
-    const sidePanel = side.length ? `<details class="side-quest-panel"><summary>Missioni secondarie · ${side.length} (facoltative)</summary>${side.map(q => {
+    const sidePanel = side.length ? `<details class="side-quest-panel" ${side.some(q => state.frontier.trackedQuest === q.id) ? "open" : ""}><summary>Missioni secondarie · ${side.length} (facoltative)</summary>${side.map(q => {
       const entry = state.frontier.quests[q.id];
       const index = q.objectives.findIndex((o, i) => entry.progress[i] < o.count);
       const progress = index >= 0 ? `${entry.progress[index]}/${q.objectives[index].count}` : statusNames[entry.status];
