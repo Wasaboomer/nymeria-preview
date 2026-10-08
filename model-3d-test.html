@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Nymeria · 3D Model Test</title>
+<style>body{margin:0;background:#101c24;color:#f0e7d5;font:16px system-ui;padding:18px}main{max-width:600px;margin:auto}model-viewer{display:block;width:100%;height:min(72vh,680px);background:radial-gradient(#263842,#0b141c);border:1px solid #62717a;border-radius:14px}p{line-height:1.5}#state{color:#e3c48d}a{color:#a8d2e1}small{color:#b5c1c7}</style>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js"></script></head>
+<body><main><h1>Nymeria · Prova 3D</h1><p>Modello umano Quaternius. Trascina per ruotare, pizzica per ingrandire.</p>
+<model-viewer id="character" src="https://cdn.jsdelivr.net/gh/UMRAM-Bilkent/supine-human-model@main/assets/human.glb" camera-controls auto-rotate shadow-intensity="0.7" exposure="1" interaction-prompt="auto" alt="Modello umano 3D di prova"></model-viewer>
+<p id="state" role="status">Caricamento modello e visualizzatore…</p>
+<p><small>Questo è un test isolato: nessuna modifica al gioco o al salvataggio. Il modello è ospitato su CDN esterna, non ancora nel repository Nymeria.</small></p>
+<p><a href="https://github.com/UMRAM-Bilkent/supine-human-model">Fonte modello</a></p></main>
+<script>
+const state=document.getElementById('state'),viewer=document.getElementById('character');
+viewer.addEventListener('load',()=>state.textContent='Modello caricato. Puoi ruotarlo.');
+viewer.addEventListener('error',e=>state.textContent='Errore nel caricamento del modello: '+(e.detail?.type||'sconosciuto')+'.');
+window.addEventListener('error',e=>state.textContent='Errore pagina: '+e.message);
+setTimeout(()=>{if(!customElements.get('model-viewer'))state.textContent='Il browser non ha caricato la libreria 3D esterna. Prova ad aprire questa pagina in Safari.'},9000);
+</script></body></html>
