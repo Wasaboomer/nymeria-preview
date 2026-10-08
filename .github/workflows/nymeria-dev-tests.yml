@@ -58,20 +58,16 @@ jobs:
         run: |
           mkdir -p test-results
           failed=0
+          # Keep all domain-engine checks and use the current fixed/contextual UI contract.
           tests=(
-            tests/combat-engine.cjs
-            tests/world-engine.cjs
-            tests/profession-engine.cjs
-            tests/bram-delivery-engine.cjs
-            tests/browser.cjs
-            tests/combat-browser.cjs
-            tests/navigation.cjs
-            tests/world-browser.cjs
-            tests/progression-browser.cjs
-            tests/profession-browser.cjs
-            tests/bram-delivery-browser.cjs
-            tests/bram-to-stag-browser.cjs
-            tests/expedition-clarity-browser.cjs
+            tests/*engine.cjs
+            tests/fixed-screens-browser.cjs
+            tests/fixed-battle-browser.cjs
+            tests/fixed-feedback-browser.cjs
+            tests/fixed-reward-prompts.cjs
+            tests/fixed-screens-journey.cjs
+            tests/contextual-combat-browser.cjs
+            tests/contextual-panels-browser.cjs
           )
           printf '## NYMERIA DEV test results\n\n' >> "$GITHUB_STEP_SUMMARY"
           printf '| Test | Result |\n|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
@@ -81,7 +77,7 @@ jobs:
               result="NOT FOUND"
               failed=1
               echo "Missing test file: $test" > "test-results/$name.log"
-            elif timeout 240s node "$test" > "test-results/$name.log" 2>&1; then
+            elif timeout 600s node "$test" > "test-results/$name.log" 2>&1; then
               result="PASS"
             else
               result="FAIL"

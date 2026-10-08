@@ -99,3 +99,55 @@ body.fixed-compact .bottom-nav button > span:first-child { display:none; }
 body.fixed-compact #world-battle { padding:2px; }
 body.fixed-compact #fixed-battle-essential { padding:2px; }
 body #creator-actions { transform:none; left:auto; right:auto; bottom:auto; width:100%; box-sizing:border-box; }
+
+/* Contextual-scroll revision: the document stays fixed; only explicit panels pan. */
+html { overscroll-behavior:none; }
+body { position:fixed; top:var(--fixed-top,0px); left:0; right:0; height:var(--fixed-vh,100dvh); min-height:0; overscroll-behavior:none; }
+body .app, body #item-dialog { overscroll-behavior:none; touch-action:pinch-zoom; }
+@supports (overflow:clip) { body, body .app, body #item-dialog { overflow:clip; } }
+body .app > .fixed-scroll-panel { overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y pinch-zoom; -webkit-overflow-scrolling:touch; }
+body.fixed-combat #panel-world { padding:4px; }
+body.fixed-combat #panel-world > :not(#world-battle) { display:none!important; }
+body.fixed-combat #world-battle { height:100%; box-sizing:border-box; margin:0; padding:4px; }
+body.fixed-combat #world-battle > :not(#fixed-battle-essential) { display:none!important; }
+body.fixed-combat #fixed-battle-essential { display:flex; flex-direction:column; height:100%; min-height:0; padding:2px; gap:4px; }
+body.fixed-combat #fixed-battle-essential > * { flex:none; }
+body.fixed-combat #fixed-battle-essential .section-title { gap:4px; }
+body.fixed-combat #world-battle-name { line-height:1.2; }
+body.fixed-combat .world-fighters { margin:0!important; gap:6px; }
+body.fixed-combat #fixed-battle-essential .world-fighters > div { padding:4px; }
+body.fixed-combat .world-fighters strong, body.fixed-combat .world-fighters p { font-size:14px; line-height:1.2; min-height:0!important; }
+body.fixed-combat #world-enemy-name { display:none; } /* The same name is in the fixed encounter heading. */
+body.fixed-combat #world-resource { padding:0; margin:4px 0 0; }
+body.fixed-combat .world-resource-label { font-size:13px; margin-bottom:3px; gap:3px; }
+body.fixed-combat .world-resource-track { height:6px; }
+body.fixed-combat .world-damage-summary { display:flex; justify-content:space-between; gap:6px; font-size:14px; line-height:1.3; padding:3px; background:#ffffff0b; }
+body.fixed-combat #world-battle-recent { margin:0; padding:4px; border-left:2px solid #bca579; }
+body.fixed-combat #world-battle-recent p { font-size:14px; line-height:1.25; margin:3px 0; overflow-wrap:anywhere; }
+body.fixed-combat #fixed-battle-essential .world-battle-controls { margin:auto 0 0; gap:4px; flex-wrap:nowrap; }
+body.fixed-combat #world-battle .world-battle-controls button { flex:1; min-width:0; min-height:44px; padding:4px; font-size:13px; line-height:1.2; }
+body.fixed-combat #fixed-battle-history:not([hidden]) { display:flex; flex-direction:column; flex:1; min-height:0; }
+body.fixed-combat #fixed-battle-history h3 { font-size:14px; margin:2px 0; }
+body.fixed-combat #fixed-battle-history small { font-size:12px; }
+body.fixed-combat #world-battle-history { flex:1; min-height:0; max-height:none; margin:4px 0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y pinch-zoom; font-size:14px; }
+body.fixed-combat #world-battle { padding:2px; }
+body.fixed-combat #fixed-battle-essential { gap:3px; }
+body.fixed-combat .world-fighters .xp-bar { height:5px; margin:2px 0; }
+body.fixed-combat #fixed-battle-essential #world-resource { padding:0; margin:2px 0 0; }
+body.fixed-combat .world-resource-label { line-height:1.2; }
+body.fixed-compact #navigation-back { font-size:14px; min-height:44px; padding:6px; }
+body.fixed-combat .world-fighters > div:first-child { display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:3px; align-items:center; }
+body.fixed-combat .world-fighters > div:first-child p { text-align:right; }
+body.fixed-combat .world-fighters > div:first-child .xp-bar { grid-column:1 / -1; }
+body.fixed-compact.fixed-combat #fixed-battle-essential { gap:1px; }
+body.fixed-compact.fixed-combat #world-battle-name { font-size:14px; }
+body.fixed-compact.fixed-combat .world-damage-summary { padding:1px; }
+body.fixed-compact.fixed-combat #world-battle-recent { padding:2px; }
+body.fixed-compact.fixed-combat #world-battle-recent p { margin:2px 0; }
+/* Top-layer feedback follows the same visual viewport as the game shell. */
+body #item-dialog { position:fixed; top:var(--fixed-top,0px); bottom:auto; left:0; right:0; }
+body #global-notifications { top:calc(var(--fixed-top,0px) + max(14px,env(safe-area-inset-top))); max-height:calc(var(--fixed-vh,100dvh) - 100px - env(safe-area-inset-bottom)); overscroll-behavior:none; touch-action:pinch-zoom; }
+body .world-update { top:var(--fixed-top,0px); bottom:auto; height:var(--fixed-vh,100dvh); padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom)); overscroll-behavior:none; touch-action:pinch-zoom; }
+body #notice { top:calc(var(--fixed-top,0px) + var(--fixed-vh,100dvh) - 80px); bottom:auto; transform:translate(-50%,-100%); }
+body.fixed-combat #world-battle-history { line-height:1.3; }
+body.fixed-combat #world-battle-history li { padding:4px 0; }

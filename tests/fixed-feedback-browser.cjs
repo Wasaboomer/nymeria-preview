@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
 const {press}=require('./fixed-navigation-fixture.cjs');
-(async()=>{const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+(async()=>{const browser=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{
  for(const width of [320,375,390,430]){
   const p=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000');await p.evaluate(()=>NymeriaNavigation.root('character'));await p.waitForTimeout(100);

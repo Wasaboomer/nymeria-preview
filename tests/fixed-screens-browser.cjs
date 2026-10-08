@@ -1,9 +1,17 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
+const {audit}=require('./contextual-scroll-fixture.cjs');
 const {press,reach}=require('./fixed-navigation-fixture.cjs');
 const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
 async function settle(p){await p.waitForTimeout(70);}
 async function visitAll(p){
  const modal=await p.locator('#item-dialog').evaluate(d=>d.open);
+ const active=p.locator('.app > [id^="panel-"]:not([hidden])');
+ if(!modal && await active.getAttribute('data-fixed-mode')==='scroll'){
+  const max=await active.evaluate(n=>n.scrollHeight-n.clientHeight);let visited=0;
+  for(let y=0;y<=max+1;y+=Math.max(1,await active.evaluate(n=>n.clientHeight/2))){await active.evaluate((n,y)=>n.scrollTop=y,y);await settle(p);await audit(p);visited++;}
+  await active.evaluate(n=>n.scrollTop=0);return visited;
+ }
+
  const pager=p.locator(modal?'#item-dialog > .fixed-pager':'.app > .fixed-pager');
  while(!await pager.locator('[data-fixed-prev]').isDisabled()){await pager.locator('[data-fixed-prev]').tap();await settle(p);}
  let visited=0;
@@ -17,14 +25,14 @@ async function visitAll(p){
     cut:controls.filter(n=>{const x=n.getBoundingClientRect();return x.top<b.top-1||x.bottom>b.bottom+1||x.left<0||x.right>innerWidth+1;}).map(n=>n.id||n.textContent.trim().slice(0,40))};
   });
   assert.equal(violations.overflow,'false',JSON.stringify(violations));assert.equal(violations.wide,false);assert.equal(violations.tall,false);assert.deepEqual(violations.cut,[]);assert.deepEqual(violations.shell,[],JSON.stringify(violations));
-  visited++;
+  await audit(p);visited++;
   if(await pager.locator('[data-fixed-next]').isDisabled())break;
   await pager.locator('[data-fixed-next]').tap();await settle(p);
   assert.ok(visited<150,'Pagination must terminate');
  }while(true);
  return visited;
 }
-(async()=>{const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+(async()=>{const b=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{
  for(const width of [320,375,390,430])for(const height of [568,667,844]){
   const p=await b.newPage({viewport:{width,height},hasTouch:true,isMobile:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error'&&m.location().url!==new URL('/favicon.ico',url).href)errors.push(m.text());});p.on('response',r=>{if(r.url().startsWith(url)&&r.status()>=400)errors.push(r.status()+' '+r.url());});await p.goto(url);await settle(p);
   let total=0;
@@ -39,6 +47,6 @@ async function visitAll(p){
   await p.locator('#close-detail').tap();await p.evaluate(()=>NymeriaNavigation.root('world'));await settle(p);
   await p.setViewportSize({width,height:height-60});await settle(p);await visitAll(p);
   await p.setViewportSize({width,height});await settle(p);await visitAll(p);
-  assert.deepEqual(errors,[]);console.log('PASS fixed '+width+'×'+height+': '+total+' pages, screens/modal, no scroll/cut controls, viewport contraction/expansion');await p.close();
+  assert.deepEqual(errors,[]);console.log('PASS fixed '+width+'×'+height+': '+total+' pages, screens/modal, fixed shell/authorized internal scroll, no cut controls, viewport contraction/expansion');await p.close();
  }
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

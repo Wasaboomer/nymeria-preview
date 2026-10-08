@@ -48,7 +48,7 @@
     <script src="world-discovery.js?v=sprint1-mobile-1" defer></script>
     <script src="world-system.js?v=sprint1-mobile-1" defer></script>
     <script src="quest-ui.js?v=sprint1-mobile-1" defer></script>
-    <script src="world-ui.js?v=sprint1-mobile-1" defer></script>
+    <script src="world-ui.js?v=contextual-combat-1" defer></script>
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
     <script src="notification-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
@@ -61,8 +61,8 @@
       <link rel="stylesheet" href="kaelith-dev.css?v=1" />
     <script src="kaelith-dev.js?v=1" defer></script>
     <script src="modular-proof.js?v=1" defer></script>
-    <link rel="stylesheet" href="fixed-screens.css?v=1" />
-    <script src="fixed-screens.js?v=1" defer></script>
+    <link rel="stylesheet" href="fixed-screens.css?v=contextual-combat-1" />
+    <script src="fixed-screens.js?v=contextual-combat-1" defer></script>
   </head>
   <body>
     <main class="app">
@@ -500,6 +500,8 @@
           <p id="world-battle-profile" class="hint"></p>
           <div class="world-fighters"><div><strong id="world-player-name"></strong><p id="world-player-hp"></p><div class="xp-bar"><span id="world-player-bar"></span></div></div><div><strong id="world-enemy-name"></strong><p id="world-enemy-hp"></p><div class="xp-bar"><span id="world-enemy-bar"></span></div></div></div>
           <div class="world-resource" id="world-resource" role="group" aria-label="Risorsa di classe"><div class="world-resource-label"><strong id="world-resource-name"></strong><span id="world-resource-value"></span></div><div class="world-resource-track" role="progressbar" id="world-resource-bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="world-resource-fill"></span></div></div>
+          <div id="world-damage-summary" class="world-damage-summary"><span>Inflitti <strong id="world-damage-dealt">0</strong></span><span>Subiti <strong id="world-damage-taken">0</strong></span></div>
+          <section id="world-battle-recent" aria-label="Ultime azioni del combattimento"><p id="world-recent-player">Tu · nessuna azione</p><p id="world-recent-enemy">Nemico · nessuna azione</p></section>
           <section class="world-combat-highlight" id="world-combat-highlight" aria-label="Ultima azione importante" aria-live="off"><span class="world-eyebrow">ULTIMA AZIONE</span><strong id="world-highlight-action">In attesa del primo colpo</strong><span id="world-highlight-detail"></span></section>
           <details class="world-combat-history"><summary>Registro completo del combattimento</summary><ol id="world-battle-history" aria-label="Cronologia combattimento"></ol></details>
           <div class="world-battle-controls"><button id="world-battle-resume">Riprendi incontro</button><button id="world-battle-pause">Pausa</button><button id="world-battle-abandon">Torna a Veyra</button></div>

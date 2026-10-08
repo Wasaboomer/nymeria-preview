@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
-(async()=>{const b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{const p=await b.newPage();await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000');
+(async()=>{const b=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{const p=await b.newPage();await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000');
  const result=await p.evaluate(()=>{
   const before=JSON.stringify({state:ProgressionStore.state,gear:Equipment.state,storage:{...localStorage}});
   const s=structuredClone(ProgressionStore.state);s.frontier.quests.mq04.status='claimed';

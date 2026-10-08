@@ -876,3 +876,68 @@ fixture when reused; their direct-scroll assumptions are not a fixed-screen test
 Chromium touch emulation is available; real Safari/iPhone and WebKit are not.
 Physical validation remains required for actual browser chrome/keyboard,
 safe-area insets, focus and suspend/resume. No manual deployment is performed.
+
+### Contextual scrolling & combat HUD — revised DEV contract
+
+This supersedes Sprint 1.1's blanket no-scroll requirement. The document/game shell
+stays fixed; Inventory, Equipment, Professions and World journal/quest detail use
+explicit vertical scroll panels. Exploration and the combat HUD remain fixed.
+Horizontal scrolling is not permitted. Other long screens and item comparisons
+retain their existing pagination. No chat feature is added.
+
+Diagnosis of the earlier scrolling risk: the shell was in normal document flow,
+`body` still inherited `min-height:100dvh`, and root overscroll was unrestricted.
+`overflow:hidden` alone does not establish an iOS viewport lock or prevent scroll
+chaining. The revised body is fixed with its legacy minimum removed, sized/offset
+from `visualViewport` (including resize, scroll and pageshow). Shell/dialog use
+`overflow:clip` where supported, root overscroll is disabled, and vertical panning
+is scoped to the explicit scroll panels. CSS gesture policy retains taps and pinch
+zoom; no blanket touchmove/preventDefault listener is installed. Modals and feedback
+also follow the visual viewport. Real Safari behavior remains unverified.
+
+World combat no longer paginates its essentials. The HUD keeps the encounter name,
+player/enemy current/max HP, the actual class resource, total damage dealt/taken,
+the latest player ability and enemy action/dodge, and the existing Pause/Resume/
+return controls visible together. `world-ui.js` reads `engine.metrics` and actual
+logged events/ability definitions; critical/block/dodge feedback uses existing
+text. Totals include effective damage, including periodic damage. No attacks,
+resources, effects, balance values or engine rules are added. The optional combat
+art is omitted from this compact HUD; frozen asset/renderer files are untouched.
+
+The Registro button replaces the recent-action area with an internal scrollable
+history, leaving HP, resource, damage totals and controls visible. Returning to
+Scontro restores recent actions; a new encounter always starts in Scontro. The
+history is honestly labeled as the engine's latest **60 events**, not an unlimited
+archive. A complete long-fight archive would need an optional event consumer from
+`CombatEngine.emit` so UI can retain every event independently of the engine's
+bounded log, without changing simulation rules. This is a proposal, not implemented.
+The existing encounter ticket/preparation survives reload; live elapsed time,
+HP/resource state and event history are not serialized by the existing engine.
+This revision does not change that resume behavior or any save schema.
+
+New automated suites:
+
+- `tests/contextual-combat-browser.cjs`: both classes at 320/375/390/430 and
+  375/508/568/667/844 heights; real HP/resource/damage/ability updates, touch drags,
+  history/control access, saved encounter after reload, long miniboss/special names,
+  visual viewport height/offset independent of layout viewport and comparison modal.
+- `tests/contextual-panels-browser.cjs`: trusted Chromium touch gestures scroll many
+  inventory objects, equipment, professions and quest journal, with fixed navigation,
+  no horizontal movement/chaining and unchanged storage after navigation/reload.
+- `tests/contextual-scroll-fixture.cjs`: detects unauthorized scrollable containers,
+  horizontal overflow and programmatic shell/document movement. The fixed-screen
+  regression suite uses the same audit and allows only the designated panels.
+
+The existing fourteen engine suites and fixed-screen journey/feedback/reward/HUD
+regressions are also executed. These are Chromium touch/viewport simulations, not
+physical iPhone proof. Safari bars, keyboard, safe areas, zoom and suspend/resume
+still require physical validation. The public preview could not be inspected from
+this environment (GitHub Pages connection blocked with HTTP 403); DEV remote SHA
+is verified separately. Updated UI asset query versions avoid reusing older cached
+HUD/pagination scripts once the new index is served. No separate preview repository
+or manual deployment is changed.
+
+The DEV-only Actions workflow runs all engine suites and the seven current
+fixed/contextual browser suites. Older scroll-page browser scripts are retained
+in the repository but are replaced in this job by the current UI-contract tests;
+no deployment or workflow permissions are added.

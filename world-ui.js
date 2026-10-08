@@ -250,6 +250,15 @@ const WorldUI = (() => {
     node("world-resource-bar").setAttribute("aria-valuenow", String(Math.round(resourceCurrent)));
     node("world-resource-bar").setAttribute("aria-label", resourceName);
     const events = engine?.log || [];
+    node("world-damage-dealt").textContent = String(engine?.metrics.damage ?? 0);
+    node("world-damage-taken").textContent = String(engine?.metrics.damageTaken ?? 0);
+    const recentPlayer = [...events].reverse().find(e => e.type === "playerAction");
+    const recentEnemy = [...events].reverse().find(e => ["enemyAction", "dodge"].includes(e.type));
+    for (const [id, event, label] of [["world-recent-player", recentPlayer, "Tu"], ["world-recent-enemy", recentEnemy, "Nemico"]]) {
+      const entry = event && combatEventText(event, ticket);
+      const actionName = event?.type === "enemyAction" ? ticket.template.attacks?.find(a => a.id === event.abilityId)?.name || entry.action : entry?.action;
+      node(id).textContent = entry ? `${label} · ${actionName} · ${entry.detail}` : `${label} · nessuna azione`;
+    }
     const notable = [...events].reverse().find(e => ["playerAction", "enemyAction", "dodge", "result", "dot", "itemProc"].includes(e.type));
     const highlight = notable ? combatEventText(notable, ticket) : { action: "In attesa del primo colpo", detail: "Le azioni appariranno qui.", kind: "idle" };
     node("world-highlight-action").textContent = highlight.action;

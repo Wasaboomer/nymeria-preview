@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var atoms=[], pages=[], index=0, root=null, frame=0, signature='', category='main';
+  var historyMode=false, lastEncounterId=null;
   var ns='http://www.w3.org/2000/svg';
   var app=document.querySelector('.app'), dialog=document.getElementById('item-dialog');
   var pager=document.createElement('nav'); pager.className='fixed-pager';pager.setAttribute('aria-label','Pagine della schermata');
@@ -48,23 +49,42 @@
     observer.disconnect();
     try{
       var viewportHeight=Math.floor(window.visualViewport?visualViewport.height:innerHeight);
-      document.body.classList.toggle('fixed-compact',viewportHeight<480);
+      var insetExtra=Math.max(0,parseFloat(getComputedStyle(app).paddingTop)-6)+Math.max(0,parseFloat(getComputedStyle(app.querySelector('.bottom-nav')).paddingBottom)-6);
+      document.body.classList.toggle('fixed-compact',viewportHeight-insetExtra<480);
       document.documentElement.style.setProperty('--fixed-vh',viewportHeight+'px');
+      document.documentElement.style.setProperty('--fixed-top', (window.visualViewport ? visualViewport.offsetTop : 0)+'px');
       cleanup(app);cleanup(dialog);categoryTabs();
       var battle=document.getElementById('world-battle');
       if(battle&&!battle.querySelector('#fixed-battle-essential')){
         var essential=document.createElement('section');essential.id='fixed-battle-essential';
-        ['.section-title','.world-fighters','#world-resource','.world-battle-controls'].forEach(function(selector){var item=battle.querySelector(selector);if(item)essential.append(item);});
+        ['.section-title','.world-fighters','#world-damage-summary','#world-battle-recent','.world-battle-controls'].forEach(function(selector){var item=battle.querySelector(selector);if(item)essential.append(item);});
+        essential.insertBefore(document.getElementById('world-resource'),document.getElementById('world-damage-summary'));
+        var history=document.createElement('section');history.id='fixed-battle-history';history.hidden=true;
+        history.innerHTML='<h3>Registro · ultimi '+CombatData.logLimit+' eventi</h3>';
+        history.append(document.getElementById('world-battle-history'));
+        essential.insertBefore(history,essential.querySelector('.world-battle-controls'));
+        var toggle=document.createElement('button');toggle.id='world-history-toggle';toggle.textContent='Registro';toggle.setAttribute('aria-controls','fixed-battle-history');toggle.setAttribute('aria-expanded','false');
+        essential.querySelector('.world-battle-controls').append(toggle);
+        toggle.addEventListener('click',function(){historyMode=!historyMode;schedule();});
         battle.prepend(essential);
       }
       var open=dialog.open, nextRoot=open?document.getElementById('detail-body'):Array.from(app.children).find(function(n){return /^panel-/.test(n.id)&&!n.hidden;});
       if(!nextRoot)return;
       var prep=document.getElementById('world-stag-preparation'), result=document.getElementById('world-result');
       var phase=prep&&!prep.hidden?'prepare':result&&!result.hidden?'result':'normal';
+      var encounterId=typeof ProgressionStore!=='undefined' ? ProgressionStore.state.frontier.activeEncounter?.id || null : null;
+      if(encounterId!==lastEncounterId){lastEncounterId=encounterId;historyMode=false;}
       var nextSignature=phase+':'+(open?'dialog:':'')+nextRoot.id+':'+document.body.dataset.worldView+':'+document.body.dataset.screen+':'+(window.NymeriaNavigation?NymeriaNavigation.route.questId||'':'');
       if(signature!==nextSignature){index=0;signature=nextSignature;}
       root=nextRoot;
-      pager.hidden=open;modalPager.hidden=!open;
+      var route=window.NymeriaNavigation?NymeriaNavigation.route:{};
+      var combat= !open && root.id==='panel-world' && route.view==='battle' && battle && !battle.hidden;
+      var contextual=!open && (['panel-inventory','panel-equipment','panel-professions'].includes(root.id) || (root.id==='panel-world' && ['journal','quest'].includes(route.view)));
+      document.body.classList.toggle('fixed-combat',!!combat);
+      app.querySelectorAll('.fixed-scroll-panel').forEach(function(n){n.classList.remove('fixed-scroll-panel');});
+      root.classList.toggle('fixed-scroll-panel',contextual);
+      root.dataset.fixedMode=combat?'combat':contextual?'scroll':'pages';
+      pager.hidden=open||contextual||combat;modalPager.hidden=!open;
       var vh=Math.floor(window.visualViewport?visualViewport.height:innerHeight);
       var chrome=Array.from(app.children).filter(function(n){return n!==root && !/^panel-/.test(n.id) && n.tagName!=='FOOTER' && !hidden(n) && !['absolute','fixed'].includes(getComputedStyle(n).position);}).reduce(function(sum,n){var css=getComputedStyle(n);return sum+n.getBoundingClientRect().height+parseFloat(css.marginTop||0)+parseFloat(css.marginBottom||0);},0);
       var appCSS=getComputedStyle(app);
@@ -72,6 +92,17 @@
       if(open)budget=Math.floor(dialog.clientHeight-document.querySelector('#item-dialog .detail-header').getBoundingClientRect().height-modalPager.getBoundingClientRect().height-32);
       budget=Math.max(100,budget);
       document.documentElement.style.setProperty(open?'--fixed-dialog-height':'--fixed-content-height',budget+'px');
+      if(combat || contextual){
+        atoms=[];pages=[[]];index=0;root.style.height=(budget+4)+'px';
+        if(combat){
+          document.getElementById('fixed-battle-history').hidden=!historyMode;
+          document.getElementById('world-battle-recent').hidden=historyMode;
+          var toggle=document.getElementById('world-history-toggle');
+          toggle.textContent=historyMode?'← Scontro':'Registro';toggle.setAttribute('aria-expanded',String(historyMode));
+        }
+        root.dataset.fixedOverflow=String(!contextual && root.scrollHeight>root.clientHeight+1);
+        return;
+      }
       // Measure content rather than the fixed container itself.
       root.style.height='auto';
       atoms=[];Array.from(root.children).forEach(function(n){collect(n,budget,atoms);});
@@ -120,7 +151,8 @@
   document.addEventListener('focusin',schedule);document.addEventListener('focusout',schedule);
   document.addEventListener('toggle',schedule,true);
   document.addEventListener('nymeria:navigation',function(){index=0;schedule();});
-  window.addEventListener('resize',schedule);if(window.visualViewport)visualViewport.addEventListener('resize',schedule);
+  window.addEventListener('resize',schedule);if(window.visualViewport){visualViewport.addEventListener('resize',schedule);visualViewport.addEventListener('scroll',schedule);}
+  window.addEventListener('pageshow',schedule);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')schedule();});
   window.FixedScreens=Object.freeze({refresh:layout,get page(){return index;},get count(){return pages.length;}});
   watch();schedule();
