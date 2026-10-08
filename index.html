@@ -477,6 +477,7 @@
         <div class="world-shortcuts"><button id="world-active-link" data-world-view="battle" hidden>Riprendi incontro</button><button data-world-view="journal">Diario <span id="journal-badge"></span></button><button data-world-view="overview">Mappa dei luoghi</button></div>
         <p id="world-message" class="world-message" role="status" aria-live="polite"></p>
         <p id="world-storage" class="compatibility" role="status"></p>
+        <section id="world-quest-reward" class="world-result" hidden></section>
         <aside id="world-tracked" class="quest-tracker" hidden></aside>
         <section id="world-places">
           <div id="world-locations" class="world-locations" hidden></div>
@@ -493,7 +494,6 @@
           <ol id="world-battle-log" aria-label="Azioni recenti"></ol>
         </section>
         <section id="world-result" class="world-result" hidden aria-live="polite"></section>
-        <section id="world-quest-reward" class="world-result" hidden></section>
         <section id="world-debug" class="expedition-debug" hidden>
           <h3>DEBUG · M6 · TEST MODE</h3><p class="hint">Solo ?test=1. Questi comandi modificano il salvataggio locale reale. Le missioni riscosse restano protette dal doppio pagamento.</p>
           <label>Missione<select id="world-debug-quest"></select></label><div class="world-battle-controls"><button data-quest-debug="complete">Completa obiettivi</button><button data-quest-debug="reset">Reset obiettivi</button></div>
