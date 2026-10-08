@@ -3,7 +3,7 @@
   var roots = ["character", "world", "expeditions", "menu"];
   var screens = roots.concat(["equipment", "inventory", "class", "combat", "debug", "guild", "professions"]);
   var route = { screen: "world", root: "world", view: "places" }, stack = [];
-  var labels = { character: "Personaggio", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professions", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Diario", quest: "Missione", discoveries: "Scoperte", overview: "Mappa dei luoghi", battle: "Incontro" };
+  var labels = { character: "Personaggio", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professioni", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Diario", quest: "Missione", discoveries: "Scoperte", overview: "Mappa dei luoghi", battle: "Incontro" };
   function snapshot() {
     return { route: Object.assign({}, route), scroll: window.scrollY, focus: document.activeElement && document.activeElement.id, focusData: document.activeElement ? Object.assign({}, document.activeElement.dataset) : {} };
   }

@@ -2046,3 +2046,13 @@ body { min-height: 100dvh; }
 .expedition-guide p, .expedition-requirement, .expedition-cancel-confirm p { font-size:13px; line-height:1.6; }
 .expedition-requirement { color:#ead4a3; }
 .expedition-cancel-confirm button { width:100%; min-height:44px; margin-top:8px; white-space:normal; }
+
+.profession-action-card { padding:12px; border:1px solid #536870; border-radius:8px; }
+.profession-action-card p, .profession-action-card small { display:block; font-size:13px; line-height:1.6; margin:8px 0; }
+.profession-action-card > strong { color:#ead4a3; }
+.profession-action-card button { width:100%; min-height:44px; white-space:normal; margin-top:8px; }
+.profession-requirement { color:#ead4a3; font-size:13px; line-height:1.6; }
+.profession-head { display:block; }
+.profession-head h1 { margin:8px 0 12px; }
+.profession-head .hint { font-size:13px; line-height:1.6; }
+.profession-actions .profession-action-card small { font-size:13px; }

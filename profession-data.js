@@ -1,22 +1,22 @@
-/* M7.3 profession catalogue. English content, stable IDs. */
+/* M7.3 profession catalogue. Italian labels, stable IDs. */
 const ProfessionData = (() => {
   const schemaVersion = 1;
   const professions = [
-    { id:"blacksmithing", name:"Blacksmithing", kind:"crafting", maxLevel:20 },
-    { id:"herbalism", name:"Herbalism", kind:"gathering", maxLevel:20 },
-    { id:"cartography", name:"Cartography", kind:"discovery", maxLevel:20 },
+    { id:"blacksmithing", name:"Forgiatura", kind:"crafting", maxLevel:20 },
+    { id:"herbalism", name:"Erboristeria", kind:"gathering", maxLevel:20 },
+    { id:"cartography", name:"Cartografia", kind:"discovery", maxLevel:20 },
   ];
   const materials = [
-    { id:"raw-iron", name:"Raw Iron" }, { id:"forged-iron", name:"Forged Iron" },
-    { id:"wild-herbs", name:"Wild Herbs" }, { id:"weathered-map-fragment", name:"Weathered Map Fragment" },
-    { id:"frontier-brace", name:"Frontier Brace", collective:true },
+    { id:"raw-iron", name:"Ferro grezzo" }, { id:"forged-iron", name:"Ferro forgiato" },
+    { id:"wild-herbs", name:"Erbe selvatiche" }, { id:"weathered-map-fragment", name:"Frammento di mappa consumato" },
+    { id:"frontier-brace", name:"Rinforzo della Frontiera", collective:true },
   ];
   const recipes = [
     { id:"forge-iron", profession:"blacksmithing", level:1, costs:{"raw-iron":3}, outputs:{"forged-iron":1}, xp:18 },
     { id:"frontier-brace", profession:"blacksmithing", level:2, costs:{"forged-iron":2}, outputs:{"frontier-brace":1}, xp:30,
-      purpose:"A reinforced component prepared for future guild construction." },
+      purpose:"Componente rinforzato; in questa versione non è ancora utilizzabile nei progetti di gilda." },
     { id:"chart-vesper-fragment", profession:"cartography", level:1, costs:{"weathered-map-fragment":3}, outputs:{}, xp:35,
-      discovery:"vesper-fragment-chart", purpose:"Assemble three fragments into a readable frontier chart." },
+      discovery:"vesper-fragment-chart", purpose:"Unisci tre frammenti e registra una carta della Frontiera; non sblocca nuovi luoghi in questa versione." },
   ];
   const gathering = [
     { id:"vesper-iron-vein", location:"broken-path", profession:"blacksmithing", material:"raw-iron", amount:2, xp:10 },
