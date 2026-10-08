@@ -87,7 +87,16 @@ const WorldUI = (() => {
         const target = button.dataset.worldTalk || button.dataset.worldFight || button.dataset.worldExplore || button.dataset.worldEnter;
         const enemy = WorldData.enemy(target);
         if (target === objective.target || enemy?.drops.includes(objective.target) || location.points.find(p => p.id === target)?.collect === objective.target) {
-          button.classList.add("quest-relevant"); button.setAttribute("aria-label", `${button.textContent.trim()} · obiettivo della missione tracciata`);
+          button.classList.add("quest-relevant");
+          if (!button.querySelector('.quest-target-label')) {
+            const badge = document.createElement("small"); badge.className = "quest-target-label";
+            badge.textContent = "OBIETTIVO DI MISSIONE"; button.append(badge);
+          }
+          button.setAttribute("aria-label", `${button.textContent.trim()} · ${tracked.title} · ${objective.label}`);
+          const host = button.closest('.world-enemy') || button;
+          let info = host.querySelector('.quest-target-progress');
+          if (!info) { info = document.createElement('p'); info.className = 'quest-target-progress'; host.append(info); }
+          const line = document.createElement('span'); line.textContent = `${objective.label} · ${entry.progress[i]} / ${objective.count}`; info.append(line);
         }
       }
     });
@@ -123,6 +132,7 @@ const WorldUI = (() => {
       for (const b of node("world-location-detail").querySelectorAll("button")) b.disabled = true;
     }
     if (busy) for (const b of node("panel-world").querySelectorAll("[data-quest-accept], [data-quest-claim], [data-quest-track]")) b.disabled = true;
+    if (busy || frontier.activeEncounter) for (const b of node("panel-world").querySelectorAll('.quest-next-step button')) b.disabled = true;
     if(typeof ProfessionData!=="undefined"){
       const localNodes=ProfessionData.gathering.filter(n=>n.location===location.id);
       if(localNodes.length){
@@ -189,6 +199,12 @@ const WorldUI = (() => {
   document.addEventListener("click", async event => {
     const b = event.target.closest("button");
     if (!b || b.disabled) return;
+    if (b.hasAttribute("data-quest-expedition")) { NymeriaNavigation.root("expeditions"); return; }
+    if (b.dataset.questDestination) {
+      const result = await action(() => WorldSystem.enter(b.dataset.questDestination));
+      if (result?.ok) NymeriaNavigation.root("world");
+      return;
+    }
     if (b.dataset.questOpen) { NymeriaNavigation.open("world", { view: "quest", questId: b.dataset.questOpen }); return; }
     if (b.hasAttribute("data-world-continue")) {
       const receipt = ProgressionStore.state.frontier.lastEncounter;

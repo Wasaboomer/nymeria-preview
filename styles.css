@@ -2022,3 +2022,21 @@ body { min-height: 100dvh; }
 .profession-discovery{padding:13px;border:1px solid var(--accent);border-radius:8px;background:#2b3939;line-height:1.5}.profession-discovery small{color:var(--muted)}
 
 .world-professions{margin-top:16px}.world-professions button{width:100%;min-height:58px;display:flex;justify-content:space-between;align-items:center;text-align:left;padding:11px 12px;background:#172a33;color:var(--ink);border:1px solid var(--accent);border-radius:8px}.world-professions button span{display:grid;gap:4px}.world-professions button small{font-size:9px;color:var(--muted)}.profession-actions button:disabled{opacity:.45;cursor:not-allowed}
+
+/* Quest guidance: explicit next action and visible objective association. */
+.quest-next-step { margin:12px 0; padding:12px; border:1px solid #8f805a; border-radius:8px; background:#172a30; }
+.quest-next-step > strong { display:block; color:#ead4a3; font-size:13px; }
+.quest-next-step p { margin:8px 0; font-size:14px; line-height:1.5; }
+.quest-next-step small { display:block; font-size:12px; line-height:1.5; color:#b4c0cc; }
+.quest-next-step button { display:block; width:100%; min-height:48px; margin-top:12px; white-space:normal; text-align:left; font-size:14px; padding:12px; }
+.quest-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.quest-actions button, .quest-tracker > button:not(.tracker-title) { min-height:44px; white-space:normal; }
+.quest-target-label { display:block; color:#ead4a3; font-size:10px; letter-spacing:.3px; line-height:1.4; }
+.quest-relevant { flex-wrap:wrap; border-color:#ad9561; }
+.world-enemy .quest-relevant { display:flex; flex-direction:column; align-items:center; gap:6px; min-height:54px; }
+.quest-target-progress { width:100%; color:#ead4a3; font-size:12px; line-height:1.5; margin:8px 0 0; }
+.quest-target-progress span { display:block; }
+.world-enemy:has(.quest-target-progress) { flex-wrap:wrap; border-left:3px solid #ceb17e; padding-left:12px; }
+.quest-card summary { flex-wrap:wrap; }
+.quest-card h4 { margin:14px 0 8px; font-size:14px; }
+.quest-rewards { padding:12px; background:#172a30; border-radius:6px; line-height:1.6; }

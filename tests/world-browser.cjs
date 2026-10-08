@@ -25,15 +25,15 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
    await page.locator('[data-world-view="overview"]').tap();assert.ok(await page.locator('[data-world-enter="lantern-wood"]:visible').isDisabled());await page.locator('#navigation-back').tap();
    const tap=async locator=>{await dismissNotifications(page);await locator.tap();await page.waitForFunction(()=>document.getElementById('panel-world').getAttribute('aria-busy')==='false');};
    const accept=id=>tap(page.locator(`#world-location-detail [data-quest-accept="${id}"]`));
-   const talk=id=>tap(page.locator(`[data-world-talk="${id}"]`));
+   const talk=id=>tap(page.locator(`#world-location-detail [data-world-talk="${id}"]`));
    const enter=async id=>{await tap(page.locator('[data-world-view="overview"]'));await tap(page.locator(`[data-world-enter="${id}"]:visible`));};
-   const explore=id=>tap(page.locator(`[data-world-explore="${id}"]`));
+   const explore=id=>tap(page.locator(`#world-location-detail [data-world-explore="${id}"]`));
    const claim=async id=>{
     await tap(page.locator('#world-tracked [data-quest-claim="'+id+'"]'));
     assert.equal(await page.evaluate(id=>ProgressionStore.state.frontier.quests[id].status,id),'claimed');
    };
    const fight=async id=>{
-    await tap(page.locator(`[data-world-fight="${id}"]`));
+    await tap(page.locator(`#world-location-detail [data-world-fight="${id}"]`));
     assert.ok(await page.locator('#world-battle').isVisible());
     await page.evaluate(async()=>{WorldUI.engine.advance(180);await WorldUI.settle();});
     const result=await page.evaluate(()=>ProgressionStore.state.frontier.lastEncounter);
