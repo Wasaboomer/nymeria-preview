@@ -83,26 +83,29 @@ const WorldUI = (() => {
       return `<button data-world-enter="${id}" ${!unlocked || frontier.activeEncounter || busy ? "disabled" : ""}><span><strong>${escape(destination.name)}</strong>${!unlocked ? `<small>Bloccato · ${escape(destination.unlockHint)}</small>` : ""}</span><b aria-hidden="true">${unlocked ? "→" : "🔒"}</b></button>`;
     }).join("")}</section>`;
     // Objective markers are semantic UI hints, never quest-engine branches.
-    const tracked = QuestData.get(frontier.trackedQuest), entry = tracked && frontier.quests[tracked.id];
-    if (tracked && entry?.status === "active") tracked.objectives.forEach((objective, i) => {
-      if (entry.progress[i] >= objective.count) return;
-      for (const button of node("world-location-detail").querySelectorAll("[data-world-talk], [data-world-fight], [data-world-explore], [data-world-enter]")) {
-        const target = button.dataset.worldTalk || button.dataset.worldFight || button.dataset.worldExplore || button.dataset.worldEnter;
-        const enemy = WorldData.enemy(target);
-        if (target === objective.target || enemy?.drops.includes(objective.target) || location.points.find(p => p.id === target)?.collect === objective.target) {
-          button.classList.add("quest-relevant");
-          if (!button.querySelector('.quest-target-label')) {
-            const badge = document.createElement("small"); badge.className = "quest-target-label";
-            badge.textContent = "OBIETTIVO DI MISSIONE"; button.append(badge);
+    for (const tracked of QuestUI.relevantQuests(state)) {
+      const entry = frontier.quests[tracked.id];
+      tracked.objectives.forEach((objective, i) => {
+        if (entry.progress[i] >= objective.count) return;
+        for (const button of node("world-location-detail").querySelectorAll("[data-world-talk], [data-world-fight], [data-world-explore], [data-world-enter]")) {
+          const target = button.dataset.worldTalk || button.dataset.worldFight || button.dataset.worldExplore || button.dataset.worldEnter;
+          const enemy = WorldData.enemy(target);
+          if (target === objective.target || enemy?.drops.includes(objective.target) || location.points.find(p => p.id === target)?.collect === objective.target) {
+            button.classList.add("quest-relevant");
+            if (!button.querySelector('.quest-target-label')) {
+              const badge = document.createElement("small"); badge.className = "quest-target-label";
+              badge.textContent = "OBIETTIVO DI MISSIONE"; button.append(badge);
+            }
+            button.setAttribute("aria-label", `${button.textContent.trim()} · ${tracked.title} · ${objective.label}`);
+            const host = button.closest('.world-enemy') || button;
+            let info = host.querySelector('.quest-target-progress');
+            if (!info) { info = document.createElement('p'); info.className = 'quest-target-progress'; host.append(info); }
+            const line = document.createElement('span'); line.textContent = `${objective.label} · ${entry.progress[i]} / ${objective.count}`; info.append(line);
+            host.classList.add("quest-target-host");
           }
-          button.setAttribute("aria-label", `${button.textContent.trim()} · ${tracked.title} · ${objective.label}`);
-          const host = button.closest('.world-enemy') || button;
-          let info = host.querySelector('.quest-target-progress');
-          if (!info) { info = document.createElement('p'); info.className = 'quest-target-progress'; host.append(info); }
-          const line = document.createElement('span'); line.textContent = `${objective.label} · ${entry.progress[i]} / ${objective.count}`; info.append(line);
         }
-      }
-    });
+      });
+    }
     const detail = node("world-location-detail"), exploration = detail.querySelector('[data-world-section="explore"]'), encounters = detail.querySelector(".world-enemies");
     // Put the tracked action before optional exploration; keep exploration first when relevant.
     if (exploration && encounters.querySelector(".quest-relevant") && !detail.querySelector(".world-point.quest-relevant")) {
@@ -139,7 +142,7 @@ const WorldUI = (() => {
       const next = quest?.nextQuest && QuestData.get(quest.nextQuest);
       const level = reward.levelUps?.length ? `<p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(reward))}</p>` : "";
       const nextStep = next ? `<p class="hint">Prossimo passo: ${escape(next.title)}</p><button data-quest-open="${next.id}" class="quest-primary">Scopri la prossima missione →</button>` : '<p class="hint">Continua a esplorare la Frontiera.</p>';
-      node("world-quest-reward").innerHTML = `<span class="world-eyebrow">MISSIONE COMPLETATA · RICOMPENSE RISCOSSE</span><h3>${escape(reward.title)}</h3><div class="quest-receipt-gains"><strong>+${earned.xp || 0} XP</strong><strong>+${earned.crowns || 0} Corone</strong>${materials.join("")}</div>${level}${unlocked.length ? `<p class="quest-receipt-unlock">Nuova area sbloccata: <strong>${unlocked.map(escape).join(", ")}</strong></p>` : ""}${reward.loot.map(row => `<small>${escape(GearData.items.find(x => x.id === row.itemId)?.name || row.itemId)}${row.duplicate ? " · duplicato convertito in 2 Ferro" : " · aggiunto all'inventario"}</small>`).join("")}${nextStep}${QuestUI.rewardComparison(reward.id, state)}`;
+      node("world-quest-reward").innerHTML = `<span class="world-eyebrow">MISSIONE COMPLETATA · RICOMPENSE RISCOSSE</span><h3>${escape(reward.title)}</h3><div class="quest-receipt-gains"><strong>+${earned.xp || 0} XP</strong><strong>+${earned.crowns || 0} Corone</strong>${materials.join("")}</div>${level}${unlocked.length ? `<p class="quest-receipt-unlock">Nuova area sbloccata: <strong>${unlocked.map(escape).join(", ")}</strong></p>` : ""}${reward.loot.map(row => `<small>${escape(GearData.items.find(x => x.id === row.itemId)?.name || row.itemId)}${row.duplicate ? " · duplicato convertito in 2 Ferro" : " · aggiunto all'inventario"}</small>`).join("")}${view === "places" ? "" : QuestUI.rewardComparison(reward.id, state)}${nextStep}`;
     }
     if (frontier.activeEncounter) {
       if (ticketId !== frontier.activeEncounter.id) {

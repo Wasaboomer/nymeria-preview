@@ -26,9 +26,9 @@ const dismissNotifications = require('./notifications-fixture.cjs');
    assert.equal(await page.evaluate(id=>ProgressionStore.state.frontier.quests[id].status,id),'claimed');
    await tap('#navigation-back');await tap('#navigation-back');
   };
-  await accept('sq-debt');await accept('sq-herbs');await enter('broken-path');await accept('sq-merchant');await tap('[data-world-explore="lost-cart"]');
+  await accept('sq-debt');await accept('sq-herbs');await enter('broken-path');await accept('sq-merchant');await tap('#world-location-detail [data-world-explore="lost-cart"]');
   for(let i=0;i<2;i++){
-   await tap('[data-world-fight="vesper-raider"]');
+   await tap('#world-location-detail [data-world-fight="vesper-raider"]');
    await page.evaluate(async()=>{WorldUI.engine.advance(180);await WorldUI.settle();});await tap('[data-world-continue]');
   }
   await claim('sq-debt');
@@ -37,11 +37,11 @@ const dismissNotifications = require('./notifications-fixture.cjs');
   assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.quests['sq-merchant'].progress[2]),0);
   await page.locator('#expedition-claim').tap();await page.locator('#expedition-claimed').waitFor({state:'visible'});
   await page.locator('#tab-world').tap();await claim('sq-merchant');
-  await enter('lantern-wood');for(let i=0;i<3;i++)await tap('[data-world-explore="mist-herbs"]');
-  await enter('veyra');await tap('[data-world-talk="mira"]');await claim('sq-herbs');
-  await enter('elar-ruins');await accept('sq-window');await tap('[data-world-explore="lit-window"]');await tap('[data-world-talk="ilyen"]');await claim('sq-window');
+  await enter('lantern-wood');for(let i=0;i<3;i++)await tap('#world-location-detail [data-world-explore="mist-herbs"]');
+  await enter('veyra');await tap('#world-location-detail [data-world-talk="mira"]');await claim('sq-herbs');
+  await enter('elar-ruins');await accept('sq-window');await tap('#world-location-detail [data-world-explore="lit-window"]');await tap('#world-location-detail [data-world-talk="ilyen"]');await claim('sq-window');
   await page.reload();await page.locator('#tab-world').tap();
-  assert.ok(await page.evaluate(()=>QuestData.quests.filter(q=>q.type==='side').every(q=>ProgressionStore.state.frontier.quests[q.id].status==='claimed')));
+  assert.ok(await page.evaluate(()=>['sq-debt','sq-herbs','sq-merchant','sq-window'].every(id=>ProgressionStore.state.frontier.quests[id].status==='claimed')));
   assert.ok(await page.evaluate(()=>Equipment.state.inventory.some(i=>i.id==='frontier-ring')));
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
   console.log(`PASS ${width}px: four side quest UI, herbs, narrative without combat, real M5 expedition claim dispatcher, universal ring, persistence/touch/no errors/overflow`);

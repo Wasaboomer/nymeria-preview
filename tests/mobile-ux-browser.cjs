@@ -58,7 +58,7 @@ const shot = async (p, name, width, cls) => { if (width === 390 && cls === 'hunt
    await tap(`[data-item-id="${cls==='hunter'?'torso-warden':'torso-chain'}"]`);
    assert.match(await page.locator('#detail-body').innerText(),/solamente armature|Non utilizzabile/);
    await tap('#close-detail');await tap('#navigation-back');
-   await tap('#tab-world'); await tap('[data-quest-accept="mq01"]');await tap('[data-world-talk="serah"]');
+   await tap('#tab-world'); await tap('#world-tracked [data-quest-accept="mq01"]');await tap('#world-location-detail [data-world-talk="serah"]');
    assert.match(await page.locator('#world-location-detail').innerText(),/Non chiedo promesse/);
    assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.quests.mq01.progress[0]),1);
    await tap('[data-world-enter="broken-path"]');
@@ -66,14 +66,14 @@ const shot = async (p, name, width, cls) => { if (width === 390 && cls === 'hunt
    assert.ok(await page.locator('#world-location-detail [data-world-enter="lantern-wood"]').isDisabled());
    assert.match(await page.locator('#world-location-detail [data-world-enter="lantern-wood"]').innerText(),/Nessuno è tornato/);
    assert.ok(await page.locator('#badge-world').isVisible());
-   await tap('#world-tracked [data-quest-claim="mq01"]');await tap('[data-quest-accept="mq02"]');
+   await tap('#world-tracked [data-quest-claim="mq01"]');await tap('#world-tracked [data-quest-accept="mq02"]');
    assert.match(await page.locator('#world-tracked').innerText(),/Nessuno è tornato/);
-   assert.ok(await page.locator('[data-world-fight="vesper-raider"]').evaluate(e=>e.classList.contains('quest-relevant')));
+   assert.ok(await page.locator('#world-location-detail [data-world-fight="vesper-raider"]').evaluate(e=>e.classList.contains('quest-relevant')));
    assert.ok(await page.evaluate(()=>document.querySelector('.world-enemies').getBoundingClientRect().top < document.querySelector('.world-point').getBoundingClientRect().top));
    await shot(page,'sentiero',width,cls);
    const loc=await page.evaluate(()=>ProgressionStore.state.frontier.location);
    await tap('[data-world-view="journal"]');await shot(page,'journal',width,cls);
-   assert.equal(await page.locator('.journal-entry').count(),10);
+   assert.equal(await page.locator('.journal-entry').count(),await page.evaluate(()=>QuestData.quests.length));
    await tap('.journal-entry[data-quest-open="mq02"]');assert.ok(await page.locator('#quest-detail').isVisible());
    assert.match(await page.locator('#quest-detail').innerText(),/XP.*Corone/s);
    await tap('#navigation-back');assert.ok(await page.locator('#quest-journal').isVisible());assert.equal(await page.evaluate(()=>document.activeElement.dataset.questOpen),'mq02');assert.equal(await page.evaluate(()=>document.activeElement.tabIndex),0);
@@ -81,7 +81,7 @@ const shot = async (p, name, width, cls) => { if (width === 390 && cls === 'hunt
    assert.ok(await page.locator('#world-current').isVisible());
    // Battle is a secondary world route, snapshots retain custom strategy.
    await tap('#tab-character');await tap('[data-nav="class"]');if(!(await page.locator('.strategy-settings').evaluate(e=>e.open))) await tap('.strategy-settings > summary');await tap('[data-combat-mode="custom"]');await tap('#tab-world');
-   await tap('[data-world-fight="vesper-raider"]');assert.ok(await page.locator('#world-battle').isVisible());assert.ok(await page.locator('#world-location-detail').isHidden());
+   await tap('#world-location-detail [data-world-fight="vesper-raider"]');assert.ok(await page.locator('#world-battle').isVisible());assert.ok(await page.locator('#world-location-detail').isHidden());
    assert.deepEqual(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.snapshot.rules),await page.evaluate(()=>CombatUI.settings.rules));
    await shot(page,'combat',width,cls);
    const ticket=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id);

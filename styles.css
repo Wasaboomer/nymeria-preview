@@ -2126,3 +2126,36 @@ body { min-height: 100dvh; }
 .stag-victory p { margin:0; line-height:1.5; }
 .stag-victory button { min-height:44px; }
 @media(max-width:350px) { #world-stag-preparation:not([hidden]) { padding:12px; } .world-battle-miniboss { padding:8px; } }
+
+/* Mobile quest clarity: semantic states and touch targets, no game rules. */
+#panel-world .quest-state-label { display:inline-block; padding:5px 8px; border:1px solid #899985; border-radius:6px; font:600 12px/1.5 system-ui; white-space:normal; }
+#panel-world .quest-completed { border-left:4px solid #e4c68b; background:#22352d; }
+#panel-world .quest-active { border-left:3px solid #a9bbc4; }
+#panel-world .quest-claimed .quest-state-label { color:#b8cbbd; }
+#panel-world .journal-entry { gap:12px; padding:12px; min-height:64px; border-radius:6px; }
+#panel-world .journal-entry > span { min-width:0; }
+#panel-world .journal-entry strong { line-height:1.4; overflow-wrap:anywhere; }
+#panel-world .main-quest-panel.quest-completed { padding:12px; border-radius:6px; }
+#panel-world .quest-primary { min-height:48px; padding:12px; white-space:normal; line-height:1.4; font-size:15px; border:1px solid #dac28a; }
+#panel-world [data-quest-accept]::before, #panel-world [data-quest-giver]::before,
+#panel-world [data-quest-claim]::before, #panel-world .quest-next-step .quest-primary::before,
+#world-quest-reward [data-quest-open]::before { content:"◆ "; }
+#panel-world .quest-next-step small { font-size:13px; }
+#panel-world .quest-target-host { border-left:3px solid #ceb17e; }
+#panel-world .quest-relevant { background:#293b36; }
+#panel-world .quest-target-label { font-size:11px; }
+#panel-world .world-enemy, #panel-world .npc-heading { gap:12px; }
+#panel-world .world-enemy > div, #panel-world .npc-heading > div { min-width:0; }
+#panel-world .world-enemy button, #panel-world .npc-heading button { min-height:48px; min-width:88px; white-space:normal; }
+#panel-world .quest-target-progress { font-size:13px; }
+#panel-world .quest-card summary { min-height:48px; gap:10px; }
+#panel-world .quest-card summary > span { min-width:0; }
+#panel-world .quest-card summary strong { overflow-wrap:anywhere; }
+#panel-world .quest-receipt-gains { flex-wrap:wrap; }
+#panel-world button:focus-visible { outline:2px solid #ead4a3; outline-offset:3px; }
+@media (max-width:350px) {
+  #panel-world .world-enemy { flex-wrap:wrap; }
+  #panel-world .world-enemy > div, #panel-world .world-enemy > button { width:100%; }
+  #panel-world .npc-heading { flex-wrap:wrap; }
+  #panel-world .npc-heading > button { width:100%; }
+}
