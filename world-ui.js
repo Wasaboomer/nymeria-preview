@@ -169,6 +169,18 @@ const WorldUI = (() => {
     if (engine.result || engine.time >= 180) { settle(); return; }
     stopClock(); renderBattle(); frameId = requestAnimationFrame(frame);
   }
+  function combatEventText(event, ticket) {
+    const ability = ticket.snapshot.profile.abilities.find(a => a.id === event.abilityId)?.name;
+    const attack = ticket.template.attacks?.find(a => a.id === event.abilityId)?.name;
+    if (event.type === "playerAction") return { action: ability || "Attacco", detail: `${event.damage ?? 0} danni${event.critical ? " · COLPO CRITICO!" : ""}`, kind: event.critical ? "critical" : "attack" };
+    if (event.type === "enemyAction") return { action: `${ticket.template.name}: ${attack || "Attacco"}`, detail: `${event.damage ?? 0} danni${event.blocked ? " · BLOCCO!" : ""}`, kind: event.blocked ? "blocked" : "enemy" };
+    if (event.type === "dodge") return { action: "SCHIVATA!", detail: `Evitato ${attack || "un attacco nemico"}`, kind: "dodge" };
+    if (event.type === "result") return { action: event.outcome === "victory" ? "VITTORIA" : "SCONFITTA", detail: "Incontro concluso", kind: "result" };
+    if (event.type === "dot") return { action: "Danno persistente", detail: `${event.damage ?? 0} danni`, kind: "effect" };
+    if (event.type === "effectApply" || event.type === "effectRefresh") return { action: "Effetto attivato", detail: event.effectId || "", kind: "effect" };
+    if (event.type === "itemProc") return { action: "Effetto equipaggiamento", detail: "Attivato", kind: "effect" };
+    return { action: "Effetto", detail: event.effectId || "", kind: "effect" };
+  }
   function renderBattle() {
     const ticket = ProgressionStore.state.frontier.activeEncounter;
     if (!ticket) return;
@@ -187,7 +199,30 @@ const WorldUI = (() => {
     node("world-battle-resume").textContent = engine?.result || engine?.time >= 180 ? "Salva risultato · riprova" : "Riprendi incontro";
     node("world-battle-resume").disabled = settling;
     node("world-battle-pause").disabled = engine?.status !== "running" || settling;
-    node("world-battle-log").innerHTML = engine ? engine.log.slice(-5).reverse().map(event => `<li>${event.time.toFixed(1)}s · ${event.type === "enemyAction" ? ticket.template.name : event.type === "playerAction" ? ticket.snapshot.profile.abilities.find(a => a.id === event.abilityId)?.name : event.type === "result" ? "Scontro concluso" : event.type === "dodge" ? "Schivata" : "Effetto"}${event.damage !== undefined ? ` · ${event.damage} danni` : ""}</li>`).join("") : '<li class="hint">Incontro salvato. Riprendi quando vuoi.</li>';
+    const resource = engine?.player.resource || { current: ticket.snapshot.profile.resource.initial, max: ticket.snapshot.profile.resource.max };
+    const resourceName = ticket.snapshot.profile.resource.name;
+    const resourceCurrent = Math.max(0, Math.min(resource.max, resource.current));
+    node("world-resource-name").textContent = resourceName;
+    node("world-resource-value").textContent = `${Math.round(resourceCurrent)} / ${resource.max}`;
+    node("world-resource-fill").style.width = `${resource.max ? 100 * resourceCurrent / resource.max : 0}%`;
+    node("world-resource-bar").setAttribute("aria-valuemax", String(resource.max));
+    node("world-resource-bar").setAttribute("aria-valuenow", String(Math.round(resourceCurrent)));
+    node("world-resource-bar").setAttribute("aria-label", resourceName);
+    const events = engine?.log || [];
+    const notable = [...events].reverse().find(e => ["playerAction", "enemyAction", "dodge", "result", "dot", "itemProc"].includes(e.type));
+    const highlight = notable ? combatEventText(notable, ticket) : { action: "In attesa del primo colpo", detail: "Le azioni appariranno qui.", kind: "idle" };
+    node("world-highlight-action").textContent = highlight.action;
+    node("world-highlight-detail").textContent = highlight.detail;
+    node("world-combat-highlight").dataset.kind = highlight.kind;
+    const history = events.map(event => {
+      const entry = combatEventText(event, ticket);
+      return `<li><time>${event.time.toFixed(1)}s</time> · ${escape(entry.action)} · ${escape(entry.detail)}</li>`;
+    }).reverse().join("");
+    node("world-battle-history").innerHTML = history || '<li class="hint">Nessuna azione registrata.</li>';
+    node("world-battle-log").innerHTML = events.slice(-5).reverse().map(event => {
+      const entry = combatEventText(event, ticket);
+      return `<li>${event.time.toFixed(1)}s · ${escape(entry.action)} · ${escape(entry.detail)}</li>`;
+    }).join("") || '<li class="hint">Incontro salvato. Riprendi quando vuoi.</li>';
     document.dispatchEvent(new Event("nymeria:world-battle-render"));
   }
   async function settle() {
