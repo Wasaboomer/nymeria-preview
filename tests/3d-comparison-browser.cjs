@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const {chromium} = require('playwright');
+const file = id => id === 'base' ? 'base.glb' : id + '-with-head.glb';
 const url = process.env.NYMERIA_COMPARISON_URL || 'http://127.0.0.1:8012/nymeria-preview-pilot/3d-comparison.html';
 (async () => {
  const browser = await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--enable-unsafe-swiftshader']});
@@ -16,7 +17,7 @@ const url = process.env.NYMERIA_COMPARISON_URL || 'http://127.0.0.1:8012/nymeria
    await page.goto(url);
    for(const id of ['base','peasant','ranger','base']) {
     if(id!=='base'||await page.locator('[data-model="base"]').getAttribute('aria-pressed')!=='true')await page.locator('[data-model="'+id+'"]').tap();
-    await page.waitForFunction(id=>{const v=document.querySelector('#viewer');return v.loaded&&v.getAttribute('src')==='assets/3d-comparison/'+id+'.glb'&&document.querySelector('#comparison-status').textContent==='Modello caricato: '+id[0].toUpperCase()+id.slice(1);},id,{timeout:60000});
+    await page.waitForFunction(({id,filename})=>{const v=document.querySelector('#viewer');return v.loaded&&v.getAttribute('src')==='assets/3d-comparison/'+filename&&document.querySelector('#comparison-status').textContent==='Modello caricato: '+id[0].toUpperCase()+id.slice(1);},{id,filename:file(id)},{timeout:60000});
     const dimensions=await page.evaluate(()=>{const d=document.querySelector('#viewer').getDimensions();return [d.x,d.y,d.z];});
     assert.ok(dimensions.every(n=>n>0),'Model has real rendered geometry');
     assert.equal(await page.locator('[data-model="'+id+'"]').getAttribute('aria-pressed'),'true');
@@ -26,7 +27,7 @@ const url = process.env.NYMERIA_COMPARISON_URL || 'http://127.0.0.1:8012/nymeria
    assert.deepEqual(await page.evaluate(()=>({...localStorage})),{'comparison-sentinel':'unchanged'});
    assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);
    assert.ok(requests.filter(u=>!u.startsWith('data:')).every(u=>new URL(u).origin===new URL(url).origin),'No CDN or remote asset requests');
-   for(const id of ['base','peasant','ranger'])assert.ok(requests.some(u=>u.endsWith('/'+id+'.glb')));
+   for(const id of ['base','peasant','ranger'])assert.ok(requests.some(u=>u.endsWith('/'+file(id))));
    await page.locator('[data-model="peasant"]').tap();await page.locator('[data-model="ranger"]').tap();
    await page.waitForFunction(()=>document.querySelector('#viewer').loaded&&document.querySelector('#comparison-status').textContent==='Modello caricato: Ranger');
    assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);

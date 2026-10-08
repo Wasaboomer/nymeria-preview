@@ -3,8 +3,8 @@
   'use strict';
   var models = {
     base: {label: 'Base', src: 'assets/3d-comparison/base.glb'},
-    peasant: {label: 'Peasant', src: 'assets/3d-comparison/peasant.glb'},
-    ranger: {label: 'Ranger', src: 'assets/3d-comparison/ranger.glb'}
+    peasant: {label: 'Peasant', src: 'assets/3d-comparison/peasant-with-head.glb'},
+    ranger: {label: 'Ranger', src: 'assets/3d-comparison/ranger-with-head.glb'}
   };
   var viewer = document.getElementById('viewer');
   var status = document.getElementById('comparison-status');
