@@ -2,6 +2,11 @@
 const QuestUI = (() => {
   const escape = value => String(value).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const statusNames = { locked: "Bloccata", available: "Disponibile", active: "Attiva", completed: "✓ Da riscuotere", claimed: "✓ Completata · Riscossa" };
+  function category(quest) {
+    return quest.type === "main" ? {id: "main", label: "MISSIONE PRINCIPALE"}
+      : quest.objectives.some(o => o.type === "professionDelivery") ? {id: "profession", label: "ATTIVITÀ PROFESSIONALE"}
+      : {id: "side", label: "MISSIONE SECONDARIA"};
+  }
   function rewards(reward) {
     const parts = [`${reward.xp || 0} XP`, `${reward.crowns || 0} Corone`];
     for (const [id, count] of Object.entries(reward.materials || {})) parts.push(`${count} ${ProgressionData.materialNames[id]}`);
@@ -84,11 +89,11 @@ const QuestUI = (() => {
     const entry = state.frontier.quests[quest.id];
     const npc = WorldData.npcs.find(x => x.id === quest.giver);
     const unlocks = quest.contentUnlocks.map(id => WorldData.location(id).name);
-    return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) || (entry.status === "claimed" && (quest.objectives.some(o => o.type === "professionDelivery") || rewardComparison(quest.id, state))) ? "open" : ""}><summary><span><small>${quest.type === "main" ? "MISSIONE PRINCIPALE" : "MISSIONE SECONDARIA"} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b class="quest-state-label">${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}${rewardComparison(quest.id, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
+    return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) || (entry.status === "claimed" && (quest.objectives.some(o => o.type === "professionDelivery") || rewardComparison(quest.id, state))) ? "open" : ""}><summary><span><small>${category(quest).label} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b class="quest-state-label">${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}${rewardComparison(quest.id, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
   }
   function journal(state) {
-    return [["main", "Principale"], ["side", "Secondarie"]].map(([type, title]) =>
-      `<section class="journal-group"><h4>${title}</h4>${QuestData.quests.filter(q => q.type === type).sort((a,b) => ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[a.id].status) - ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[b.id].status)).map(q => `<button class="journal-entry quest-${state.frontier.quests[q.id].status}" data-quest-open="${q.id}"><span><strong>${escape(q.title)}</strong><small class="quest-state-label">${statusNames[state.frontier.quests[q.id].status]}</small></span><b aria-hidden="true">→</b></button>`).join("")}</section>`).join("");
+    return [["main", "Storia principale"], ["side", "Missioni secondarie"], ["profession", "Attività professionali"]].map(([type, title]) =>
+      `<section class="journal-group"><h4>${title}</h4>${QuestData.quests.filter(q => category(q).id === type).sort((a,b) => ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[a.id].status) - ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[b.id].status)).map(q => `<button class="journal-entry quest-${state.frontier.quests[q.id].status}" data-quest-open="${q.id}"><span><strong>${escape(q.title)}</strong><small class="quest-state-label">${statusNames[state.frontier.quests[q.id].status]}</small></span><b aria-hidden="true">→</b></button>`).join("")}</section>`).join("");
   }
   function offers(npcId, state) {
     return QuestData.quests.filter(q => q.giver === npcId && ["available", "active", "completed"].includes(state.frontier.quests[q.id].status) && !(state.frontier.trackedQuest === q.id && state.frontier.quests[q.id].status === "active"))
@@ -122,10 +127,10 @@ const QuestUI = (() => {
       const entry = state.frontier.quests[q.id];
       const index = q.objectives.findIndex((o, i) => entry.progress[i] < o.count);
       const progress = index >= 0 ? `${entry.progress[index]}/${q.objectives[index].count}` : statusNames[entry.status];
-      return `<div class="side-quest-row"><button data-quest-open="${q.id}">${escape(q.title)} →</button><small>${escape(progress)}</small>${state.frontier.trackedQuest === q.id ? guidance(q, state) : ""}${entry.status === "completed" ? actions(q, entry, state) : ""}</div>`;
+      return `<div class="side-quest-row"><button data-quest-open="${q.id}">${escape(q.title)} →</button><small>${category(q).id === "profession" ? "Professioni · " : ""}${escape(progress)}</small>${state.frontier.trackedQuest === q.id ? guidance(q, state) : ""}${entry.status === "completed" ? actions(q, entry, state) : ""}</div>`;
     }).join("")}</details>` : '<p class="side-quest-empty">Missioni secondarie: consulta il Diario per le attività facoltative.</p>';
     const recentReward = state.frontier.lastQuestClaim?.id;
     return (recentReward ? rewardComparison(recentReward, state) : "") + mainPanel + sidePanel;
   }
-  return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison, relevantQuests };
+  return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison, relevantQuests, category };
 })();

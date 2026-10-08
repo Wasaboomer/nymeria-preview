@@ -20,7 +20,7 @@ const navigate=require('./mobile-navigation-fixture.cjs'),dismiss=require('./not
  
  const compareReward=async(id,expected)=>{
  const before=await p.evaluate(()=>JSON.stringify(Equipment.state.equipment)),loot=await p.evaluate(()=>JSON.stringify(ProgressionStore.state.ownedLootIds));
- for(const mobileWidth of [320,390,430]) {
+ for(const mobileWidth of [320,375,390,430]) {
   await p.setViewportSize({width:mobileWidth,height:844});
   await tap('#world-tracked [data-quest-compare="'+expected+'"]');
   assert.ok(await p.locator('#item-dialog').isVisible());

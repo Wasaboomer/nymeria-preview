@@ -205,6 +205,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
         await page.locator("#detail-body .comparison").innerText(),
         /Lama della soglia/,
       );
+      await page.locator(".advisor-explanation summary").tap();
       assert.match(
         await page.locator(".advisor-score").innerText(),
         /Score provvisorio Custode/,
@@ -240,6 +241,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
         await page.locator("#detail-body .comparison").innerText(),
         /Faretra del viaggio/,
       );
+      await page.locator(".advisor-explanation summary").tap();
       assert.match(
         await page.locator(".advisor-score").innerText(),
         /Laceratore/,

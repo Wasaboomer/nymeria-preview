@@ -24,10 +24,21 @@ const WorldUI = (() => {
   }
   async function action(work) {
     if (busy) return;
+    const previous = ProgressionStore.state.frontier.quests;
     busy = true; render();
     try {
       const result = await work();
-      node("world-message").textContent = result?.message || "";
+      const feedback = [];
+      if (result?.ok) for (const quest of QuestData.quests) {
+        const before = previous[quest.id], after = ProgressionStore.state.frontier.quests[quest.id];
+        if (before?.status !== "active") continue;
+        if (after?.status === "completed") feedback.push(`Missione pronta da riscuotere: ${quest.title}.`);
+        else quest.objectives.forEach((objective, i) => {
+          if (before.progress[i] < objective.count && after?.progress[i] >= objective.count)
+            feedback.push(`Obiettivo completato: ${objective.label}.`);
+        });
+      }
+      node("world-message").textContent = [result?.message, ...feedback].filter(Boolean).join(" ");
       clearTimeout(messageTimer); messageTimer = setTimeout(() => { node("world-message").textContent = ""; }, 3500);
       return result;
     } catch (error) {
@@ -38,6 +49,16 @@ const WorldUI = (() => {
   const discovery = id => typeof WorldDiscovery !== "undefined" && WorldDiscovery?.accessible(id);
   function render() {
     const state = ProgressionStore.state, frontier = state.frontier;
+    const primary = QuestData.quests.find(q => q.type === "main" && ["available", "active", "completed"].includes(frontier.quests[q.id]?.status));
+    const questLink = node("current-quest-link");
+    questLink.hidden = !primary;
+    if (primary) {
+      const entry = frontier.quests[primary.id];
+      const objective = primary.objectives.find((o, i) => entry.progress[i] < o.count);
+      questLink.dataset.questOpen = primary.id;
+      questLink.textContent = entry.status === "completed" ? "✓ Ricompensa" : "◆ Missione";
+      questLink.setAttribute("aria-label", `${primary.title} · ${entry.status === "completed" ? "Pronta da riscuotere" : objective?.label || "Accetta missione"}`);
+    }
     node("panel-world").setAttribute("aria-busy", String(busy));
     node("world-zone-name").textContent = WorldData.zone.name;
     node("world-zone-story").textContent = WorldData.zone.description;
@@ -73,10 +94,10 @@ const WorldUI = (() => {
     }
     node("world-location-detail").innerHTML = `${WorldData.npcs.some(n => n.location === location.id) ? "<h4>Personaggi presenti</h4>" : ""}${WorldData.npcs.filter(n => n.location === location.id).map(npc => {
       const dialogue = npc.dialogues.filter(d => !d.after || frontier.quests[d.after]?.status === "claimed").pop();
-      return `<article class="world-npc"><div class="npc-heading"><span class="npc-seal" aria-hidden="true">${npc.name.split(" ")[0][0]}</span><div><h4>${escape(npc.name)}</h4><small>${escape(npc.role)}</small></div><button data-world-talk="${npc.id}">Parla</button></div>${talked === npc.id ? `<p>«${escape(dialogue.text)}»</p>` : ""}${QuestUI.offers(npc.id, state)}</article>`;
-    }).join("")}${location.points.length ? '<h4 data-world-section="explore">Da esplorare</h4>' : ""}${location.points.map(point => `<button class="world-point" data-world-explore="${point.id}" ${point.requiresDefeat && !frontier.defeatedEnemies.includes(point.requiresDefeat) ? "disabled" : ""}><strong>${escape(point.name)}</strong><small>${point.requiresDefeat && !frontier.defeatedEnemies.includes(point.requiresDefeat) ? "Passaggio controllato dal comandante" : point.discovery ? "Segreto professionale · esamina" : point.collect ? "Esplorazione · trova un campione" : "Esamina →"}</small></button>`).join("")}${location.enemies.length ? '<h4 data-world-section="encounters">Incontri</h4>' : ""}<div class="world-enemies">${location.enemies.map(id => {
+      return `<article class="world-npc"><div class="npc-heading"><span class="npc-seal" aria-hidden="true">${npc.name.split(" ")[0][0]}</span><div><h4>${escape(npc.name)}</h4><small>${escape(npc.role)}</small></div><button data-world-talk="${npc.id}">Parla con ${escape(npc.name)}</button></div>${talked === npc.id ? `<p>«${escape(dialogue.text)}»</p>` : ""}${QuestUI.offers(npc.id, state)}</article>`;
+    }).join("")}${location.points.length ? '<h4 data-world-section="explore">Da esplorare</h4>' : ""}${location.points.map(point => `<button class="world-point" data-world-explore="${point.id}" ${point.requiresDefeat && !frontier.defeatedEnemies.includes(point.requiresDefeat) ? "disabled" : ""}><strong>${escape(point.name)}</strong><small>${point.requiresDefeat && !frontier.defeatedEnemies.includes(point.requiresDefeat) ? "Passaggio controllato dal comandante" : point.discovery ? "Segreto professionale · esamina" : point.collect ? `Raccogli ${escape(WorldData.supplyNames[point.collect] || point.name)}` : "Esamina →"}</small></button>`).join("")}${location.enemies.length ? '<h4 data-world-section="encounters">Incontri</h4>' : ""}<div class="world-enemies">${location.enemies.map(id => {
       const enemy = WorldData.enemy(id);
-      return `<article class="world-enemy enemy-${enemy.kind}"><div><small>${enemy.kind === "boss" ? "BOSS" : enemy.kind === "miniboss" ? "MINIBOSS" : "INCONTRO"} · LIV. ${enemy.level}</small><h4>${escape(enemy.name)}</h4><p>${estimates[id]} · ${enemy.rewards.xp} XP · ${enemy.rewards.crowns} Corone</p><small>${enemy.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ") || "Nessun oggetto di missione"}</small></div><button data-world-fight="${id}" ${frontier.activeEncounter ? "disabled" : ""}>Combatti</button></article>`;
+      return `<article class="world-enemy enemy-${enemy.kind}"><div><small>${enemy.kind === "boss" ? "BOSS" : enemy.kind === "miniboss" ? "MINIBOSS" : "INCONTRO"} · LIV. ${enemy.level}</small><h4>${escape(enemy.name)}</h4><p>${estimates[id]} · ${enemy.rewards.xp} XP · ${enemy.rewards.crowns} Corone</p><small>${enemy.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ") || "Nessun oggetto di missione"}</small></div><button data-world-fight="${id}" ${frontier.activeEncounter ? "disabled" : ""}>Affronta ${escape(enemy.name)}</button></article>`;
     }).join("")}</div>${location.enemies.length && !ClassSystem.kitRequirement(Equipment.equipped("mainHand"), Equipment.equipped("support")) ? '<p class="compatibility">Prepara il kit della classe prima degli incontri.</p><button data-world-equipment>Prepara equipaggiamento</button>' : ""}`;
     node("world-location-detail").innerHTML += `<section class="world-destinations"><h4>Destinazioni</h4>${(WorldData.connections[location.id] || []).concat(location.id === "veyra" && discovery("vesper-outpost") ? ["vesper-outpost"] : []).map(id => {
       const destination = WorldData.location(id), unlocked = destination.discoveryType ? discovery(id) : state.unlockedContent.includes(`world:${id}`);

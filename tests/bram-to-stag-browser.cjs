@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
 const navigate=require('./mobile-navigation-fixture.cjs'),dismiss=require('./notifications-fixture.cjs');
-(async()=>{const browser=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM,args:['--no-sandbox','--no-zygote','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});try{for(const width of [320,390,430])for(const cls of ['hunter','warden']){
+(async()=>{const browser=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM,args:['--no-sandbox','--no-zygote','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});try{for(const width of [320,375,390,430])for(const cls of ['hunter','warden']){
  const p=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true}),errors=[],fights=[];p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{Math.random=()=>1/4294967296;});await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8018');
  await p.evaluate(cls=>{ClassSystem.selectClass(cls);for(const [slot,id]of Object.entries(cls==='hunter'?{mainHand:'bow',support:'quiver',torso:'torso-chain',legs:'legs-chain',boots:'boots-chain'}:{mainHand:'sword',support:'shield',torso:'torso-warden',legs:'legs-sentinel',boots:'boots-plate'}))Equipment.equip(id,slot);},cls);

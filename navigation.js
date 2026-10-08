@@ -22,6 +22,9 @@
     }
     var bar = document.getElementById("context-bar");
     if (bar) bar.hidden = stack.length === 0;
+    var previousRoute = stack.length ? stack[stack.length - 1].route : null;
+    var backButton = document.getElementById("navigation-back");
+    if (backButton) backButton.textContent = previousRoute ? "← Torna a " + (labels[previousRoute.view] || labels[previousRoute.screen] || "Mondo") : "← Indietro";
     var title = document.getElementById("context-title");
     if (title) title.textContent = labels[route.view] || labels[route.screen] || "Mondo";
     var context = document.getElementById("topbar-context");

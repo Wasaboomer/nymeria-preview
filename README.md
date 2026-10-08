@@ -794,3 +794,27 @@ Claims continue to work wherever the existing engine permits; no extra return
 trip to the quest giver is implied. Tests: `tests/mobile-quest-clarity-browser.cjs`
 and the existing quest/journey/reward/World regressions. Physical Safari/iPhone
 verification remains required for scroll/focus, rapid taps and browser resume.
+
+### Sprint 1 — mobile usability (DEV)
+
+The existing mission shortcut in the new top-bar control is available from every
+main screen and opens the actual main quest; Back names its return screen and
+keeps the navigation stack. The journal distinguishes story, side quests and
+professional delivery activities using existing quest objectives, without adding
+quests or prerequisites. World actions name their NPC, enemy or collected item.
+Inline feedback reports objective completion and claim readiness from the state
+before/after a successful action, without a new notification queue or save writes.
+
+Inventory cards show category and a compact preview of existing stats. The detail
+sheet summarizes the existing class/build advice and preserves full stat deltas;
+technical scoring is expandable. Nothing equips automatically. Mobile controls,
+wrapping and dialog safe-area padding are refined; transient notice feedback does
+not capture taps. Frozen character assets and renderer files remain untouched.
+
+Verification includes 320/375/390/430 × 844 touch contexts, normal-mode entry at
+Veyra, optional Bram gathering/crafting/delivery, combat preparation, Cervo, Elar,
+reward comparison and reload. `tests/sprint1-mobile-browser.cjs` checks the global
+quest shortcut, Back, categories, non-mutating comparison and inline completion
+feedback; existing journey/reward tests cover the actual combat path. Real Safari
+and physical iPhone are unavailable here: scrolling/focus, safe-area on device and
+resume from suspension remain physical validation items. No manual DEV deployment.

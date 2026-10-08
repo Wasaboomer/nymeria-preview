@@ -105,7 +105,7 @@ const modules = [
       assert.ok(
         assets.every((url) =>
           url.searchParams.get("v") ===
-          (devAssets.has(url.pathname.split("/").pop()) ? "1" : "mobile-quest-ux-1")
+          (devAssets.has(url.pathname.split("/").pop()) ? "1" : "sprint1-mobile-1")
         ),
       );
       console.log(
