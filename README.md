@@ -941,3 +941,53 @@ The DEV-only Actions workflow runs all engine suites and the seven current
 fixed/contextual browser suites. Older scroll-page browser scripts are retained
 in the repository but are replaced in this job by the current UI-contract tests;
 no deployment or workflow permissions are added.
+
+### Sprint 1.2 — Mobile Experience Overhaul
+
+La barra principale espone **Mappa / Missioni / Eroe / Inventario / Menu** usando
+`NymeriaNavigation`, lo stesso stack contestuale M6.2. Spedizioni resta accessibile
+in Menu. Ogni sezione conserva in memoria il proprio percorso e stack; Indietro
+ritorna al contesto locale. Sono conservati filtro inventario, categoria missioni,
+posizione dei pannelli e pagina UI. Mappa costituisce l'eccezione intenzionale:
+il suo pulsante apre sempre la panoramica in un tap, senza una lunga cronologia.
+«Esplora [luogo attuale]» ritorna alle interazioni senza viaggiare o modificare lo
+stato. La memoria UI dura la sessione; i salvataggi di gioco restano nei sistemi
+esistenti, senza nuove chiavi o migrazioni.
+
+Il contenitore principale è fisso. Inventario, equipaggiamento, professioni,
+missioni, Menu, Classe/Strategia, Gilda e Spedizioni permettono scrolling verticale
+interno. Esplorazione, creazione e confronto oggetti mantengono la paginazione
+adattiva; non è previsto scrolling orizzontale. Il layout segue `visualViewport`
+(altezza e offset), safe area e variazioni dell'area disponibile.
+
+In combattimento navigazione e scorciatoie esterne sono disabilitate; la barra
+principale viene temporaneamente nascosta per lasciare spazio al HUD. HP, risorsa,
+danni cumulativi, ultime azioni e comandi restano visibili. Il ritorno a Veyra
+richiede una conferma, poi usa l'abbandono già esistente, senza cambiarne le regole.
+Al termine la navigazione torna disponibile. Le evidenziazioni sugli HP derivano
+solo dagli incrementi reali delle metriche del motore; rispettano reduced-motion.
+Il Registro contiene gli eventi già esposti dal motore (ultimi 60, nessuna modifica
+alla retention), con gli stati delle abilità: ricarica, risorsa insufficiente,
+condizione in attesa o esclusione dalla strategia. Il combattimento resta automatico:
+«Pronta» non promette l'esecuzione immediata e rispetta le priorità esistenti.
+Il ticket e la preparazione persistono; HP/tempo/log in corso non sono un nuovo
+salvataggio live e seguono il comportamento di ripristino precedente.
+
+Il Diario distingue Storia / Secondarie / Professioni e presenta stato, prossimo
+obiettivo, quantità e destinazione direttamente nella lista, da dati Quest/World
+reali. I comandi di missione mantengono il simbolo ◆ e una gerarchia distinta.
+Il risultato del combattimento nomina il luogo a cui tornare. Il confronto mostra
+il verdetto esistente e disabilita Equipaggia quando incompatibile, spiegandone il
+motivo: nessun equipaggiamento automatico o modifica a statistiche/ricompense.
+
+Validazione: le 14 suite engine e le 7 suite UI attive precedenti, più
+`tests/sprint12-navigation-browser.cjs`. La suite nuova verifica cinque destinazioni,
+memoria/Indietro/ritorno Mappa, filtri e scrolling, assenza di scritture durante
+navigazione, guardia combattimento, feedback reale, abilità e abbandono confermato.
+Viewport 320/375/390/430, altezze 375/508/568/667/844, variazioni simulate
+visualViewport/safe area, touch Chromium e salvataggi. Il percorso normale
+Veyra → Professioni/Bram facoltativo → Cervo → sblocco e visita Elar è esercitato senza
+Debug per entrambe le classi; l'advance del motore accelera soltanto le attese idle.
+Safari reale e le barre del browser su iPhone richiedono ancora test fisico.
+La CI DEV esegue le 22 suite; non effettua deployment manuale né modifica main
+oppure il repository separato di pubblicazione.

@@ -8,9 +8,9 @@
     />
     <meta name="theme-color" content="#101c24" />
     <title>Nymeria Frontiera del Vespro &amp; Quest System 0.1</title>
-    <!-- Bump this shared asset version together on releases to avoid mixed cached scripts. -->
+    <!-- Version changed UI assets together; retain frozen game asset versions. -->
     <link rel="stylesheet" href="styles.css?v=sprint1-mobile-1" />
-    <script src="navigation.js?v=sprint1-mobile-1" defer></script>
+    <script src="navigation.js?v=sprint12-mobile-1" defer></script>
     <script src="guild-data.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-system.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-project-data.js?v=sprint1-mobile-1" defer></script>
@@ -37,7 +37,7 @@
     <script src="visual-manifest.js?v=sprint1-mobile-1" defer></script>
     <script src="visual-renderer.js?v=sprint1-mobile-1" defer></script>
     <script src="character.js?v=sprint1-mobile-1" defer></script>
-    <script src="inventory.js?v=sprint1-mobile-1" defer></script>
+    <script src="inventory.js?v=sprint12-mobile-1" defer></script>
     <script src="app.js?v=sprint1-mobile-1" defer></script>
     <script src="combat-engine.js?v=sprint1-mobile-1" defer></script>
     <script src="combat-ui.js?v=sprint1-mobile-1" defer></script>
@@ -47,12 +47,12 @@
     <script src="expedition-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="world-discovery.js?v=sprint1-mobile-1" defer></script>
     <script src="world-system.js?v=sprint1-mobile-1" defer></script>
-    <script src="quest-ui.js?v=sprint1-mobile-1" defer></script>
-    <script src="world-ui.js?v=contextual-combat-1" defer></script>
+    <script src="quest-ui.js?v=sprint12-mobile-1" defer></script>
+    <script src="world-ui.js?v=sprint12-mobile-1" defer></script>
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
     <script src="notification-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
-    <script src="mobile-ui.js?v=sprint1-mobile-1" defer></script>
+    <script src="mobile-ui.js?v=sprint12-mobile-1" defer></script>
     <script src="visual-icons.js?v=sprint1-mobile-1" defer></script>
     <script src="visual-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-ui.js?v=sprint1-mobile-1" defer></script>
@@ -61,8 +61,8 @@
       <link rel="stylesheet" href="kaelith-dev.css?v=1" />
     <script src="kaelith-dev.js?v=1" defer></script>
     <script src="modular-proof.js?v=1" defer></script>
-    <link rel="stylesheet" href="fixed-screens.css?v=contextual-combat-1" />
-    <script src="fixed-screens.js?v=contextual-combat-1" defer></script>
+    <link rel="stylesheet" href="fixed-screens.css?v=sprint12-mobile-1" />
+    <script src="fixed-screens.js?v=sprint12-mobile-1" defer></script>
   </head>
   <body>
     <main class="app">
@@ -71,13 +71,14 @@
         <span id="topbar-context">Frontiera del Vespro</span><button id="current-quest-link" hidden>Missione</button>
       </header>
       <nav class="screen-tabs bottom-nav" role="tablist" aria-label="Navigazione principale">
-        <button id="tab-character" role="tab" aria-selected="false" aria-controls="panel-character" data-screen="character"><span aria-hidden="true">♙</span>Personaggio</button>
-        <button id="tab-world" role="tab" aria-selected="true" aria-controls="panel-world" data-screen="world"><span aria-hidden="true">◇</span>Mondo<span id="badge-world" class="nav-badge" hidden></span></button>
-        <button id="tab-expeditions" role="tab" aria-selected="false" aria-controls="panel-expeditions" data-screen="expeditions"><span aria-hidden="true">⌁</span>Attività<span id="badge-activities" class="nav-badge" hidden></span></button>
+        <button id="tab-world" role="tab" aria-selected="true" aria-controls="panel-world" data-screen="world"><span aria-hidden="true">◇</span>Mappa</button>
+        <button id="tab-missions" role="tab" aria-selected="false" aria-controls="panel-world" data-screen="missions"><span aria-hidden="true">◆</span>Missioni<span id="badge-world" class="nav-badge" hidden></span></button>
+        <button id="tab-character" role="tab" aria-selected="false" aria-controls="panel-character" data-screen="character"><span aria-hidden="true">♙</span>Eroe</button>
+        <button id="tab-inventory" role="tab" aria-selected="false" aria-controls="panel-inventory" data-screen="inventory"><span aria-hidden="true">▣</span>Inventario</button>
         <button id="tab-menu" role="tab" aria-selected="false" aria-controls="panel-menu" data-screen="menu"><span aria-hidden="true">≡</span>Menu</button>
       </nav>
       <div id="context-bar" class="context-bar" hidden><button id="navigation-back">← Indietro</button><strong id="context-title"></strong></div>
-      <section id="panel-menu" hidden aria-label="Menu"><h1>Menu</h1><p class="hint">I ricordi del viaggio e le conoscenze raccolte.</p><div class="hub-links"><button data-nav="guild">Gilda <span>→</span></button><button data-nav="professions">Professioni <span>→</span></button><button data-nav="discoveries">Scoperte <span>→</span></button><button id="menu-debug-link" data-nav="debug" hidden>DEBUG · Test Mode <span>→</span></button></div></section>
+      <section id="panel-menu" hidden aria-label="Menu"><h1>Menu</h1><p class="hint">I ricordi del viaggio e le conoscenze raccolte.</p><div class="hub-links"><button id="tab-expeditions" data-nav="expeditions"><span aria-hidden="true">⌁</span>Spedizioni <span id="badge-activities" class="nav-badge" hidden></span></button><button data-nav="guild">Gilda <span>→</span></button><button data-nav="professions">Professioni <span>→</span></button><button data-nav="discoveries">Scoperte <span>→</span></button><button id="menu-debug-link" data-nav="debug" hidden>DEBUG · Test Mode <span>→</span></button></div></section>
       <section id="panel-guild" hidden aria-label="Gilda"><div id="guild-root"></div><p id="guild-status" role="status" aria-live="polite"></p></section>
       <section id="panel-professions" hidden aria-label="Professioni"><div id="profession-root"></div><p id="profession-status" class="hint" role="status" aria-live="polite"></p></section>
       <section id="panel-debug" hidden aria-label="DEBUG"><h1>DEBUG · Test Mode</h1><p class="hint">Strumenti di sviluppo. Modificano il salvataggio locale reale.</p><div id="debug-tools"></div><button data-nav="combat">Incontro dimostrativo · DEBUG</button></section>
@@ -482,6 +483,7 @@
         <section id="world-quest-reward" class="world-result" hidden></section>
         <aside id="world-tracked" class="quest-tracker" hidden></aside>
         <section id="world-places">
+          <button id="world-return-place" data-world-view="places" hidden>Esplora il luogo attuale</button>
           <div id="world-locations" class="world-locations" hidden></div>
           <section id="world-location-detail" class="world-location-detail"></section>
         </section>
@@ -504,7 +506,7 @@
           <section id="world-battle-recent" aria-label="Ultime azioni del combattimento"><p id="world-recent-player">Tu · nessuna azione</p><p id="world-recent-enemy">Nemico · nessuna azione</p></section>
           <section class="world-combat-highlight" id="world-combat-highlight" aria-label="Ultima azione importante" aria-live="off"><span class="world-eyebrow">ULTIMA AZIONE</span><strong id="world-highlight-action">In attesa del primo colpo</strong><span id="world-highlight-detail"></span></section>
           <details class="world-combat-history"><summary>Registro completo del combattimento</summary><ol id="world-battle-history" aria-label="Cronologia combattimento"></ol></details>
-          <div class="world-battle-controls"><button id="world-battle-resume">Riprendi incontro</button><button id="world-battle-pause">Pausa</button><button id="world-battle-abandon">Torna a Veyra</button></div>
+          <div id="world-ability-status" hidden><details class="combat-abilities"><summary>Abilità · strategia automatica</summary><ul id="world-ability-status-list"></ul></details></div><div class="world-battle-controls"><button id="world-battle-resume">Riprendi incontro</button><button id="world-battle-pause">Pausa</button><button id="world-battle-abandon">Torna a Veyra</button></div>
           <p class="hint">Preparazione e strategia salvate all'inizio. Il refresh permette di riprendere lo stesso incontro.</p>
           <ol id="world-battle-log" aria-label="Azioni recenti"></ol>
         </section>

@@ -4,6 +4,17 @@ const WorldUI = (() => {
   let view = "places", talked = null, talkedLocation = null, busy = false, engine = null, ticketId = null;
   let messageTimer = null, frameId = null, lastTime = null, renderingAt = 0, settling = false;
   let estimateKey = "", estimates = {};
+  let damageTicket = null, lastDamage = {dealt:0,taken:0};
+  const damageTimers = {};
+  function damageFeedback(id, amount) {
+    const element = node(id);
+    element.dataset.hit = String(amount);
+    element.classList.remove("combat-hit");
+    void element.offsetWidth;
+    element.classList.add("combat-hit");
+    clearTimeout(damageTimers[id]);
+    damageTimers[id] = setTimeout(() => element.classList.remove("combat-hit"), 550);
+  }
   // Presentation-only receipt for a successful claim in this session; never grants rewards.
   let visibleQuestReceipt = null;
   let stagPreparation = false;
@@ -70,6 +81,8 @@ const WorldUI = (() => {
     node("world-tracked").innerHTML = QuestUI.tracker(state);
     node("world-tracked").hidden = view !== "places";
     node("world-locations").hidden = view !== "overview";
+    node("world-return-place").hidden = view !== "overview";
+    node("world-return-place").textContent = `Esplora ${WorldData.location(frontier.location)?.name || "il luogo attuale"} →`;
     node("world-location-detail").hidden = view !== "places";
     node("world-active-link").hidden = !frontier.activeEncounter;
     document.querySelector(".world-shortcuts").hidden = view !== "places";
@@ -152,7 +165,7 @@ const WorldUI = (() => {
     node("world-battle").hidden = view !== "battle" || !frontier.activeEncounter;
     const result = frontier.lastEncounter;
     node("world-result").hidden = view !== "battle" || !result || !!frontier.activeEncounter;
-    if (result) node("world-result").innerHTML = `<span class="world-eyebrow">${escape(result.enemyName)}</span><h3>${result.outcome === "victory" ? "VITTORIA" : "SCONFITTA"}</h3><p>+${result.rewards.xp} XP · +${result.rewards.crowns} Corone</p><p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(result))}</p>${result.drops.length ? `<small>${result.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ")}</small>` : ""}${result.outcome === "defeat" ? '<p class="hint">Ritorno a Veyra. Nessuna perdita di livello o equipaggiamento. Nessuna penalità permanente.</p>' : ""}<button data-world-continue class="quest-primary">Continua →</button>${result.enemyId === "twilight-stag" && result.outcome === "victory" ? `<div class="stag-victory"><strong>MINIBOSS SCONFITTO · Cervo del Crepuscolo</strong><p>La creatura del Bosco è caduta. Verifica gli obiettivi di «Luci senza fiamma» e riscuoti la missione per sbloccare le Rovine di Elar.</p><p>Missione: ${escape(ProgressionStore.state.frontier.quests.mq03.status === "completed" ? "Pronta per la riscossione" : "Obiettivi ancora da completare")}</p><button data-quest-open="mq03">Apri «Luci senza fiamma» →</button></div>` : ""}${WorldData.enemy(result.enemyId)?.kind === "boss" && result.outcome === "victory" ? `<p>${escape(WorldData.zone.epilogue)}</p><button data-world-view="journal">Apri il Diario · riscuoti la missione</button>` : ""}`;
+    if (result) node("world-result").innerHTML = `<span class="world-eyebrow">${escape(result.enemyName)}</span><h3>${result.outcome === "victory" ? "VITTORIA" : "SCONFITTA"}</h3><p>+${result.rewards.xp} XP · +${result.rewards.crowns} Corone</p><p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(result))}</p>${result.drops.length ? `<small>${result.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ")}</small>` : ""}${result.outcome === "defeat" ? '<p class="hint">Ritorno a Veyra. Nessuna perdita di livello o equipaggiamento. Nessuna penalità permanente.</p>' : ""}<button data-world-continue class="quest-primary">Torna a ${escape(WorldData.location(result.location)?.name || "Veyra")} →</button>${result.enemyId === "twilight-stag" && result.outcome === "victory" ? `<div class="stag-victory"><strong>MINIBOSS SCONFITTO · Cervo del Crepuscolo</strong><p>La creatura del Bosco è caduta. Verifica gli obiettivi di «Luci senza fiamma» e riscuoti la missione per sbloccare le Rovine di Elar.</p><p>Missione: ${escape(ProgressionStore.state.frontier.quests.mq03.status === "completed" ? "Pronta per la riscossione" : "Obiettivi ancora da completare")}</p><button data-quest-open="mq03">Apri «Luci senza fiamma» →</button></div>` : ""}${WorldData.enemy(result.enemyId)?.kind === "boss" && result.outcome === "victory" ? `<p>${escape(WorldData.zone.epilogue)}</p><button data-world-view="journal">Apri il Diario · riscuoti la missione</button>` : ""}`;
     const reward = frontier.lastQuestClaim;
     node("world-quest-reward").hidden = !reward || !visibleQuestReceipt || visibleQuestReceipt !== `${reward.id}:${reward.claimedAt}` || !["places", "quest", "journal"].includes(view);
     if (reward) {
@@ -252,6 +265,22 @@ const WorldUI = (() => {
     const events = engine?.log || [];
     node("world-damage-dealt").textContent = String(engine?.metrics.damage ?? 0);
     node("world-damage-taken").textContent = String(engine?.metrics.damageTaken ?? 0);
+    const dealt = engine?.metrics.damage || 0, taken = engine?.metrics.damageTaken || 0;
+    if (damageTicket !== ticket.id) { damageTicket = ticket.id; lastDamage = {dealt:0,taken:0}; }
+    if (dealt > lastDamage.dealt) damageFeedback("world-enemy-hp", dealt - lastDamage.dealt);
+    if (taken > lastDamage.taken) damageFeedback("world-player-hp", taken - lastDamage.taken);
+    lastDamage = {dealt,taken};
+    if (node("world-ability-status-list")) node("world-ability-status-list").innerHTML = ticket.snapshot.profile.abilities.map(ability => {
+      const cooldown = engine ? Math.max(0, (engine.player.cooldowns[ability.id] || 0) - engine.time) : 0;
+      const affordable = engine ? engine.canAfford(ability.id) : resource.current >= (ability.cost || 0);
+      const rules = engine?.rules || ticket.snapshot.profile.defaultRules;
+      const rule = rules.find(rule => rule.abilityId === ability.id);
+      const eligible = !engine || !rule || engine.conditionMet(rule.condition, ability.id);
+      const status = !rule ? "Esclusa dalla strategia" : cooldown > 0 ? `Ricarica · ${cooldown.toFixed(1)}s`
+        : !affordable ? `${resourceName} insufficiente` : !eligible ? "In attesa della condizione di strategia"
+        : "Pronta · scelta automatica secondo priorità";
+      return `<li><strong>${escape(ability.name)}</strong><span>${escape(status)}</span></li>`;
+    }).join("");
     const recentPlayer = [...events].reverse().find(e => e.type === "playerAction");
     const recentEnemy = [...events].reverse().find(e => ["enemyAction", "dodge"].includes(e.type));
     for (const [id, event, label] of [["world-recent-player", recentPlayer, "Tu"], ["world-recent-enemy", recentEnemy, "Nemico"]]) {
@@ -304,7 +333,7 @@ const WorldUI = (() => {
     }
     if (b.hasAttribute('data-quest-inventory')) { NymeriaNavigation.open('inventory'); return; }
     if (b.dataset.questDeliver) { await action(() => QuestSystem.deliver(b.dataset.questDeliver)); return; }
-    if (b.hasAttribute("data-quest-expedition")) { NymeriaNavigation.root("expeditions"); return; }
+    if (b.hasAttribute("data-quest-expedition")) { NymeriaNavigation.open("expeditions"); return; }
     if (b.dataset.questDestination) {
       const result = await action(() => WorldSystem.enter(b.dataset.questDestination));
       if (result?.ok) NymeriaNavigation.root("world");
@@ -325,7 +354,7 @@ const WorldUI = (() => {
     if (b.hasAttribute("data-world-equipment")) { NymeriaNavigation.showScreen("equipment"); return; }
     if (b.dataset.worldEnter) {
       const result = await action(() => WorldSystem.enter(b.dataset.worldEnter));
-      if (result?.ok && view === "overview") NymeriaNavigation.back();
+      if (result?.ok && view === "overview") NymeriaNavigation.open("world", {view:"places"});
       if (result?.ok) { window.scrollTo(0, 0); node("world-current").focus({ preventScroll: true }); }
       return;
     }
@@ -368,7 +397,18 @@ const WorldUI = (() => {
   });
   node("world-battle-resume").addEventListener("click", resume);
   node("world-battle-pause").addEventListener("click", () => { engine?.pause(); stopClock(); renderBattle(); });
-  node("world-battle-abandon").addEventListener("click", () => action(() => WorldSystem.abandonEncounter()));
+  const abandonDialog = document.createElement("dialog");
+  abandonDialog.id = "combat-exit-confirm";
+  abandonDialog.setAttribute("aria-labelledby", "combat-exit-title");
+  abandonDialog.innerHTML = '<h2 id="combat-exit-title">Tornare a Veyra?</h2><p>Abbandonerai questo incontro senza ricompense.</p><button id="combat-exit-cancel">Resta nello scontro</button><button id="combat-exit-accept">Abbandona e torna a Veyra</button>';
+  document.body.append(abandonDialog);
+  node("world-battle-abandon").addEventListener("click", () => abandonDialog.showModal());
+  node("combat-exit-cancel").addEventListener("click", () => abandonDialog.close());
+  node("combat-exit-accept").addEventListener("click", async () => {
+    abandonDialog.close();
+    const result = await action(() => WorldSystem.abandonEncounter());
+    if (result?.ok) NymeriaNavigation.root("world");
+  });
   node("world-debug-quest").innerHTML = QuestData.quests.map(q => `<option value="${q.id}">${escape(q.title)}</option>`).join("");
   node("world-debug-location").innerHTML = WorldData.locations.map(x => `<option value="${x.id}">${escape(x.name)}</option>`).join("");
   node("world-debug-unlock").addEventListener("click", () => action(() => WorldSystem.debug("unlock", node("world-debug-location").value)));

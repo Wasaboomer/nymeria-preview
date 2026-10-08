@@ -7,9 +7,11 @@ async function press(page,selector){
   const summary=closed.locator(':scope > summary');
   await reach(page,summary);await summary.tap();await page.waitForTimeout(70);
  }
- await reach(page,target);await target.tap();await page.waitForTimeout(70);
+ try { await reach(page,target); } catch(error) { throw Error(selector+': '+error.message); } await target.tap();await page.waitForTimeout(70);
 }
 async function reach(page,target){
+ // Navigation and durable actions schedule layout on RAF; await its frame before paging.
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  if(await target.isVisible())return;
  const modal=await page.locator('#item-dialog').evaluate(d=>d.open);
  const pager=page.locator(modal?'#item-dialog > .fixed-pager':'.app > .fixed-pager');

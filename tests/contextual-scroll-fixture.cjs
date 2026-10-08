@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 async function audit(page){
  const result=await page.evaluate(()=>{
   const route=NymeriaNavigation.route;
-  const authorized=n=>n.id==='world-battle-history'||(n.classList.contains('fixed-scroll-panel')&&(['panel-inventory','panel-equipment','panel-professions'].includes(n.id)||(n.id==='panel-world'&&['journal','quest'].includes(route.view))));
+  const authorized=n=>n.id==='world-battle-history'||n.id==='combat-exit-confirm'||n.classList.contains('combat-abilities')||(n.classList.contains('fixed-scroll-panel')&&(['panel-inventory','panel-equipment','panel-professions','panel-menu','panel-class','panel-expeditions','panel-guild'].includes(n.id)||(n.id==='panel-world'&&['journal','quest'].includes(route.view))));
   const violations=[];
   for(const n of document.querySelectorAll('*')){
    if(!(n instanceof HTMLElement)||!n.getClientRects().length||!n.checkVisibility()||n.matches('input,textarea,select'))continue;

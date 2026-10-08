@@ -1,7 +1,7 @@
 /* UI-only adaptive pagination. Existing nodes/listeners are retained, no game/storage writes. */
 (function () {
   'use strict';
-  var atoms=[], pages=[], index=0, root=null, frame=0, signature='', category='main';
+  var atoms=[], pages=[], index=0, root=null, frame=0, signature='', category='main', pageMemory={};
   var historyMode=false, lastEncounterId=null;
   var ns='http://www.w3.org/2000/svg';
   var app=document.querySelector('.app'), dialog=document.getElementById('item-dialog');
@@ -58,10 +58,12 @@
       if(battle&&!battle.querySelector('#fixed-battle-essential')){
         var essential=document.createElement('section');essential.id='fixed-battle-essential';
         ['.section-title','.world-fighters','#world-damage-summary','#world-battle-recent','.world-battle-controls'].forEach(function(selector){var item=battle.querySelector(selector);if(item)essential.append(item);});
-        essential.insertBefore(document.getElementById('world-resource'),document.getElementById('world-damage-summary'));
+        essential.insertBefore(document.getElementById('world-resource'),essential.querySelector('#world-damage-summary'));
         var history=document.createElement('section');history.id='fixed-battle-history';history.hidden=true;
         history.innerHTML='<h3>Registro · ultimi '+CombatData.logLimit+' eventi</h3>';
-        history.append(document.getElementById('world-battle-history'));
+        var skills=document.getElementById('world-ability-status');
+        skills.hidden=false;
+        history.append(skills,document.getElementById('world-battle-history'));
         essential.insertBefore(history,essential.querySelector('.world-battle-controls'));
         var toggle=document.createElement('button');toggle.id='world-history-toggle';toggle.textContent='Registro';toggle.setAttribute('aria-controls','fixed-battle-history');toggle.setAttribute('aria-expanded','false');
         essential.querySelector('.world-battle-controls').append(toggle);
@@ -75,11 +77,15 @@
       var encounterId=typeof ProgressionStore!=='undefined' ? ProgressionStore.state.frontier.activeEncounter?.id || null : null;
       if(encounterId!==lastEncounterId){lastEncounterId=encounterId;historyMode=false;}
       var nextSignature=phase+':'+(open?'dialog:':'')+nextRoot.id+':'+document.body.dataset.worldView+':'+document.body.dataset.screen+':'+(window.NymeriaNavigation?NymeriaNavigation.route.questId||'':'');
-      if(signature!==nextSignature){index=0;signature=nextSignature;}
+      if(signature!==nextSignature){
+        if(signature.indexOf('normal:')===0 && signature.indexOf('dialog:')<0)pageMemory[signature]=index;
+        index=phase==='normal'&&!open ? pageMemory[nextSignature]||0 : 0;
+        signature=nextSignature;
+      }
       root=nextRoot;
       var route=window.NymeriaNavigation?NymeriaNavigation.route:{};
       var combat= !open && root.id==='panel-world' && route.view==='battle' && battle && !battle.hidden;
-      var contextual=!open && (['panel-inventory','panel-equipment','panel-professions'].includes(root.id) || (root.id==='panel-world' && ['journal','quest'].includes(route.view)));
+      var contextual=!open && (['panel-inventory','panel-equipment','panel-professions','panel-menu','panel-class','panel-expeditions','panel-guild'].includes(root.id) || (root.id==='panel-world' && ['journal','quest'].includes(route.view)));
       document.body.classList.toggle('fixed-combat',!!combat);
       app.querySelectorAll('.fixed-scroll-panel').forEach(function(n){n.classList.remove('fixed-scroll-panel');});
       root.classList.toggle('fixed-scroll-panel',contextual);
@@ -99,6 +105,7 @@
           document.getElementById('world-battle-recent').hidden=historyMode;
           var toggle=document.getElementById('world-history-toggle');
           toggle.textContent=historyMode?'← Scontro':'Registro';toggle.setAttribute('aria-expanded',String(historyMode));
+          document.documentElement.style.setProperty('--combat-history-height',document.getElementById('fixed-battle-history').clientHeight+'px');
         }
         root.dataset.fixedOverflow=String(!contextual && root.scrollHeight>root.clientHeight+1);
         return;
@@ -145,12 +152,17 @@
     if(!form||button.type!=='submit'||form.checkValidity())return;
     e.preventDefault();
     var field=form.querySelector(':invalid');
+    if(root && root.classList.contains('fixed-scroll-panel')){field.focus();field.reportValidity();return;}
     var page=pages.findIndex(function(rows){return rows.some(function(a){return a===field||a.contains(field);});});
     if(page>=0){index=page;schedule();requestAnimationFrame(function(){field.focus({preventScroll:true});field.reportValidity();});}
   },true);
+  dialog.addEventListener('close',function(){
+    if(signature.indexOf('dialog:')>=0){index=0;signature='';}
+    schedule();
+  });
   document.addEventListener('focusin',schedule);document.addEventListener('focusout',schedule);
   document.addEventListener('toggle',schedule,true);
-  document.addEventListener('nymeria:navigation',function(){index=0;schedule();});
+  document.addEventListener('nymeria:navigation',schedule);
   window.addEventListener('resize',schedule);if(window.visualViewport){visualViewport.addEventListener('resize',schedule);visualViewport.addEventListener('scroll',schedule);}
   window.addEventListener('pageshow',schedule);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')schedule();});

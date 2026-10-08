@@ -151,3 +151,38 @@ body .world-update { top:var(--fixed-top,0px); bottom:auto; height:var(--fixed-v
 body #notice { top:calc(var(--fixed-top,0px) + var(--fixed-vh,100dvh) - 80px); bottom:auto; transform:translate(-50%,-100%); }
 body.fixed-combat #world-battle-history { line-height:1.3; }
 body.fixed-combat #world-battle-history li { padding:4px 0; }
+
+/* Sprint 1.2: five primary destinations, secondary contexts and readable feedback. */
+body .screen-tabs.bottom-nav { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:2px; }
+body .screen-tabs.bottom-nav button, body.fixed-compact .screen-tabs.bottom-nav #tab-world { min-width:0; min-height:48px; padding:4px 1px; font-size:12px; line-height:1.25; }
+body .bottom-nav button[aria-selected="true"] { border-color:#dac28a; background:#dac28a22; color:#fff1ce; }
+body .bottom-nav button:disabled { opacity:.5; }
+body button:active:not(:disabled) { filter:brightness(1.18); }
+body .journal-entry { min-height:80px; padding:12px; text-align:left; }
+body .journal-entry > span { min-width:0; display:grid; gap:5px; }
+body .journal-objective, body .journal-destination { font-size:14px; line-height:1.4; color:#e2d8bf; }
+body .quest-state-label { font-size:13px; }
+body .quest-primary { border-left:3px solid #d4b878; background:#b6975424; }
+body .inventory-name { font-size:15px; line-height:1.35; }
+body .inventory-item .item-location, body .inventory-item .item-preview { font-size:13px; }
+body #fixed-battle-history #world-ability-status { flex:none; }
+body .combat-abilities summary { min-height:44px; font-size:14px; padding:8px 2px; }
+body .combat-abilities[open] { max-height:110px; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; touch-action:pan-y pinch-zoom; }
+body .combat-abilities ul { margin:0; padding:0 8px 0 20px; }
+body .combat-abilities li { font-size:14px; padding:5px 0; }
+body .combat-abilities li span { display:block; font-size:13px; }
+body #combat-exit-confirm { position:fixed; top:calc(var(--fixed-top,0px) + 12px); width:calc(100% - 24px); max-width:420px; max-height:calc(var(--fixed-vh,100dvh) - 24px); box-sizing:border-box; margin:auto; padding:16px; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y pinch-zoom; }
+body #combat-exit-confirm h2 { font-size:19px; margin:0 0 8px; }
+body #combat-exit-confirm p { font-size:15px; line-height:1.4; }
+body #combat-exit-confirm button { width:100%; min-height:44px; margin-top:8px; }
+body .combat-hit { animation:nymeria-hit .55s ease-out; outline:2px solid #e5ad78; border-radius:3px; }
+@keyframes nymeria-hit { from { background:#c66048; color:#fff; } to { background:transparent; } }
+@media(prefers-reduced-motion:reduce) { body .combat-hit { animation:none; background:#683928; } }
+
+/* During an encounter the disabled navigation yields its space to the HUD. */
+body.fixed-combat .bottom-nav { display:none; }
+body .combat-abilities[open] { max-height:max(44px,min(110px,calc(var(--combat-history-height,140px) - 80px))); }
+body #panel-world .journal-entry .journal-objective,
+body #panel-world .journal-entry .journal-destination { font-size:14px; line-height:1.4; color:#e2d8bf; }
+body #panel-world .quest-state-label { font-size:13px; }
+body #panel-world .journal-entry.quest-locked { opacity:1; }

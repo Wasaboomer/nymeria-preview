@@ -36,7 +36,7 @@ const MobileUI = (() => {
     const completed = Object.values(state.frontier.quests).filter(q => q.status === "completed").length;
     node("badge-world").hidden = !completed;
     node("badge-world").textContent = completed ? String(completed) : "";
-    node("tab-world").setAttribute("aria-label", completed ? `Mondo · ${completed} missioni da riscuotere` : "Mondo");
+    node("tab-missions").setAttribute("aria-label", completed ? `Missioni · ${completed} da riscuotere` : "Missioni");
     node("tab-expeditions").setAttribute("aria-label", state.pendingExpeditionResult ? "Attività · ricompense da riscuotere" : "Attività");
     node("mobile-dye").innerHTML = PALETTES.dye.map(color => `<button class="swatch" data-equipment-dye="${color.id}" style="--swatch:${color.color}" aria-label="${color.name}" aria-pressed="${state && Equipment.state.equipmentAppearance.dye === color.id}"></button>`).join("");
   }

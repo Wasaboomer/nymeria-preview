@@ -124,7 +124,7 @@ const InventoryUI = (() => {
           )
           .join("") ||
         "<div><dt>Statistiche</dt><dd>Nessuna differenza</dd></div>"
-      }<div class="power-delta"><dt>Potere</dt><dd>${comparison.power > 0 ? "+" : ""}${comparison.power}</dd></div></dl></div>${error ? `<p class="compatibility" role="status">${error}</p>` : ""}<div class="detail-actions"><button id="equip-item" ${ownSlot === target ? "disabled" : ""}>${ownSlot === target ? "Già equipaggiato" : "Equipaggia"}</button>${ownSlot ? `<button data-remove="${ownSlot}">Rimuovi da ${slotLabel(ownSlot)}</button>` : ""}<button id="browse-slot">Altri oggetti per questo slot</button></div>`;
+      }<div class="power-delta"><dt>Potere</dt><dd>${comparison.power > 0 ? "+" : ""}${comparison.power}</dd></div></dl></div>${error ? `<p class="compatibility" role="status">${error}</p>` : ""}<div class="detail-actions"><button id="equip-item" ${ownSlot === target || error ? "disabled" : ""}>${ownSlot === target ? "Già equipaggiato" : error ? "Non utilizzabile" : "Equipaggia"}</button>${ownSlot ? `<button data-remove="${ownSlot}">Rimuovi da ${slotLabel(ownSlot)}</button>` : ""}<button id="browse-slot">Altri oggetti per questo slot</button></div>`;
   }
   function openItem(id, preferred) {
     selectedId = id;
@@ -221,7 +221,9 @@ const InventoryUI = (() => {
   }
   document.addEventListener("nymeria:navigation", event => {
     if (event.detail.screen !== "inventory") return;
-    slotFilter = event.detail.slot || null; filter = "all"; renderInventory();
+    const nextSlot = event.detail.slot || null;
+    if (nextSlot !== slotFilter) { slotFilter = nextSlot; filter = "all"; }
+    renderInventory();
   });
   ClassSystem.subscribe(render);
   return {

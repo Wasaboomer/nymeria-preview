@@ -95,9 +95,23 @@ const QuestUI = (() => {
     const unlocks = quest.contentUnlocks.map(id => WorldData.location(id).name);
     return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) || (entry.status === "claimed" && (quest.objectives.some(o => o.type === "professionDelivery") || rewardComparison(quest.id, state))) ? "open" : ""}><summary><span><small>${category(quest).label} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b class="quest-state-label">${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}${rewardComparison(quest.id, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
   }
+  function journalObjective(quest, state) {
+    const entry = state.frontier.quests[quest.id];
+    const index = quest.objectives.findIndex((o,i) => entry.progress[i] < o.count);
+    const objective = entry.status === "active" && index >= 0 ? quest.objectives[index] : null;
+    const destination = objective ? objectiveLocation(objective) : quest.location;
+    const place = destination === "activities" ? "Spedizioni" : WorldData.location(destination)?.name;
+    const giver = WorldData.npcs.find(n => n.id === quest.giver)?.name;
+    const instruction = objective ? `${objective.label} · ${entry.progress[index]}/${objective.count}`
+      : entry.status === "available" ? `Accetta da ${giver}`
+      : entry.status === "completed" ? "Obiettivi completi · riscuoti ricompense"
+      : entry.status === "claimed" ? "Ricompense già riscosse"
+      : `Richiede Lv. ${quest.minimumLevel}${quest.prerequisites.length ? " e le missioni precedenti" : ""}`;
+    return `<small class="journal-objective">${escape(instruction)}</small>${place && entry.status !== "claimed" ? `<small class="journal-destination">${escape(place)}</small>` : ""}`;
+  }
   function journal(state) {
     return [["main", "Storia principale"], ["side", "Missioni secondarie"], ["profession", "Attività professionali"]].map(([type, title]) =>
-      `<section class="journal-group"><h4>${title}</h4>${QuestData.quests.filter(q => category(q).id === type).sort((a,b) => ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[a.id].status) - ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[b.id].status)).map(q => `<button class="journal-entry quest-${state.frontier.quests[q.id].status}" data-quest-open="${q.id}"><span><strong>${escape(q.title)}</strong><small class="quest-state-label">${statusNames[state.frontier.quests[q.id].status]}</small></span><b aria-hidden="true">→</b></button>`).join("")}</section>`).join("");
+      `<section class="journal-group"><h4>${title}</h4>${QuestData.quests.filter(q => category(q).id === type).sort((a,b) => ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[a.id].status) - ["completed","active","available","locked","claimed"].indexOf(state.frontier.quests[b.id].status)).map(q => `<button class="journal-entry quest-${state.frontier.quests[q.id].status}" data-quest-open="${q.id}"><span><strong>${escape(q.title)}</strong><small class="quest-state-label">${statusNames[state.frontier.quests[q.id].status]}</small>${journalObjective(q,state)}</span><b aria-hidden="true">→</b></button>`).join("")}</section>`).join("");
   }
   function offers(npcId, state) {
     return QuestData.quests.filter(q => q.giver === npcId && ["available", "active", "completed"].includes(state.frontier.quests[q.id].status) && !(state.frontier.trackedQuest === q.id && state.frontier.quests[q.id].status === "active"))
