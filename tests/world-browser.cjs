@@ -37,6 +37,11 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
    const fight=async id=>{
     await tap(page.locator(`#world-location-detail [data-world-fight="${id}"]`));
     assert.ok(await page.locator('#world-battle').isVisible());
+    assert.equal(await page.locator('#world-resource-name').innerText(),cls==='hunter'?'Concentrazione':'Risolutezza');
+    assert.ok(await page.locator('#world-resource-bar').isVisible());
+    assert.ok(await page.locator('#world-combat-highlight').isVisible());
+    assert.ok(await page.locator('.world-combat-history summary').isVisible());
+    assert.ok(await page.locator('#world-resource-bar').getAttribute('aria-valuenow')!==null);
     await page.evaluate(async()=>{WorldUI.engine.advance(180);await WorldUI.settle();});
     const result=await page.evaluate(()=>ProgressionStore.state.frontier.lastEncounter);
     assert.equal(result.outcome,'victory',id);assert.ok(await page.locator('#world-result').isVisible());
