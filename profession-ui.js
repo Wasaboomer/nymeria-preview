@@ -1,6 +1,6 @@
 /* M7.3 mobile profession vertical slice. Presentation only; engine owns durable changes. */
 const ProfessionUI = (() => {
-  const context=()=>{const s=ProgressionStore.state, location=s.frontier.location, place=WorldData.location(location);return {location,activeEncounter:!!s.frontier.activeEncounter,accessible:!ProgressionStore.error&&!!place&&(place.discoveryType?WorldDiscovery.accessible(location):s.unlockedContent.includes('world:'+location))}};
+  const context=()=>{const s=ProgressionStore.state, location=s.frontier.location, place=WorldData.location(location);return {location,quests:Object.fromEntries(Object.entries(s.frontier.quests).map(([id,q])=>[id,q.status])),activeEncounter:!!s.frontier.activeEncounter,accessible:!ProgressionStore.error&&!!place&&(place.discoveryType?WorldDiscovery.accessible(location):s.unlockedContent.includes('world:'+location))}};
   const exclusive=run=>ProfessionTabWriter.exclusive(()=>{
     const refreshAndRun=()=>{ProgressionStore.refresh();return ProgressionStore.error?{ok:false,message:"World context unavailable. No profession changes applied."}:run()};
     return navigator.locks?navigator.locks.request("nymeria-progression",refreshAndRun):refreshAndRun();
@@ -15,10 +15,13 @@ const ProfessionUI = (() => {
     if(!root)return;
     const s=engine.state,current=ProgressionStore.state.frontier.location,place=context();
     const blocked=engine.storageIssue?'Salvataggio non disponibile: riprova dopo aver riaperto la schermata.':place.activeEncounter?'Concludi l’incontro in corso prima di raccogliere o creare.':!place.accessible?'Raggiungi un luogo accessibile nel Mondo.':busy?'Operazione in corso.':'';
+    const preparation = ProgressionStore.state.frontier.quests['sq-bram-preparation'];
+    const bramReady = (s.materials['frontier-brace'] || 0) > 0 || !!s.deliveries['sq-bram-preparation'];
+    const bramHint = preparation?.status === 'active' ? `<section class="profession-action-card"><strong>Preparati al Sentiero · missione facoltativa</strong><p>Raccogli 6 Ferro grezzo, forgia due Ferro forgiato e crea un Rinforzo della Frontiera. La ricetta richiede Forgiatura 2: le raccolte e le due fusioni ti portano a quel livello.</p>${bramReady ? '<p>Rinforzo pronto: torna da Bram per consegnarlo e riscuotere l’anello.</p><button data-prof-bram>Vai da Bram →</button>' : ''}</section>` : '';
     root.innerHTML=`<header class="profession-head"><span class="world-eyebrow">FRONTIERA DEL VESPRO</span><h1>Professioni</h1><p class="hint">Raggiungi il luogo → Raccogli → Ottieni materiali → Crea</p><p class="hint">Raccogliere e creare fanno salire la professione indicata. Questi materiali sono conservati separatamente dalle risorse delle Spedizioni.</p></header>
     ${blocked?`<p class="profession-requirement" role="status">${esc(blocked)}</p>`:''}
     <div class="profession-list">${ProfessionData.professions.map(p=>{const r=s.professions[p.id],need=engine.threshold(r.level);return `<article class="profession-card"><div><strong>${esc(p.name)}</strong><small>Livello ${r.level} · ${r.level===p.maxLevel?'MAX':r.xp+'/'+need+' XP'}</small></div><div class="xp-bar"><span style="width:${r.level===p.maxLevel?100:Math.min(100,r.xp/need*100)}%"></span></div></article>`}).join('')}</div>
-    <h3>Dove raccogliere</h3><p class="hint">Ti trovi a: ${esc(WorldData.location(current)?.name||current)}</p><div class="profession-actions">${ProfessionData.gathering.map(n=>{
+    ${bramHint}<h3>Dove raccogliere</h3><p class="hint">Ti trovi a: ${esc(WorldData.location(current)?.name||current)}</p><div class="profession-actions">${ProfessionData.gathering.map(n=>{
       const location=WorldData.location(n.location),unlocked=accessible(location),here=n.location===current;
       const reason=blocked||(!unlocked?(location.discoveryType?'Completa il progetto di gilda Faro del Vespro per sbloccare questo luogo.':location.unlockHint+'. Riscuoti le ricompense della missione per sbloccarlo.'):!here?'Raggiungi questo luogo prima di raccogliere.':'');
       return `<article class="profession-action-card"><strong>${esc(matName(n.material))}</strong><p>${esc(location.name)} · ${esc(ProfessionData.profession(n.profession).name)}</p><small>Ottieni ${n.amount} ${esc(matName(n.material))} e ${n.xp} XP professione per raccolta.</small>${reason?`<p class="profession-requirement" id="prof-requirement-${n.id}">${esc(reason)}</p>`:''}
@@ -43,6 +46,12 @@ const ProfessionUI = (() => {
   }
   root?.addEventListener("click",async e=>{
     const b=e.target.closest("button");if(!b||busy||b.disabled)return;
+    if(b.hasAttribute('data-prof-bram')) {
+      busy=true;render();
+      try {const result=await WorldSystem.enter('veyra');if(result.ok){NymeriaNavigation.root('world');NymeriaNavigation.open('world',{view:'quest',questId:'sq-bram-preparation'});}else status.textContent='Concludi l’incontro prima di tornare da Bram.';}
+      catch {status.textContent='Spostamento non disponibile. Riprova dal Mondo.';}
+      finally{busy=false;render();}return;
+    }
     const gather=b.dataset.profGather,craft=b.dataset.profCraft,travel=b.dataset.profTravel;
     if(travel){
       busy=true;render();

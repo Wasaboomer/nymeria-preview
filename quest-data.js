@@ -3,6 +3,8 @@ const QuestData = (() => {
   const objective = (type, target, count, label) => ({ type, target, count, label });
   const quest = (id, type, title, description, giver, location, prerequisites, minimumLevel, objectives, rewards, nextQuest = null, contentUnlocks = []) => ({ id, type, title, description, giver, location, prerequisites, minimumLevel, objectives, rewards, nextQuest, contentUnlocks });
   const quests = [
+    quest("sq-bram-preparation", "side", "Preparati al Sentiero", "Prova facoltativa: raccogli 6 Ferro grezzo al Sentiero Spezzato, forgia due Ferro forgiato e crea un Rinforzo della Frontiera. Consegnalo a Bram per ottenere l’Anello della Frontiera, poi confrontalo in Inventario. Puoi usare un rinforzo già posseduto. La storia prosegue anche senza questa missione.", "bram", "veyra", [], 1,
+      [objective("professionDelivery", "frontier-brace", 1, "Consegna un Rinforzo della Frontiera a Bram")], { xp: 0, crowns: 0, items: ["frontier-ring"] }),
     quest("mq01", "main", "Oltre il confine", "Serah cerca qualcuno che guardi oltre i fuochi di Veyra.", "serah", "veyra", [], 1,
       [objective("talk", "serah", 1, "Parla con Serah"), objective("visit", "broken-path", 1, "Visita il Sentiero Spezzato")], { xp: 40, crowns: 6 }, "mq02"),
     quest("mq02", "main", "Nessuno è tornato", "Oren riconosce le tracce della pattuglia. Riporta qualcosa che abbia un nome.", "oren", "broken-path", ["mq01"], 1,
@@ -24,6 +26,6 @@ const QuestData = (() => {
     quest("sq-window", "side", "Una luce alla finestra", "Ilyen giura che quella finestra non esisteva ieri. Ascolta, senza bussare.", "ilyen", "elar-ruins", ["mq03"], 3,
       [objective("visit", "lit-window", 1, "Osserva la finestra"), objective("talk", "ilyen", 1, "Racconta a Ilyen")], { xp: 180, crowns: 15, materials: { ether: 2 } }),
   ];
-  return { quests, get: (id) => quests.find((q) => q.id === id), objectiveTypes: ["kill", "collect", "visit", "talk", "completeExpedition", "defeatBoss"] };
+  return { quests, get: (id) => quests.find((q) => q.id === id), objectiveTypes: ["kill", "collect", "visit", "talk", "completeExpedition", "defeatBoss", "professionDelivery"] };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = QuestData;

@@ -16,6 +16,7 @@ const QuestUI = (() => {
       : `<button data-quest-giver="${quest.id}">Incontra ${escape(WorldData.npcs.find(n => n.id === quest.giver).name)}</button>`;
     if (entry.status === "completed") return `<button data-quest-claim="${quest.id}" class="quest-primary">Riscuoti ricompense</button>`;
     if (entry.status === "active") return `<button data-quest-track="${quest.id}" aria-pressed="${state.frontier.trackedQuest === quest.id}">${state.frontier.trackedQuest === quest.id ? "Stai seguendo questa missione" : "Segui questa missione"}</button>`;
+    if (entry.status === "claimed" && quest.objectives.some(o => o.type === 'professionDelivery')) return '<button data-quest-inventory>Apri Inventario · confronta l’anello →</button>';
     return "";
   }
   function guidance(quest, state) {
@@ -26,6 +27,14 @@ const QuestUI = (() => {
     const index = quest.objectives.findIndex((o, i) => entry.progress[i] < o.count);
     if (index < 0) return "";
     const objective = quest.objectives[index], destination = objectiveLocation(objective);
+    if (objective.type === 'professionDelivery') {
+      const profession = typeof ProfessionUI !== 'undefined' ? ProfessionUI.engine.state : null;
+      const registered = !!profession?.deliveries[quest.id];
+      const ready = (profession?.materials[objective.target] || 0) >= objective.count || registered;
+      const attribute = !ready ? 'data-quest-professions' : state.frontier.location !== quest.location ? `data-quest-destination="${quest.location}"` : `data-quest-deliver="${quest.id}"`;
+      const label = !ready ? 'Apri Professioni · prepara il rinforzo' : state.frontier.location !== quest.location ? 'Vai da Bram · Avamposto di Veyra' : registered ? 'Completa la consegna registrata' : 'Consegna 1 Rinforzo della Frontiera';
+      return `<section class="quest-next-step"><strong>Prossimo passo · facoltativo</strong><p>${registered ? 'Il rinforzo è già stato consegnato. Completa la registrazione: non ne consumerai un altro.' : ready ? 'Rinforzo pronto per la consegna a Bram.' : 'Raccogli 6 Ferro grezzo al Sentiero Spezzato → forgia due Ferro forgiato → crea un Rinforzo della Frontiera.'}</p><small>La consegna consuma un rinforzo una sola volta. Poi riscuoti l’anello e confrontalo in Inventario.</small><button ${attribute} class="quest-primary">${label} →</button></section>`;
+    }
     let label = "", attribute = "", target = objective.target, hint = "";
     if (destination === "activities") {
       attribute = 'data-quest-expedition'; label = 'Apri Attività · Spedizioni';
@@ -64,7 +73,7 @@ const QuestUI = (() => {
     const entry = state.frontier.quests[quest.id];
     const npc = WorldData.npcs.find(x => x.id === quest.giver);
     const unlocks = quest.contentUnlocks.map(id => WorldData.location(id).name);
-    return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) ? "open" : ""}><summary><span><small>${quest.type === "main" ? "MISSIONE PRINCIPALE" : "MISSIONE SECONDARIA"} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b>${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
+    return `<details class="quest-card quest-${entry.status}" data-quest-card="${quest.id}" ${["available", "active", "completed"].includes(entry.status) || (entry.status === "claimed" && quest.objectives.some(o => o.type === "professionDelivery")) ? "open" : ""}><summary><span><small>${quest.type === "main" ? "MISSIONE PRINCIPALE" : "MISSIONE SECONDARIA"} · LIV. ${quest.minimumLevel}</small><strong>${escape(quest.title)}</strong></span><b>${statusNames[entry.status]}</b></summary><p>${escape(quest.description)}</p><small>${escape(npc.name)} · ${escape(WorldData.location(quest.location).name)}</small>${guidance(quest, state)}<h4>Obiettivi</h4><ul class="quest-objectives">${quest.objectives.map((o, i) => `<li class="${entry.progress[i] >= o.count ? "objective-done" : ""}"><span>${escape(o.label)}</span><b>${entry.progress[i]} / ${o.count}</b></li>`).join("")}</ul><p class="quest-rewards"><strong>Ricompensa</strong><br>${rewards(quest.rewards)}</p>${unlocks.length ? `<small>Sblocca: ${unlocks.map(escape).join(", ")}</small>` : ""}${entry.status === "locked" ? `<p class="hint">Richiede livello ${quest.minimumLevel}${quest.prerequisites.length ? ` e ${quest.prerequisites.map(id => escape(QuestData.get(id).title)).join(", ")}` : ""}.</p>` : ""}<div class="quest-actions">${actions(quest, entry, state)}</div></details>`;
   }
   function journal(state) {
     return [["main", "Principale"], ["side", "Secondarie"]].map(([type, title]) =>
@@ -75,6 +84,7 @@ const QuestUI = (() => {
       .map(q => `<div class="npc-offer"><strong>${escape(q.title)}</strong><small>${statusNames[state.frontier.quests[q.id].status]}</small>${actions(q, state.frontier.quests[q.id], state)}</div>`).join("");
   }
   function objectiveLocation(objective) {
+    if (objective.type === "professionDelivery") return "veyra";
     if (objective.type === "talk") return WorldData.npcs.find(n => n.id === objective.target)?.location;
     if (objective.type === "completeExpedition") return "activities";
     return WorldData.locations.find(location => location.id === objective.target || location.enemies.includes(objective.target) || location.points.some(p => p.id === objective.target || p.collect === objective.target) || location.enemies.some(id => WorldData.enemy(id).drops.includes(objective.target)))?.id;

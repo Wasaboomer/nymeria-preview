@@ -38,7 +38,7 @@ const dismiss = require('./notifications-fixture.cjs');
    }
    return rows;
   });
-  for(const row of cases)assert.match(row.html,/data-(world-(talk|fight|explore)|quest-(destination|expedition))/,row.id+' '+row.type);
+  for(const row of cases)assert.match(row.html,/data-(world-(talk|fight|explore)|quest-(destination|expedition|professions|deliver))/,row.id+' '+row.type);
   await page.evaluate(async()=>{await ProgressionStore.transact(s=>{
    s.frontier.quests['sq-merchant'].status='active';s.frontier.quests['sq-merchant'].progress=[1,1,0];s.frontier.trackedQuest='sq-merchant';return {ok:true};
   });});

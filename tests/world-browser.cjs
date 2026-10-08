@@ -80,7 +80,7 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
    const duplicate=await page.evaluate(()=>QuestSystem.claim('mq06'));assert.equal(duplicate.ok,false);
    assert.equal(await page.evaluate(()=>ProgressionStore.state.totalXP),oldXP);
    await dismissNotifications(page);await page.locator('[data-world-view="journal"]:visible').tap();
-   assert.equal(await page.locator('#quest-journal [data-quest-open]').count(),10);
+   assert.equal(await page.locator('#quest-journal [data-quest-open]').count(),11);
    await page.locator('.journal-entry[data-quest-open="mq06"]').tap();
    assert.match(await page.locator('[data-quest-card="mq06"]').innerText(),/Riscossa/);
    if(width===390 && cls==='hunter')await page.screenshot({path:'/tmp/nymeria-m6-journal-390.png',fullPage:true});

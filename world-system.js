@@ -134,5 +134,6 @@ const WorldSystem = typeof window !== "undefined" ? WorldEngine.create({
 }) : null;
 const QuestSystem = typeof window !== "undefined" ? QuestEngine.create({
   store: ProgressionStore, progression: ProgressionSystem, classes: ClassSystem,
+  professions: () => typeof ProfessionUI !== "undefined" ? ProfessionUI.engine : null,
   testMode: new URLSearchParams(location.search).get("test") === "1",
 }) : null;

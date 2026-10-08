@@ -199,6 +199,9 @@ const WorldUI = (() => {
   document.addEventListener("click", async event => {
     const b = event.target.closest("button");
     if (!b || b.disabled) return;
+    if (b.hasAttribute('data-quest-professions')) { NymeriaNavigation.open('professions'); return; }
+    if (b.hasAttribute('data-quest-inventory')) { NymeriaNavigation.open('inventory'); return; }
+    if (b.dataset.questDeliver) { await action(() => QuestSystem.deliver(b.dataset.questDeliver)); return; }
     if (b.hasAttribute("data-quest-expedition")) { NymeriaNavigation.root("expeditions"); return; }
     if (b.dataset.questDestination) {
       const result = await action(() => WorldSystem.enter(b.dataset.questDestination));

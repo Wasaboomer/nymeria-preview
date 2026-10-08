@@ -47,14 +47,14 @@ async function storyline(f) {
   return claim(f,'mq06');
 }
 (async()=>{
- await check('data: six base places plus guild discovery, five NPCs, six normal enemies, two minibosses, final boss; six objective kinds',()=>{
+ await check('data: six base places plus guild discovery, five NPCs, six normal enemies, two minibosses, final boss; seven objective kinds',()=>{
   assert.equal(World.locations.length,7); assert.equal(World.locations.filter(l=>!l.discoveryType).length,6); assert.equal(World.npcs.length,5);
   assert.equal(World.enemies.filter(e=>e.kind==='normal').length,6);
   assert.equal(World.enemies.filter(e=>e.kind==='miniboss').length,2);
   assert.equal(World.enemies.filter(e=>e.kind==='boss').length,1);
   for(const key of ['maxHp','armor','speed']) assert.ok(new Set(World.enemies.map(e=>e[key])).size>3);
-  assert.equal(Quests.quests.filter(q=>q.type==='main').length,6); assert.equal(Quests.quests.filter(q=>q.type==='side').length,4);
-  assert.equal(new Set(Quests.quests.flatMap(q=>q.objectives.map(o=>o.type))).size,6);
+  assert.equal(Quests.quests.filter(q=>q.type==='main').length,6); assert.equal(Quests.quests.filter(q=>q.type==='side').length,5);
+  assert.equal(new Set(Quests.quests.flatMap(q=>q.objectives.map(o=>o.type))).size,7);
  });
  await check('M5 additive migration preserves level/XP/class/build/appearance/gear/inventory/materials/crowns and active expedition',async()=>{
   const f=fixture();f.kit('warden','retaliation');await f.level(5);await f.system.start('patrol',{seed:7});
@@ -131,7 +131,7 @@ async function storyline(f) {
    await ok(f.world.enter('veyra'));await ok(f.quests.accept('sq-herbs'));await ok(f.world.enter('lantern-wood'));
    for(let i=0;i<3;i++)await ok(f.world.explore('mist-herbs'));await ok(f.world.enter('veyra'));await ok(f.world.talk('mira'));await claim(f,'sq-herbs');
    await ok(f.world.enter('elar-ruins'));await ok(f.quests.accept('sq-window'));await ok(f.world.explore('lit-window'));await ok(f.world.talk('ilyen'));await claim(f,'sq-window');
-   assert.ok(Quests.quests.filter(q=>q.type==='side').every(q=>status(f,q.id)==='claimed'));
+   assert.ok(Quests.quests.filter(q=>q.type==='side' && !q.objectives.some(o=>o.type==='professionDelivery')).every(q=>status(f,q.id)==='claimed'));
   });
  }
  await check('encounter snapshot survives refresh/class change; replay deterministic and payout exactly once',async()=>{

@@ -8,7 +8,7 @@ const QuestEngine = (() => {
   const statuses = ["locked", "available", "active", "completed", "claimed"];
   function normalize(raw = {}) {
     const frontier = {
-      version: 1, zoneVersion: 1, questVersion: 1, discoveryVersion: 1, achievementVersion: 1,
+      version: 1, zoneVersion: 1, questVersion: 2, discoveryVersion: 1, achievementVersion: 1,
       location: world.location(raw?.location) ? raw.location : "veyra",
       quests: {}, trackedQuest: null, discoveries: [], achievements: [],
       defeatedEnemies: [], supplies: {}, activeEncounter: null, lastEncounter: null, lastQuestClaim: null,
@@ -43,7 +43,7 @@ const QuestEngine = (() => {
     return frontier;
   }
   function unsupported(raw) {
-    return ["version", "zoneVersion", "questVersion", "discoveryVersion", "achievementVersion"].some(key => raw?.[key] > 1);
+    return raw?.questVersion > 2 || ["version", "zoneVersion", "discoveryVersion", "achievementVersion"].some(key => raw?.[key] > 1);
   }
   function reconcile(state) {
     const frontier = state.frontier;
@@ -64,7 +64,7 @@ const QuestEngine = (() => {
     if (!unlocks.has(`world:${frontier.location}`)) frontier.location = "veyra";
     if (frontier.quests[frontier.trackedQuest]?.status === "claimed") frontier.trackedQuest = null;
   }
-  function create({ store, progression, now = () => Date.now(), testMode = false }) {
+  function create({ store, progression, now = () => Date.now(), testMode = false, professions = () => null }) {
     function accept(id) {
       return store.transact(state => {
         const quest = data.get(id), entry = state.frontier.quests[id];
@@ -101,6 +101,25 @@ const QuestEngine = (() => {
         return { ok: true, message: `Ricompense riscosse · ${quest.title}`, receipt: copy(state.frontier.lastQuestClaim) };
       });
     }
+    async function deliver(id) {
+      const quest = data.get(id), profession = professions();
+      const objective = quest?.objectives.find(o => o.type === 'professionDelivery');
+      if (!objective || !profession || store.state.frontier.quests[id]?.status !== 'active')
+        return {ok:false, message:'Consegna non disponibile o già effettuata.'};
+      // Reserve the material with a durable receipt first; retries never consume it again.
+      const reserved = await profession.handover(id);
+      if (!reserved.ok) return reserved;
+      return store.transact(state => {
+        const entry = state.frontier.quests[id];
+        const receipt = profession.deliveryReceipt(id);
+        if (entry.status !== 'active' || state.frontier.location !== quest.location || state.frontier.activeEncounter)
+          return {ok:false, message:'Consegna già registrata: torna da Bram per completarla.'};
+        if (!receipt || receipt.material !== objective.target || receipt.amount !== objective.count)
+          return {ok:false, message:'Consegna non verificabile. Il rinforzo registrato resta conservato; riprova.'};
+        events.dispatch(state, {type:'professionDelivery',target:objective.target,quantity:receipt.amount});
+        return {ok:true, message:'Rinforzo consegnato a Bram. Riscuoti la ricompensa della missione.'};
+      });
+    }
     function debug(id, action) {
       if (!testMode) return Promise.resolve({ ok: false, message: "Solo DEBUG · ?test=1" });
       return store.transact(state => {
@@ -111,7 +130,7 @@ const QuestEngine = (() => {
         return { ok: true, message: `DEBUG · ${action === "complete" ? "obiettivi completati" : "progresso azzerato"}` };
       });
     }
-    return { accept, track, claim, debug, testMode, get state() { return store.state.frontier; } };
+    return { accept, track, claim, deliver, debug, testMode, get state() { return store.state.frontier; } };
   }
   return { normalize, unsupported, reconcile, create, statuses, dispatch: events.dispatch };
 })();

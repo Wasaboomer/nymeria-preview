@@ -13,10 +13,10 @@ const ProfessionEngine = (() => {
     while (level < p.maxLevel && xp >= threshold(level)) { xp -= threshold(level); level++; }
     return { level, xp: level === p.maxLevel ? 0 : xp, totalXP };
   }
-  const empty = () => ({ version: data.schemaVersion, professions: Object.fromEntries(data.professions.map(p => [p.id, growth(p, 0)])), materials: {}, discoveries: [] });
+  const empty = () => ({ version: data.schemaVersion, professions: Object.fromEntries(data.professions.map(p => [p.id, growth(p, 0)])), materials: {}, discoveries: [], deliveries: {} });
   function normalize(raw) {
     const s = empty();
-    if (!object(raw) || (raw.version !== undefined && raw.version !== data.schemaVersion)) return s;
+    if (!object(raw) || (raw.version !== undefined && ![1, data.schemaVersion].includes(raw.version))) return s;
     for (const p of data.professions) {
       const row = object(raw.professions) ? raw.professions[p.id] : null;
       if (!object(row)) continue;
@@ -33,6 +33,11 @@ const ProfessionEngine = (() => {
     }
     const known = new Set(data.recipes.map(r => r.discovery).filter(Boolean));
     if (Array.isArray(raw.discoveries)) s.discoveries = [...new Set(raw.discoveries.filter(id => known.has(id)))];
+    for (const delivery of data.deliveries || []) {
+      const receipt = raw.deliveries?.[delivery.questId];
+      if (receipt?.material === delivery.material && receipt.amount === delivery.amount)
+        s.deliveries[delivery.questId] = {material:delivery.material, amount:delivery.amount};
+    }
     return s;
   }
   function create({ storage = { getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) }, context = () => null, exclusive = run => run() } = {}) {
@@ -43,7 +48,7 @@ const ProfessionEngine = (() => {
       try {
         const source = storage.getItem(KEY); let raw = null;
         try { raw = JSON.parse(source || "null"); } catch { return { ok: true, state: empty(), recovered: true }; }
-        if (object(raw) && raw.version !== undefined && raw.version !== data.schemaVersion) return { ok: false, message: "Unsupported profession save version. No data overwritten." };
+        if (object(raw) && raw.version !== undefined && ![1, data.schemaVersion].includes(raw.version)) return { ok: false, message: "Unsupported profession save version. No data overwritten." };
         const normalized = normalize(raw);
         return { ok: true, state: normalized, recovered: source !== null && canonical(normalized) !== canonical(raw) };
       } catch { return { ok: false, message: "Profession storage unavailable. No changes applied." }; }
@@ -96,8 +101,25 @@ const ProfessionEngine = (() => {
         award(next, r.profession, r.xp); return { ok: true, recipe: r.id, discovery: r.discovery || null };
       });
     }
+    function handover(questId) {
+      return transact((next, place) => {
+        const delivery = (data.deliveries || []).find(d => d.questId === questId);
+        if (!delivery || place.location !== delivery.location || place.quests?.[questId] !== 'active')
+          return {ok:false, message:'Accetta la missione e raggiungi Bram prima della consegna.'};
+        if (next.deliveries[questId]) return {ok:true, unchanged:true};
+        if ((next.materials[delivery.material] || 0) < delivery.amount)
+          return {ok:false, message:'Crea prima un Rinforzo della Frontiera nelle Professioni.'};
+        next.materials[delivery.material] -= delivery.amount;
+        next.deliveries[questId] = {material:delivery.material, amount:delivery.amount};
+        return {ok:true};
+      });
+    }
+    function deliveryReceipt(questId) {
+      const result = read();
+      return result.ok ? copy(result.state.deliveries[questId] || null) : null;
+    }
     load();
-    return { KEY, threshold, load, gather, craft, get state() { return copy(state); }, get storageIssue() { return storageIssue; }, get recovered() { return recovered; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
+    return { KEY, threshold, load, gather, craft, handover, deliveryReceipt, get state() { return copy(state); }, get storageIssue() { return storageIssue; }, get recovered() { return recovered; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
   }
   return { KEY, MAX_MATERIAL, empty, normalize, growth, threshold, create };
 })();
