@@ -2085,3 +2085,12 @@ body { min-height: 100dvh; }
 #world-tracked .side-quest-row .quest-next-step { flex-basis:100%; }
 #world-tracked .side-quest-empty { font-size:12px; line-height:1.5; margin:12px 0 0; }
 @media(max-width:350px) { #world-tracked .main-quest-progress { font-size:13px; } #world-tracked .main-quest-panel { gap:6px; } }
+
+/* DEV quest claim feedback: real receipt, compact on portrait mobile. */
+#world-quest-reward:not([hidden]) { display:grid; gap:9px; margin:12px 0 16px; padding:16px; border:1px solid #a38b5b; border-radius:14px; }
+#world-quest-reward h3, #world-quest-reward p { margin:0; }
+#world-quest-reward .quest-receipt-gains { display:flex; flex-wrap:wrap; gap:7px; }
+#world-quest-reward .quest-receipt-gains > * { padding:7px 9px; border-radius:8px; background:#ffffff12; font-size:13px; }
+#world-quest-reward .quest-receipt-unlock { line-height:1.5; font-size:13px; }
+#world-quest-reward button { min-height:44px; width:100%; }
+@media(max-width:350px) { #world-quest-reward:not([hidden]) { padding:12px; } #world-quest-reward .quest-receipt-gains > * { font-size:12px; } }
