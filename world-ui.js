@@ -6,6 +6,7 @@ const WorldUI = (() => {
   let estimateKey = "", estimates = {};
   // Presentation-only receipt for a successful claim in this session; never grants rewards.
   let visibleQuestReceipt = null;
+  let stagPreparation = false;
   const marks = {
     haven: "M12 31 30 10 48 31M18 27V48H42V27M25 48V34H35V48M8 48H52",
     path: "M12 49 23 33 19 25 32 11M28 49 36 35 31 28 42 11M7 18H17M43 41H53",
@@ -116,10 +117,18 @@ const WorldUI = (() => {
     node("world-achievements").innerHTML = frontier.achievements.length ? frontier.achievements.map(id => `<article class="discovery-card"><span class="world-eyebrow">TITOLO OTTENUTO</span><h4>${escape(WorldData.achievements.find(x => x.id === id).name)}</h4><p>${escape(WorldData.zone.epilogue)}</p></article>`).join("") : '<p class="hint">La Frontiera deve ancora conoscere il tuo nome.</p>';
     node("world-debug").hidden = !WorldSystem.testMode;
     for (const button of node("world-debug").querySelectorAll("button")) button.disabled = busy;
+    const stag = WorldData.enemy("twilight-stag");
+    const showStagPrep = stagPreparation && view === "places" && !frontier.activeEncounter && frontier.location === "lantern-wood";
+    node("world-stag-preparation").hidden = !showStagPrep;
+    if (showStagPrep) {
+      node("world-stag-prep-title").textContent = stag.name;
+      node("world-stag-prep-stats").textContent = `Livello ${stag.level} · ${stag.maxHp} HP · Armatura ${stag.armor}`;
+      node("world-stag-prep-special").textContent = `Attacco speciale: ${stag.attacks.find(a=>a.id.endsWith("-special")).name}`;
+    }
     node("world-battle").hidden = view !== "battle" || !frontier.activeEncounter;
     const result = frontier.lastEncounter;
     node("world-result").hidden = view !== "battle" || !result || !!frontier.activeEncounter;
-    if (result) node("world-result").innerHTML = `<span class="world-eyebrow">${escape(result.enemyName)}</span><h3>${result.outcome === "victory" ? "VITTORIA" : "SCONFITTA"}</h3><p>+${result.rewards.xp} XP · +${result.rewards.crowns} Corone</p><p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(result))}</p>${result.drops.length ? `<small>${result.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ")}</small>` : ""}${result.outcome === "defeat" ? '<p class="hint">Ritorno a Veyra. Nessuna perdita di livello o equipaggiamento. Nessuna penalità permanente.</p>' : ""}<button data-world-continue class="quest-primary">Continua →</button>${WorldData.enemy(result.enemyId)?.kind === "boss" && result.outcome === "victory" ? `<p>${escape(WorldData.zone.epilogue)}</p><button data-world-view="journal">Apri il Diario · riscuoti la missione</button>` : ""}`;
+    if (result) node("world-result").innerHTML = `<span class="world-eyebrow">${escape(result.enemyName)}</span><h3>${result.outcome === "victory" ? "VITTORIA" : "SCONFITTA"}</h3><p>+${result.rewards.xp} XP · +${result.rewards.crowns} Corone</p><p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(result))}</p>${result.drops.length ? `<small>${result.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ")}</small>` : ""}${result.outcome === "defeat" ? '<p class="hint">Ritorno a Veyra. Nessuna perdita di livello o equipaggiamento. Nessuna penalità permanente.</p>' : ""}<button data-world-continue class="quest-primary">Continua →</button>${result.enemyId === "twilight-stag" && result.outcome === "victory" ? `<div class="stag-victory"><strong>MINIBOSS SCONFITTO · Cervo del Crepuscolo</strong><p>La creatura del Bosco è caduta. Verifica gli obiettivi di «Luci senza fiamma» e riscuoti la missione per sbloccare le Rovine di Elar.</p><p>Missione: ${escape(ProgressionStore.state.frontier.quests.mq03.status === "completed" ? "Pronta per la riscossione" : "Obiettivi ancora da completare")}</p><button data-quest-open="mq03">Apri «Luci senza fiamma» →</button></div>` : ""}${WorldData.enemy(result.enemyId)?.kind === "boss" && result.outcome === "victory" ? `<p>${escape(WorldData.zone.epilogue)}</p><button data-world-view="journal">Apri il Diario · riscuoti la missione</button>` : ""}`;
     const reward = frontier.lastQuestClaim;
     node("world-quest-reward").hidden = !reward || !visibleQuestReceipt || visibleQuestReceipt !== `${reward.id}:${reward.claimedAt}` || !["places", "quest", "journal"].includes(view);
     if (reward) {
@@ -184,7 +193,8 @@ const WorldUI = (() => {
   function renderBattle() {
     const ticket = ProgressionStore.state.frontier.activeEncounter;
     if (!ticket) return;
-    node("world-battle-name").textContent = ticket.template.name;
+    node("world-battle-name").textContent = ticket.template.kind === "miniboss" ? `MINIBOSS · ${ticket.template.name}` : ticket.template.name;
+    node("world-battle").classList.toggle("world-battle-miniboss", ticket.template.kind === "miniboss");
     node("world-battle-profile").textContent = `${ticket.snapshot.profile.className} · ${ticket.snapshot.profile.buildName} · Livello ${ticket.snapshot.level}`;
     node("world-player-name").textContent = "Iria";
     node("world-enemy-name").textContent = ticket.template.name;
@@ -295,7 +305,21 @@ const WorldUI = (() => {
       const result = await action(() => WorldSystem.enter(QuestData.get(b.dataset.questGiver).location));
       if (result?.ok) NymeriaNavigation.root("world"); return;
     }
+    if (b.hasAttribute("data-world-stag-cancel")) { stagPreparation = false; render(); return; }
+    if (b.hasAttribute("data-world-stag-equipment")) { NymeriaNavigation.showScreen("equipment"); return; }
+    if (b.hasAttribute("data-world-stag-start")) {
+      if (!stagPreparation || ProgressionStore.state.frontier.activeEncounter || ProgressionStore.state.frontier.location !== "lantern-wood") return;
+      const result = await action(() => WorldSystem.startEncounter("twilight-stag"));
+      if (result?.ok) { stagPreparation = false; selectView("battle"); resume(); }
+      return;
+    }
     if (b.dataset.worldFight) {
+      if (b.dataset.worldFight === "twilight-stag") {
+        stagPreparation = true;
+        render();
+        node("world-stag-preparation").scrollIntoView({block:"start",behavior:"auto"});
+        return;
+      }
       const result = await action(() => WorldSystem.startEncounter(b.dataset.worldFight));
       if (result?.ok) { selectView("battle"); resume(); }
       return;
