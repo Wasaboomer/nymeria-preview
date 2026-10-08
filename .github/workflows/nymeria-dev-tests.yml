@@ -1,0 +1,104 @@
+name: NYMERIA DEV Tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.ref == 'refs/heads/dev/kaelith-modular-character'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      NYMERIA_TEST_URL: http://127.0.0.1:8018
+      CI: "true"
+
+    steps:
+      - name: Checkout requested DEV branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev/kaelith-modular-character
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install isolated browser test dependencies
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.58.2
+          npx playwright install --with-deps chromium
+          echo "NYMERIA_CHROMIUM=$(node -p "require('playwright').chromium.executablePath()")" >> "$GITHUB_ENV"
+
+      - name: Start temporary local HTTP server
+        run: |
+          python3 -m http.server 8018 --bind 127.0.0.1 > /tmp/nymeria-server.log 2>&1 &
+          echo $! > /tmp/nymeria-server.pid
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8018/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "HTTP server did not become ready"
+          cat /tmp/nymeria-server.log
+          exit 1
+
+      - name: Run engine and mobile browser tests
+        id: tests
+        run: |
+          mkdir -p test-results
+          failed=0
+          tests=(
+            tests/combat-engine.cjs
+            tests/world-engine.cjs
+            tests/profession-engine.cjs
+            tests/bram-delivery-engine.cjs
+            tests/browser.cjs
+            tests/combat-browser.cjs
+            tests/navigation.cjs
+            tests/world-browser.cjs
+            tests/progression-browser.cjs
+            tests/profession-browser.cjs
+            tests/bram-delivery-browser.cjs
+            tests/bram-to-stag-browser.cjs
+            tests/expedition-clarity-browser.cjs
+          )
+          printf '## NYMERIA DEV test results\n\n' >> "$GITHUB_STEP_SUMMARY"
+          printf '| Test | Result |\n|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
+          for test in "${tests[@]}"; do
+            name=$(basename "$test" .cjs)
+            if [[ ! -f "$test" ]]; then
+              result="NOT FOUND"
+              failed=1
+              echo "Missing test file: $test" > "test-results/$name.log"
+            elif timeout 240s node "$test" > "test-results/$name.log" 2>&1; then
+              result="PASS"
+            else
+              result="FAIL"
+              failed=1
+            fi
+            echo "$result $test" | tee -a test-results/summary.txt
+            printf '| `%s` | %s |\n' "$test" "$result" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$result" != "PASS" ]]; then
+              tail -n 60 "test-results/$name.log"
+            fi
+          done
+          exit "$failed"
+
+      - name: Save test and server logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nymeria-dev-test-logs
+          path: |
+            test-results/
+            /tmp/nymeria-server.log
+          if-no-files-found: warn
+          retention-days: 14
