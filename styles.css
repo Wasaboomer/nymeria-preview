@@ -2094,3 +2094,21 @@ body { min-height: 100dvh; }
 #world-quest-reward .quest-receipt-unlock { line-height:1.5; font-size:13px; }
 #world-quest-reward button { min-height:44px; width:100%; }
 @media(max-width:350px) { #world-quest-reward:not([hidden]) { padding:12px; } #world-quest-reward .quest-receipt-gains > * { font-size:12px; } }
+
+/* DEV: combat readability on portrait screens; engine rules unchanged. */
+.world-resource { margin:12px 0; }
+.world-resource-label { display:flex; justify-content:space-between; gap:10px; font-size:13px; margin-bottom:6px; }
+.world-resource-track { height:10px; border-radius:20px; background:#ffffff20; overflow:hidden; }
+.world-resource-track > span { display:block; height:100%; width:0; background:#87a9ca; transition:width .15s ease; }
+.world-combat-highlight { display:grid; gap:5px; margin:12px 0; padding:12px; border:1px solid #586c70; border-radius:12px; background:#ffffff0b; min-width:0; }
+.world-combat-highlight strong { font-size:16px; line-height:1.35; overflow-wrap:anywhere; }
+.world-combat-highlight #world-highlight-detail { font-size:14px; line-height:1.5; }
+.world-combat-highlight[data-kind="critical"] { border-color:#d2aa65; }
+.world-combat-highlight[data-kind="blocked"], .world-combat-highlight[data-kind="dodge"] { border-color:#8bb1bc; }
+.world-combat-history { margin:12px 0; }
+.world-combat-history summary { cursor:pointer; min-height:44px; display:flex; align-items:center; font-size:14px; font-weight:600; }
+#world-battle-history { list-style:none; padding:0; max-height:230px; overflow:auto; font-size:13px; line-height:1.5; }
+#world-battle-history li { padding:8px 0; border-bottom:1px solid #ffffff1a; overflow-wrap:anywhere; }
+#world-battle-history time { font-variant-numeric:tabular-nums; }
+#world-battle-log { font-size:13px; max-height:110px; opacity:1; line-height:1.5; }
+@media(max-width:350px) { .world-combat-highlight { padding:10px; } .world-combat-highlight strong { font-size:15px; } }
