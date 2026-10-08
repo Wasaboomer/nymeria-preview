@@ -99,9 +99,14 @@ const modules = [
         );
       }
       const assets = requests.filter((url) => /\.(js|css)$/.test(url.pathname));
-      assert.equal(assets.length, 49);
+      assert.equal(assets.length, 52);
+      const devAssets = new Set(["kaelith-dev.css", "kaelith-dev.js", "modular-proof.js"]);
+      assert.equal(assets.filter((url) => devAssets.has(url.pathname.split("/").pop())).length, 3);
       assert.ok(
-        assets.every((url) => url.searchParams.get("v") === "m73-review-1"),
+        assets.every((url) =>
+          url.searchParams.get("v") ===
+          (devAssets.has(url.pathname.split("/").pop()) ? "1" : "m73-review-1")
+        ),
       );
       console.log(
         `PASS ${name}: panel visibility + hidden + aria-selected; versioned assets`,
