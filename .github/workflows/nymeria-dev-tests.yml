@@ -2,6 +2,9 @@ name: NYMERIA DEV Tests
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - dev/kaelith-modular-character
 
 permissions:
   contents: read
