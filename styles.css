@@ -2112,3 +2112,17 @@ body { min-height: 100dvh; }
 #world-battle-history time { font-variant-numeric:tabular-nums; }
 #world-battle-log { font-size:13px; max-height:110px; opacity:1; line-height:1.5; }
 @media(max-width:350px) { .world-combat-highlight { padding:10px; } .world-combat-highlight strong { font-size:15px; } }
+
+/* DEV: Twilight Stag encounter presentation. No combat or reward rule changes. */
+#world-stag-preparation:not([hidden]) { display:grid; gap:12px; margin:14px 0; padding:16px; border:1px solid #b59a69; border-radius:14px; background:linear-gradient(145deg,#a88b3919,transparent 70%); }
+#world-stag-preparation h3,#world-stag-preparation p { margin:0; }
+#world-stag-preparation h3 { font-size:21px; line-height:1.3; }
+.world-stag-prep-actions { display:grid; gap:8px; }
+.world-stag-prep-actions button { min-height:44px; width:100%; }
+.world-battle-miniboss { border:1px solid #b59a69; border-radius:14px; padding:12px; }
+.world-battle-miniboss #world-battle-name { color:#e4c98f; }
+.world-battle-miniboss #world-enemy-bar { background:#b58d5b; }
+.stag-victory { display:grid; gap:9px; margin:12px 0; padding:12px; border:1px solid #b59a69; border-radius:12px; }
+.stag-victory p { margin:0; line-height:1.5; }
+.stag-victory button { min-height:44px; }
+@media(max-width:350px) { #world-stag-preparation:not([hidden]) { padding:12px; } .world-battle-miniboss { padding:8px; } }
