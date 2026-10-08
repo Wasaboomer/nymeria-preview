@@ -1,11 +1,17 @@
-# DEV visual customization proof
+# DEV customization by slot
 
-Open `index.html?kaelith=1`, select **Prova modulare**, then choose an outfit and a weapon. The default remains the original Kaelith illustration. The public profile also keeps that reference. Selections last only for the current page and do not write localStorage, equipment, statistics or inventory.
+Open `index.html?kaelith=1`, select **Prova modulare**, then choose torso, arms/gloves, legs, boots, shoulders and weapon independently. Ranger and Peasant presets set clothing slots together and preserve the weapon. Shoulder choices are Ranger or none. The original Kaelith image remains available and is always used in the public profile.
 
-The provided Standard ZIPs contain Quaternius CC0 models. The fantasy outfit pack has female/male Peasant and Ranger outfits and separate pieces; it contains no weapons or plate armor. This proof uses a female base head, Long hairstyle, and the two female outfits. Hood and hidden body geometry are removed to prevent clipping. The same head/hair meshes are kept across all combinations. This is a functional model reference, not a recreation of Kaelith's face or final art style.
+The UI loads `slots-combined.glb` once (approximately 2.4 MB). Every component has a uniquely named `slot:category:variant:part` material. Model-viewer's scene graph keeps selected components opaque and hides unused alternatives through their base-color alpha, without replacing the whole model or changing the identity meshes. Hidden alternatives share one scene, so the camera framing stays stable. This is a static visual proof, with no animation, custom weapon grip or gameplay binding. Choices last for the current page only; no equipment, inventory, statistics or storage writes are performed.
 
-Spada and Bastone are deliberately simple native mesh placeholders created for this proof. Four static GLBs assemble the available parts in the same pose; they do not yet provide runtime per-slot mesh replacement or character animation. The hands remain in the source neutral pose; a final weapon grip needs a dedicated pose. Model loading uses the existing local model-viewer vendor file without a CDN.
+Sources: user-provided Quaternius Universal Base Characters Standard and Modular Character Outfits Fantasy Standard ZIPs, licensed CC0. The selected female components are the base head, Long hairstyle, Peasant and Ranger clothing. Hidden body and Ranger hood are removed to avoid clipping. Head and hair stay unchanged. The Standard pack contains no weapons or plate armor: sword and staff are simple native mesh placeholders. The model does not reproduce Kaelith's face or final art direction. Original licensing is in LICENSE.txt.
 
-Build with `python3 scripts/build-modular-proof.py /path/to/packs` (numpy and Pillow required). The builder retains base-color maps at a maximum of 1024 px, encodes a PNG palette for the mobile proof, strips normal/roughness maps and unused geometry, and produces GLBs of approximately 1.1–1.8 MB. It never edits the Kaelith reference images. Original license text is in LICENSE.txt.
+Build: `python3 scripts/build-modular-proof.py /path/to/packs` (numpy and Pillow). The builder bakes a shared static pose, preserves independent clothing meshes, limits base-color textures to 1024 px with palette PNG encoding, and strips normal/roughness maps. The four original complete outfit/weapon GLBs remain for the earlier isolated comparison. Kaelith reference assets are never edited.
 
-Validation: `node tests/modular-proof-assets.cjs`. Mobile Chromium verification covers all four combinations at 320/390/430 px, loading, horizontal overflow, public/reference roundtrips, inactive default URL, JS errors and unchanged game storage. Physical Safari/iPhone validation remains separate.
+Tests:
+
+- `node tests/modular-proof-assets.cjs`: valid geometry, stable identity, component coverage and default visibility.
+- `NYMERIA_CHROMIUM=/path/to/chromium node tests/modular-proof-browser.cjs`: independent changes in six slots at 320/390/430 px; preset behavior; unchanged identity materials and storage; one GLB request; reference/public roundtrips; inactive default URL; no horizontal overflow or JS errors.
+- Optional `NYMERIA_SCREENSHOT_DIR=/absolute/path` saves representative rendered previews during the browser test.
+
+Chromium emulation does not replace a physical Safari/iPhone check.

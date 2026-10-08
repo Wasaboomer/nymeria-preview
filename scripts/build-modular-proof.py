@@ -70,7 +70,7 @@ class Builder:
         attrs={'POSITION':self.acc(pos,'VEC3'),'NORMAL':self.acc(norm,'VEC3')}
         if uv is not None:attrs['TEXCOORD_0']=self.acc(uv,'VEC2')
         i=len(self.d['meshes']);self.d['meshes'].append({'name':name,'primitives':[{'attributes':attrs,'indices':self.acc(idx.reshape(-1,1),'SCALAR'),'material':material}]});j=len(self.d['nodes']);self.d['nodes'].append({'name':name,'mesh':i});self.d['scenes'][0]['nodes'].append(j)
-    def add(self,s,head=False,clothes=False):
+    def add(self,s,head=False,clothes=False,style=None):
         arms,grip=pose(s)
         for node in s[2]['nodes']:
             if 'mesh' not in node:continue
@@ -86,9 +86,14 @@ class Builder:
                     for pivot,r,desc in arms.values():
                         mask=np.isin(joints,[j for j,n in enumerate(skin['joints']) if n in desc]);w=(mask*weights).sum(axis=1)[:,None];pos+=w*((original-pivot)@r.T+pivot-original);norm+=w*(originalnorm@r.T-originalnorm)
                     norm/=np.maximum(np.linalg.norm(norm,axis=1)[:,None],1e-8)
-                self.mesh(name,pos,norm,uv,idx,self.material(s,prim['material']))
+                material=self.material(s,prim['material'])
+                if style:
+                    slot=('shoulders' if 'Pauldr' in name else 'arms' if 'Arms' in name else 'boots' if 'Feet' in name else 'legs' if 'Legs' in name else 'torso')
+                    m=self.d['materials'][material];m['name']=f'slot:{slot}:{style}:{name}:{material}'
+                    m['alphaMode']='BLEND';m['pbrMetallicRoughness'].setdefault('baseColorFactor',[1,1,1,1])[3]=1 if style=='ranger' else 0
+                self.mesh(name,pos,norm,uv,idx,material)
         return grip
-    def box(self,name,center,size,color):
+    def box(self,name,center,size,color,style=None):
         # A deliberately simple placeholder weapon, native mesh geometry.
         p=[];n=[];idx=[]
         for axis in range(3):
@@ -98,14 +103,15 @@ class Builder:
                 for u,v in [(-1,-1),(1,-1),(1,1),(-1,1)]:
                     q=np.array(center,float);q[axis]+=sign*size[axis]/2;q[others[0]]+=u*size[others[0]]/2;q[others[1]]+=v*size[others[1]]/2;p.append(q);n.append(normal)
                 idx.extend([[start,start+1,start+2],[start,start+2,start+3]])
-        m=len(self.d['materials']);self.d['materials'].append({'name':name,'doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':color,'metallicFactor':.35,'roughnessFactor':.5}});self.mesh(name,np.array(p),np.array(n),None,np.array(idx),m)
-    def weapon(self,kind,grip):
+        m=len(self.d['materials']);self.d['materials'].append({'name':f'slot:weapon:{style}:{name}' if style else name,'alphaMode':'BLEND','doubleSided':True,'pbrMetallicRoughness':{'baseColorFactor':color[:3]+[0 if style=='staff' else 1],'metallicFactor':.35,'roughnessFactor':.5}});self.mesh(name,np.array(p),np.array(n),None,np.array(idx),m)
+    def weapon(self,kind,grip,slots=False):
         x,y,z=grip;z+=.025
-        self.box('weapon_grip',[x,y,z],[.032,.18,.032],[.19,.12,.07,1])
+        style=kind if slots else None
+        self.box('weapon_grip',[x,y,z],[.032,.18,.032],[.19,.12,.07,1],style)
         if kind=='sword':
-            self.box('weapon_blade',[x,y-.42,z],[.065,.68,.02],[.67,.77,.81,1]);self.box('weapon_guard',[x,y-.06,z],[.23,.035,.04],[.75,.58,.25,1])
+            self.box('weapon_blade',[x,y-.42,z],[.065,.68,.02],[.67,.77,.81,1],style);self.box('weapon_guard',[x,y-.06,z],[.23,.035,.04],[.75,.58,.25,1],style)
         else:
-            self.box('weapon_staff',[x,y+.12,z],[.035,1.65,.035],[.32,.19,.09,1]);self.box('weapon_crystal',[x,y+.99,z],[.10,.18,.10],[.3,.75,.79,1])
+            self.box('weapon_staff',[x,y+.12,z],[.035,1.65,.035],[.32,.19,.09,1],style);self.box('weapon_crystal',[x,y+.99,z],[.10,.18,.10],[.3,.75,.79,1],style)
     def save(self,path):
         self.d['buffers'][0]['byteLength']=len(self.b);j=json.dumps(self.d,separators=(',',':')).encode();j+=b' '*((-len(j))%4);self.b+=b'\0'*((-len(self.b))%4)
         path.write_bytes(struct.pack('<III',0x46546c67,2,28+len(j)+len(self.b))+struct.pack('<II',len(j),0x4e4f534a)+j+struct.pack('<II',len(self.b),0x004e4942)+self.b)
@@ -118,3 +124,10 @@ for armor in ['ranger','peasant']:
     for weapon in ['sword','staff']:
         b=Builder();b.add(head,head=True);b.add(hair);grip=b.add(outfit,clothes=True);b.weapon(weapon,grip);path=folder/(armor+'-'+weapon+'.glb');b.save(path);print(path.name,path.stat().st_size)
 (folder/'LICENSE.txt').write_text(BASE.read('Universal Base Characters[Standard]/License_Standard.txt').decode()+ '\n'+OUT.read('Modular Character Outfits - Fantasy[Standard]/License_Standard.txt').decode())
+
+# One combined scene: visibility is selected per slot at runtime, with no GLB reload.
+b=Builder();b.add(head,head=True);b.add(hair)
+for style in ['ranger','peasant']:
+    grip=b.add(source(OUT,'Female_'+style.title()+'.gltf','/Outfits/'),clothes=True,style=style)
+b.weapon('sword',grip,slots=True);b.weapon('staff',grip,slots=True)
+b.save(folder/'slots-combined.glb');print('slots-combined.glb',(folder/'slots-combined.glb').stat().st_size)

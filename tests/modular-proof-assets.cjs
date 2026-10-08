@@ -20,3 +20,14 @@ for(const armor of ['ranger','peasant'])for(const weapon of ['sword','staff']){
 assert.equal(new Set(results.map(r=>r.head)).size,1);assert.equal(new Set(results.map(r=>r.hair)).size,1);
 assert.notEqual(results[0].weaponGeometry,results[1].weaponGeometry);
 console.log('PASS four valid GLBs; two outfits; two visible weapon geometries; identical head and hair across all combinations.');
+const combined=fs.readFileSync(path.join(__dirname,'../assets/modular-proof/slots-combined.glb'));
+assert.equal(combined.readUInt32LE(8),combined.length);
+const model=JSON.parse(combined.subarray(20,20+combined.readUInt32LE(12)).toString());
+for(const [slot,variants] of Object.entries({torso:['ranger','peasant'],arms:['ranger','peasant'],legs:['ranger','peasant'],boots:['ranger','peasant'],shoulders:['ranger'],weapon:['sword','staff']})){
+ for(const variant of variants){
+  const materials=model.materials.filter(m=>m.name?.startsWith(`slot:${slot}:${variant}:`));assert(materials.length>0,`Missing ${slot}/${variant}`);
+  for(const m of materials){assert.equal(m.alphaMode,'BLEND');assert.equal(m.pbrMetallicRoughness.baseColorFactor[3],variant==='peasant'||variant==='staff'?0:1);}
+ }
+}
+for(const mesh of model.meshes)for(const p of mesh.primitives){assert.equal(model.accessors[p.attributes.NORMAL].componentType,5126);}
+console.log('PASS single combined scene contains individually selectable components for all six slots.');

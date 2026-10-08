@@ -72,3 +72,7 @@ body[data-screen="character"]:has(#panel-character.kaelith-dev) .app { padding-b
 /* Public profile always displays the original artistic reference. */
 .kaelith-public .modular-proof-active #modular-proof-viewer { display:none; }
 .kaelith-public .modular-proof-active .kaelith-original-figure, .kaelith-public .modular-proof-active .stage-heading, .kaelith-public .modular-proof-active .floor { display:block; }
+.proof-slot-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:14px; }
+.proof-slot-grid label { display:flex; flex-direction:column; gap:6px; min-width:0; font-size:12px; color:#d5dfe1; }
+.proof-slot-grid select { width:100%; min-width:0; min-height:44px; padding:8px; border:1px solid #61736c; border-radius:6px; background:#142432; color:#ead4a3; font:13px system-ui,sans-serif; }
+.proof-slot-grid select:focus-visible { outline:2px solid #ead4a3; outline-offset:3px; }
