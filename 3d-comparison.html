@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101c24">
+  <link rel="icon" href="data:,">
+  <title>Nymeria — confronto 3D</title>
+  <script type="module" src="vendor/model-viewer-4.1.0.min.js"></script>
+  <script src="3d-comparison.js" defer></script>
+  <style>
+    * {box-sizing:border-box}
+    body {margin:0;background:#101c24;color:#eee8dc;font:16px system-ui;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+    main {max-width:640px;margin:auto} h1 {font-size:1.4rem} p {line-height:1.5}
+    nav {display:flex;gap:8px;margin:16px 0}
+    button {flex:1;min-width:0;min-height:48px;border:1px solid #899a9b;border-radius:8px;background:#283943;color:#fff;font:inherit}
+    button[aria-pressed="true"] {background:#765c35;border:2px solid #ebc488}
+    button:focus-visible {outline:3px solid #fff;outline-offset:3px}
+    model-viewer {display:block;width:100%;height:58vh;height:58svh;min-height:300px;max-height:660px;border:1px solid #65727a;border-radius:12px;background:radial-gradient(#36454c,#131b25);touch-action:pan-y}
+    #comparison-status {min-height:3em;color:#e9c788} small {color:#aab9c0}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>NYMERIA · Confronto 3D</h1>
+    <p>Pilot Quaternius · Base, Peasant e Ranger. Trascina per ruotare, pizzica per ingrandire.</p>
+    <nav aria-label="Seleziona personaggio">
+      <button data-model="base" aria-pressed="true">Base</button>
+      <button data-model="peasant" aria-pressed="false">Peasant</button>
+      <button data-model="ranger" aria-pressed="false">Ranger</button>
+    </nav>
+    <model-viewer id="viewer" src="assets/3d-comparison/base.glb" alt="Personaggio Base" camera-controls touch-action="pan-y" shadow-intensity="0.8" exposure="1" loading="eager"></model-viewer>
+    <p id="comparison-status" role="status" aria-live="polite">Caricamento Base…</p>
+    <p><small>Pagina di confronto isolata. Nessun collegamento allo stato o ai salvataggi del gioco. Modelli forniti nell’archivio nymeria_quaternius_pilot.zip.</small></p>
+    <noscript>Attiva JavaScript per visualizzare i modelli 3D.</noscript>
+  </main>
+</body>
+</html>
