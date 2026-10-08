@@ -28,7 +28,7 @@ const ExpeditionUI = (() => {
       ProgressionStore.state.activeExpedition &&
       Date.now() >= ProgressionStore.state.activeExpedition.endsAt
     );
-  let wasHidden = false;
+  let wasHidden = false, cancelTicket = null;
   function renderXP() {
     const state = ProgressionStore.state;
     node("identity-level").textContent = state.level;
@@ -130,18 +130,27 @@ const ExpeditionUI = (() => {
       );
     }
     node("expedition-kit").textContent = snapshot.profile.kitValid
-      ? `Preparazione: ${snapshot.profile.className} / ${snapshot.profile.buildName}. La configurazione viene fissata alla partenza; Combattimento resta indipendente.`
+      ? `Preparazione: ${snapshot.profile.className} / ${snapshot.profile.buildName}. Alla partenza vengono salvati classe, build ed equipaggiamento usati per questa spedizione.`
       : `Per partire prepara ${ClassSystem.selected().requirement} in Equipaggiamento.`;
     node("expedition-activities").innerHTML = ExpeditionData.activities
       .map((activity) => {
         const locked = state.level < activity.requiredLevel;
-        return `<article class="expedition-card" data-activity="${activity.id}"><h3>${activity.name}</h3><p>${duration(activity.durationMs)} · ${activity.encounters} incontri + eventuali eventi</p><p>Rischio: <strong>${estimates[activity.id]}</strong> · grado ${activity.difficulty}</p><small>XP ${activity.encounters * activity.xpPerEncounter + activity.completionXP} base se completata · Corone, materiali, possibilità di loot</small><button data-start-expedition="${activity.id}" ${locked || !snapshot.profile.kitValid || state.activeExpedition || state.pendingExpeditionResult || busy ? "disabled" : ""}>${locked ? `Si sblocca al livello ${activity.requiredLevel}` : state.activeExpedition ? "Spedizione in corso" : state.pendingExpeditionResult ? "Riscuoti prima di partire" : ProgressionSystem.testMode ? "Parti · TEST" : "Parti"}</button></article>`;
+        const reason = locked ? `Richiede livello ${activity.requiredLevel}; il tuo livello è ${state.level}.`
+          : state.activeExpedition ? 'Hai già una spedizione in corso. Attendi il termine oppure annullala.'
+          : state.pendingExpeditionResult ? 'Riscuoti il risultato della spedizione precedente prima di partire.'
+          : !snapshot.profile.kitValid ? `Equipaggiamento incompleto: ${ClassSystem.selected().requirement}. Usa “Prepara equipaggiamento”.`
+          : busy ? 'Operazione in corso.' : '';
+        return `<article class="expedition-card" data-activity="${activity.id}"><h3>${activity.name}</h3><p>${duration(activity.durationMs)} · ${activity.encounters} incontri + eventuali eventi</p><p>Rischio: <strong>${estimates[activity.id]}</strong> · grado ${activity.difficulty}</p><small>XP ${activity.encounters * activity.xpPerEncounter + activity.completionXP} base se completata · Corone, materiali, possibilità di loot</small>${reason ? `<p class="expedition-requirement" id="expedition-requirement-${activity.id}">${escape(reason)}</p>` : ""}<button ${reason ? `aria-describedby="expedition-requirement-${activity.id}"` : ""} data-start-expedition="${activity.id}" ${locked || !snapshot.profile.kitValid || state.activeExpedition || state.pendingExpeditionResult || busy ? "disabled" : ""}>${locked ? `Si sblocca al livello ${activity.requiredLevel}` : state.activeExpedition ? "Spedizione in corso" : state.pendingExpeditionResult ? "Riscuoti prima di partire" : !snapshot.profile.kitValid ? "Prepara equipaggiamento" : ProgressionSystem.testMode ? "Avvia spedizione · TEST" : "Avvia spedizione"}</button></article>`;
       })
       .join("");
   }
   function renderClock() {
     const active = ProgressionStore.state.activeExpedition;
     node("expedition-running").hidden = !active;
+    if (!active || cancelTicket !== active.id || busy || Date.now() >= active.endsAt) cancelTicket = null;
+    node("expedition-cancel-confirm").hidden = !cancelTicket;
+    node("expedition-cancel").setAttribute("aria-expanded", String(!!cancelTicket));
+    node("expedition-cancel-apply").disabled = busy;
     if (!active) return;
     const remaining = Math.min(
       active.endsAt - active.startedAt,
@@ -208,9 +217,19 @@ const ExpeditionUI = (() => {
     const id = ProgressionStore.state.pendingExpeditionResult?.id;
     action(() => ProgressionSystem.claim(id));
   });
-  node("expedition-cancel").addEventListener("click", () =>
-    action(() => ProgressionSystem.cancel()),
-  );
+  node("expedition-cancel").addEventListener("click", () => {
+    cancelTicket = ProgressionStore.state.activeExpedition?.id || null;
+    renderClock();
+    node("expedition-cancel-keep").focus();
+  });
+  node("expedition-cancel-keep").addEventListener("click", () => {
+    cancelTicket = null; renderClock(); node("expedition-cancel").focus();
+  });
+  node("expedition-cancel-apply").addEventListener("click", () => {
+    if (!cancelTicket || cancelTicket !== ProgressionStore.state.activeExpedition?.id) return;
+    cancelTicket = null;
+    action(() => ProgressionSystem.cancel());
+  });
   node("expedition-debug-complete").addEventListener("click", () =>
     action(() => ProgressionSystem.debugComplete()),
   );

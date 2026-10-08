@@ -1,0 +1,25 @@
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+const navigate=require('./mobile-navigation-fixture.cjs');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM,args:['--no-sandbox','--no-zygote','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});try{for(const width of [320,390,430]){
+const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.clock.install({time:new Date('2026-10-08T11:30:00Z')});await page.clock.pauseAt(new Date('2026-10-08T11:30:01Z'));
+await page.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8017');await navigate(page,'expeditions');
+if(width===390)await page.screenshot({path:'/tmp/nymeria-expedition-clarity.png',fullPage:true});
+assert.match(await page.locator('.expedition-guide').innerText(),/Prepara → Parti → Attendi → Riscuoti/);
+assert.match(await page.locator('[data-activity="patrol"] .expedition-requirement').innerText(),/Equipaggiamento incompleto/);
+assert.ok(await page.locator('[data-start-expedition="patrol"]').isDisabled());
+assert.match(await page.locator('[data-activity="broken-trail"] .expedition-requirement').innerText(),/Richiede livello 3/);
+await page.evaluate(()=>{ClassSystem.selectClass('warden');for(const [slot,id] of Object.entries({mainHand:'sword',support:'shield',torso:'torso-warden',legs:'legs-sentinel',boots:'boots-plate'}))Equipment.equip(id,slot);});
+await page.locator('[data-start-expedition="patrol"]').tap();await page.waitForFunction(()=>!!ProgressionStore.state.activeExpedition);
+const before=await page.evaluate(()=>({id:ProgressionStore.state.activeExpedition.id,xp:ProgressionStore.state.totalXP,crowns:ProgressionStore.state.crowns}));
+await page.locator('#expedition-cancel').tap();assert.ok(await page.locator('#expedition-cancel-confirm').isVisible());assert.equal(await page.evaluate(()=>ProgressionStore.state.activeExpedition.id),before.id);
+await page.locator('#expedition-cancel-keep').tap();assert.ok(await page.locator('#expedition-cancel-confirm').isHidden());
+await page.locator('#expedition-cancel').tap();await page.locator('#expedition-cancel-apply').tap();await page.waitForFunction(()=>!ProgressionStore.state.activeExpedition);
+assert.equal(await page.evaluate(()=>ProgressionStore.state.totalXP),before.xp);assert.equal(await page.evaluate(()=>ProgressionStore.state.crowns),before.crowns);
+await page.locator('[data-start-expedition="patrol"]').tap();await page.waitForFunction(()=>!!ProgressionStore.state.activeExpedition);await page.clock.fastForward(61000);await page.waitForFunction(()=>!!ProgressionStore.state.pendingExpeditionResult);
+assert.ok(await page.locator('#expedition-claim').isVisible());assert.match(await page.locator('[data-activity="patrol"] .expedition-requirement').innerText(),/Riscuoti il risultato/);
+await page.locator('#expedition-claim').tap();await page.waitForFunction(()=>!ProgressionStore.state.pendingExpeditionResult);
+assert.ok(await page.locator('[data-start-expedition="patrol"]').isEnabled());assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
+console.log('PASS '+width+'px: guide, kit/level blockers, two-step cancellation, no cancellation reward, completion and claim');await page.close();
+}}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

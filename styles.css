@@ -2040,3 +2040,9 @@ body { min-height: 100dvh; }
 .quest-card summary { flex-wrap:wrap; }
 .quest-card h4 { margin:14px 0 8px; font-size:14px; }
 .quest-rewards { padding:12px; background:#172a30; border-radius:6px; line-height:1.6; }
+
+.expedition-guide, .expedition-cancel-confirm { padding:12px; margin:12px 0; border:1px solid #8f805a; border-radius:8px; background:#172a30; }
+.expedition-guide h3 { font-size:15px; color:#ead4a3; }
+.expedition-guide p, .expedition-requirement, .expedition-cancel-confirm p { font-size:13px; line-height:1.6; }
+.expedition-requirement { color:#ead4a3; }
+.expedition-cancel-confirm button { width:100%; min-height:44px; margin-top:8px; white-space:normal; }

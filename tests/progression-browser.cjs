@@ -248,6 +248,7 @@ const frozen = new Date("2026-10-06T12:00:00Z");
       await settle();
       await page.clock.runFor(3000);
       await page.locator("#expedition-cancel").tap();
+      await page.locator("#expedition-cancel-apply").tap();
       await settle();
       assert.equal((await state()).activeExpedition, null);
       assert.equal((await state()).pendingExpeditionResult, null);

@@ -386,6 +386,11 @@
           <h2>Spedizioni</h2>
           <span>ATTIVITÀ</span>
         </div>
+        <section class="expedition-guide" aria-label="Come funzionano le spedizioni">
+          <h3>Prepara → Parti → Attendi → Riscuoti</h3>
+          <p>Equipaggia il necessario per la tua classe e scegli una spedizione. Gli incontri si svolgono automaticamente: puoi esplorare altre schermate mentre passa il tempo.</p>
+          <p>Alla fine apri il risultato e riscuoti: solo allora ricevi le ricompense e avanzano gli eventuali obiettivi di missione.</p>
+        </section>
         <section class="xp-summary" aria-label="Esperienza">
           <strong id="expedition-xp-label">Livello 1</strong
           ><span id="expedition-xp-value">0 / 80 XP</span>
@@ -431,7 +436,12 @@
             <span></span>
           </div>
           <p id="expedition-active-info" class="hint"></p>
-          <button id="expedition-cancel">Termina spedizione</button>
+          <button id="expedition-cancel" aria-expanded="false" aria-controls="expedition-cancel-confirm">Annulla spedizione</button>
+          <div id="expedition-cancel-confirm" class="expedition-cancel-confirm" hidden>
+            <p><strong>Annullare interrompe questa spedizione senza ricompense.</strong> Il tuo equipaggiamento resta conservato.</p>
+            <button id="expedition-cancel-keep">Continua la spedizione</button>
+            <button id="expedition-cancel-apply">Conferma annullamento</button>
+          </div>
         </section>
         <section id="expedition-report" class="expedition-report" hidden>
           <div id="expedition-report-body"></div>
