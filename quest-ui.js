@@ -101,17 +101,25 @@ const QuestUI = (() => {
     return WorldData.locations.find(location => location.id === objective.target || location.enemies.includes(objective.target) || location.points.some(p => p.id === objective.target || p.collect === objective.target) || location.enemies.some(id => WorldData.enemy(id).drops.includes(objective.target)))?.id;
   }
   function tracker(state) {
-    const quest = QuestData.get(state.frontier.trackedQuest) || QuestData.quests.find(q => state.frontier.quests[q.id].status === "completed") || QuestData.quests.find(q => state.frontier.quests[q.id].status === "active");
-    if (!quest) {
-      const next = QuestData.quests.find(q => q.type === "main" && state.frontier.quests[q.id].status === "available");
-      return next ? `${rewardComparison(state.frontier.lastQuestClaim?.id, state)}<span class="world-eyebrow">PROSSIMA MISSIONE</span><strong>${escape(next.title)}</strong><small>Incontra ${escape(WorldData.npcs.find(n => n.id === next.giver).name)} · ${escape(WorldData.location(next.location).name)}</small>${actions(next, state.frontier.quests[next.id], state)}` : '<span class="world-eyebrow">LA FRONTIERA TI ATTENDE</span><small>Esplora il luogo o consulta il Diario.</small>';
-    }
-    const entry = state.frontier.quests[quest.id];
-    const pending = quest.objectives.map((o, i) => ({o, i})).filter(({o, i}) => entry.progress[i] < o.count);
-    return `<span class="world-eyebrow">MISSIONE DA SEGUIRE · ${statusNames[entry.status]}</span><button class="tracker-title" data-quest-open="${quest.id}">${escape(quest.title)} →</button>${guidance(quest, state)}<ul>${pending.map(({o, i}) => {
-      const destination = objectiveLocation(o);
-      return `<li><span>${escape(o.label)}${destination && destination !== state.frontier.location ? `<small>${destination === "activities" ? "Attività → Spedizioni" : escape(WorldData.location(destination).name)}</small>` : ""}</span><b>${entry.progress[i]}/${o.count}</b></li>`;
-    }).join("")}</ul>${entry.status === "completed" ? actions(quest, entry, state) : ""}`;
+    const main = QuestData.quests.find(q => q.type === "main" && ["completed", "active", "available"].includes(state.frontier.quests[q.id]?.status));
+    const side = QuestData.quests.filter(q => q.type === "side" && ["active", "completed"].includes(state.frontier.quests[q.id]?.status));
+    const mainPanel = main ? (() => {
+      const entry = state.frontier.quests[main.id];
+      const index = entry.status === "active" ? main.objectives.findIndex((o, i) => entry.progress[i] < o.count) : -1;
+      const objective = index >= 0 ? main.objectives[index] : null;
+      const destination = objective ? objectiveLocation(objective) : main.location;
+      const locationName = destination === "activities" ? "Attività · Spedizioni" : WorldData.location(destination)?.name || WorldData.location(main.location)?.name || "Frontiera";
+      const count = objective ? `<div class="main-quest-progress"><span>${escape(objective.label)}</span><b>${entry.progress[index]}/${objective.count}</b></div><progress max="${objective.count}" value="${entry.progress[index]}" aria-label="Progresso obiettivo"></progress>` : "";
+      const next = entry.status === "available" ? actions(main, entry, state) : entry.status === "completed" ? actions(main, entry, state) : guidance(main, state);
+      return `<section class="main-quest-panel" aria-label="Missione principale"><span class="world-eyebrow">STORIA PRINCIPALE · ${statusNames[entry.status]}</span><button class="tracker-title" data-quest-open="${main.id}">${escape(main.title)} →</button>${count}<p class="main-quest-destination">Destinazione: <strong>${escape(locationName)}</strong></p>${next}</section>`;
+    })() : '<section class="main-quest-panel"><span class="world-eyebrow">STORIA PRINCIPALE</span><strong>Storia della Frontiera completata</strong><p>Esplora il mondo o consulta il Diario.</p></section>';
+    const sidePanel = side.length ? `<details class="side-quest-panel"><summary>Missioni secondarie · ${side.length} (facoltative)</summary>${side.map(q => {
+      const entry = state.frontier.quests[q.id];
+      const index = q.objectives.findIndex((o, i) => entry.progress[i] < o.count);
+      const progress = index >= 0 ? `${entry.progress[index]}/${q.objectives[index].count}` : statusNames[entry.status];
+      return `<div class="side-quest-row"><button data-quest-open="${q.id}">${escape(q.title)} →</button><small>${escape(progress)}</small>${state.frontier.trackedQuest === q.id ? guidance(q, state) : ""}${entry.status === "completed" ? actions(q, entry, state) : ""}</div>`;
+    }).join("")}</details>` : '<p class="side-quest-empty">Missioni secondarie: consulta il Diario per le attività facoltative.</p>';
+    return mainPanel + sidePanel;
   }
   return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison };
 })();
