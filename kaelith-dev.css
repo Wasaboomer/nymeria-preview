@@ -15,6 +15,9 @@
 .kaelith-dev .stage-caption { font-size:10px; }
 .kaelith-public .character-links, .kaelith-public #character-build, .kaelith-public .xp-summary, .kaelith-public .stats, .kaelith-public #character-creator, .kaelith-public .equipment { display:none !important; }
 .kaelith-public .identity { text-align:center; }
+/* Creator actions live outside the character panel. Hide them only in its public view. */
+body[data-screen="character"]:has(#panel-character.kaelith-dev.kaelith-public) #creator-actions { display:none !important; }
+body[data-screen="character"]:has(#panel-character.kaelith-dev.kaelith-public) .app { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
 @media(max-width:350px) { .kaelith-view-tabs { margin-left:12px; margin-right:12px; } .kaelith-dev .stage-caption { max-width:85%; margin:auto; } }
 .kaelith-dev .stage { border-radius:6px; }
 .kaelith-original-figure { position:absolute; left:50%; top:38px; transform:translateX(-50%); margin:0; }
