@@ -36,6 +36,13 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
    };
    const fight=async id=>{
     await tap(page.locator(`#world-location-detail [data-world-fight="${id}"]`));
+    if (id === 'twilight-stag') {
+      assert.ok(await page.locator('#world-stag-preparation').isVisible());
+      assert.match(await page.locator('#world-stag-prep-special').innerText(),/Assalto del crepuscolo/);
+      assert.ok(await page.locator('[data-world-stag-equipment]').isVisible());
+      await tap(page.locator('[data-world-stag-start]'));
+      assert.match(await page.locator('#world-battle-name').innerText(),/MINIBOSS/);
+    }
     assert.ok(await page.locator('#world-battle').isVisible());
     assert.equal(await page.locator('#world-resource-name').innerText(),cls==='hunter'?'Concentrazione':'Risolutezza');
     assert.ok(await page.locator('#world-resource-bar').isVisible());
@@ -44,7 +51,7 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
     assert.ok(await page.locator('#world-resource-bar').getAttribute('aria-valuenow')!==null);
     await page.evaluate(async()=>{WorldUI.engine.advance(180);await WorldUI.settle();});
     const result=await page.evaluate(()=>ProgressionStore.state.frontier.lastEncounter);
-    assert.equal(result.outcome,'victory',id);assert.ok(await page.locator('#world-result').isVisible());
+    assert.equal(result.outcome,'victory',id);if(id==='twilight-stag')assert.match(await page.locator('#world-result').innerText(),/MINIBOSS SCONFITTO.*Rovine di Elar/s);assert.ok(await page.locator('#world-result').isVisible());
     await tap(page.locator('[data-world-continue]'));return result;
    };
    await accept('mq01');await talk('serah');
