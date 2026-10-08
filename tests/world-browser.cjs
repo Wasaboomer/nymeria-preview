@@ -48,7 +48,7 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
    await fight('vesper-raider');
    const active=await page.evaluate(()=>ProgressionStore.state.frontier.quests.mq02);
    assert.deepEqual(active.progress,[1,1]);
-   await tap(page.locator('#world-location-detail .quest-primary[data-world-fight="vesper-raider"]'));
+   await tap(page.locator('#world-location-detail .world-enemies button[data-world-fight="vesper-raider"]'));
    const ticket=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter);
    await page.locator('#world-battle-pause').tap();
    assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
