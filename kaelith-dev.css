@@ -1,0 +1,20 @@
+/* Scoped to the opt-in Kaelith DEV view; no changes to other game screens. */
+.kaelith-view-tabs { display:flex; gap:8px; margin:12px 16px; }
+.kaelith-view-tabs button { flex:1; min-height:44px; font-size:15px; }
+.kaelith-view-tabs button[aria-pressed=true] { border-color:#ceb17e; color:#e6ca92; }
+.kaelith-portrait { padding:16px; text-align:center; background:#142432; border-bottom:1px solid #64553f; }
+.kaelith-portrait img { display:block; width:166px; height:132px; margin:auto; object-fit:contain; border-radius:0; }
+.kaelith-portrait p { margin:8px 0 0; font-size:11px; color:#b4c0cc; }
+.kaelith-dev .stage { min-height:410px; }
+.kaelith-dev #character, .kaelith-dev .halo { display:none; }
+.kaelith-original-figure { display:block; width:231px; height:335px; object-fit:contain; margin:auto; max-width:100%; }
+.kaelith-dev .identity p { font-size:13px; line-height:1.5; }
+.kaelith-dev .stats dt { font-size:12px; }
+.kaelith-dev .stats dd { font-size:17px; }
+.kaelith-dev .equipment button { min-width:44px; min-height:44px; }
+.kaelith-dev .stage-caption { font-size:10px; }
+.kaelith-public .character-links, .kaelith-public #character-build, .kaelith-public .xp-summary, .kaelith-public .stats, .kaelith-public #character-creator, .kaelith-public .equipment { display:none !important; }
+.kaelith-public .identity { text-align:center; }
+@media(max-width:350px) { .kaelith-view-tabs { margin-left:12px; margin-right:12px; } .kaelith-dev .stage-caption { max-width:85%; margin:auto; } }
+.kaelith-dev .stage { border-radius:6px; }
+.kaelith-original-figure { position:absolute; left:50%; top:38px; transform:translateX(-50%); margin:0; }
