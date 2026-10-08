@@ -120,9 +120,13 @@ const base = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8000';
   await navigate(page, 'world');await page.locator('#world-location-detail [data-quest-accept="mq01"]').tap();await navigate(page, 'debug');assert.ok(await page.locator('#world-debug').isVisible());
   const tapDebug=async locator=>{await dismissNotifications(page);await locator.tap();await page.waitForFunction(()=>document.getElementById('panel-world').getAttribute('aria-busy')==='false');};
 
+  await page.locator('#world-debug-quest').selectOption('mq01');
+  assert.equal(await page.locator('#world-debug-quest').inputValue(),'mq01');
   await tapDebug(page.locator('[data-quest-debug="reset"]'));
+  await page.waitForFunction(()=>ProgressionStore.state.frontier.quests.mq01.status==='active' && ProgressionStore.state.frontier.quests.mq01.progress.every(n=>n===0));
   assert.deepEqual(await page.evaluate(()=>ProgressionStore.state.frontier.quests.mq01.progress),[0,0]);
   await tapDebug(page.locator('[data-quest-debug="complete"]'));
+  await page.waitForFunction(()=>ProgressionStore.state.frontier.quests.mq01.status==='completed');
   const claimState=await page.evaluate(()=>{
    const persisted=JSON.parse(localStorage.getItem(ProgressionStorage.KEY));
    return {live:ProgressionStore.state.frontier.quests.mq01.status,saved:persisted?.frontier?.quests?.mq01?.status,xp:ProgressionStore.state.totalXP};
