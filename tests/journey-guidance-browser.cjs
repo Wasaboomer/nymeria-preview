@@ -1,0 +1,23 @@
+const assert=require('node:assert/strict'),{chromium}=require('playwright');
+const navigate=require('./mobile-navigation-fixture.cjs');
+(async()=>{const browser=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM,args:['--no-sandbox','--no-zygote','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});try{for(const width of [320,390,430]){
+const page=await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.clock.install({time:new Date('2026-10-08T11:40:00Z')});await page.clock.pauseAt(new Date('2026-10-08T11:40:01Z'));
+await page.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8018');await navigate(page,'character');
+assert.ok(await page.locator('#journey-guide').isVisible());assert.match(await page.locator('#journey-guide').innerText(),/missione principale/);
+await page.locator('#journey-guide summary').tap();assert.ok(await page.locator('#journey-open-world').isHidden());await page.locator('#journey-guide summary').tap();
+await page.locator('#journey-open-world').tap();assert.ok(await page.locator('#panel-world').isVisible());
+await navigate(page,'expeditions');assert.equal(await page.locator('.expedition-mission-required').count(),0);assert.ok(await page.locator('#expedition-quest-context').isHidden());
+await page.evaluate(async()=>{ClassSystem.selectClass('warden');for(const [slot,id] of Object.entries({mainHand:'sword',support:'shield',torso:'torso-warden',legs:'legs-sentinel',boots:'boots-plate'}))Equipment.equip(id,slot);await WorldSystem.enter('broken-path');await QuestSystem.accept('sq-merchant');await ProgressionStore.transact(s=>{s.frontier.quests['sq-merchant'].progress=[1,1,0];return {ok:true};});});
+await navigate(page,'world');await page.locator('#world-tracked [data-quest-expedition]').tap();
+assert.match(await page.locator('#expedition-quest-context').innerText(),/Il mercante smarrito/);assert.match(await page.locator('.expedition-mission-required').innerText(),/RICHIESTA DALLA MISSIONE SEGUITA/);assert.equal(await page.locator('#expedition-activities .expedition-card').first().getAttribute('data-activity'),'patrol');
+assert.equal(await page.locator('[data-start-expedition="patrol"]').count(),1);
+if(width===390)await page.screenshot({path:'/tmp/nymeria-expedition-mission-link.png',fullPage:true});
+await page.locator('[data-expedition-quest="sq-merchant"]').tap();assert.ok(await page.locator('[data-quest-card="sq-merchant"]').isVisible());
+await navigate(page,'expeditions');await page.locator('[data-start-expedition="patrol"]').tap();await page.waitForFunction(()=>!!ProgressionStore.state.activeExpedition);await page.clock.fastForward(61000);await page.waitForFunction(()=>!!ProgressionStore.state.pendingExpeditionResult);
+assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.quests['sq-merchant'].progress[2]),0);
+await page.locator('#expedition-claim').tap();await page.waitForFunction(()=>ProgressionStore.state.frontier.quests['sq-merchant'].status==='completed');
+assert.equal(await page.locator('.expedition-mission-required').count(),0);assert.match(await page.locator('#expedition-quest-context').innerText(),/Obiettivo della spedizione completato/);
+await page.locator('[data-expedition-quest="sq-merchant"]').tap();assert.ok(await page.locator('#quest-detail [data-quest-claim="sq-merchant"]').isVisible());assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
+console.log('PASS '+width+'px: collapsible guide, World entry, mission/expedition handoff, highlight, return and claim-only completion');await page.close();
+}}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

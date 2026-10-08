@@ -2056,3 +2056,14 @@ body { min-height: 100dvh; }
 .profession-head h1 { margin:8px 0 12px; }
 .profession-head .hint { font-size:13px; line-height:1.6; }
 .profession-actions .profession-action-card small { font-size:13px; }
+
+.journey-guide, .expedition-quest-context { margin:12px 0; padding:12px; border:1px solid #8f805a; border-radius:8px; background:#172a30; }
+.journey-guide summary { color:#ead4a3; cursor:pointer; font-weight:bold; }
+.journey-guide ol { padding-left:22px; }
+.journey-guide li, .journey-guide p, .expedition-quest-context p { font-size:13px; line-height:1.6; }
+.journey-guide li { margin:10px 0; }
+.journey-guide button, .expedition-quest-context button { width:100%; min-height:44px; white-space:normal; }
+.expedition-card.expedition-mission-required { border:2px solid #ceb17e; }
+.expedition-mission-label { padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #8f805a; }
+.expedition-mission-label > strong { color:#ead4a3; font-size:11px; }
+.expedition-mission-label p, .expedition-mission-label small { font-size:13px; line-height:1.5; }

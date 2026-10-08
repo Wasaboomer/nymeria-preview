@@ -132,15 +132,29 @@ const ExpeditionUI = (() => {
     node("expedition-kit").textContent = snapshot.profile.kitValid
       ? `Preparazione: ${snapshot.profile.className} / ${snapshot.profile.buildName}. Alla partenza vengono salvati classe, build ed equipaggiamento usati per questa spedizione.`
       : `Per partire prepara ${ClassSystem.selected().requirement} in Equipaggiamento.`;
-    node("expedition-activities").innerHTML = ExpeditionData.activities
+    const expeditionQuests = QuestData.quests.flatMap(quest => {
+      const entry = state.frontier.quests[quest.id];
+      if (!["active", "completed"].includes(entry.status)) return [];
+      return quest.objectives.map((objective, index) => ({quest, objective, index, entry}))
+        .filter(row => row.objective.type === "completeExpedition");
+    });
+    const tracked = expeditionQuests.find(row => row.quest.id === state.frontier.trackedQuest);
+    node("expedition-quest-context").hidden = !tracked;
+    node("expedition-quest-context").innerHTML = tracked ? `<strong>${escape(tracked.quest.title)}</strong><p>${tracked.entry.progress[tracked.index] >= tracked.objective.count ? 'Obiettivo della spedizione completato. Torna alla missione per proseguire o riscuotere le sue ricompense.' : `Questa missione richiede: ${escape(tracked.objective.label)}. La spedizione corrispondente è evidenziata qui sotto.`}</p><button data-expedition-quest="${tracked.quest.id}">Torna alla missione →</button>` : '';
+    const requiredBy = activity => expeditionQuests.filter(row => row.objective.target === activity.id && row.entry.progress[row.index] < row.objective.count);
+    node("expedition-activities").innerHTML = [...ExpeditionData.activities]
+      .sort((a,b) => Number(requiredBy(b).some(row => row.quest.id === state.frontier.trackedQuest)) - Number(requiredBy(a).some(row => row.quest.id === state.frontier.trackedQuest)))
       .map((activity) => {
+        const requests = requiredBy(activity);
+        const trackedRequest = requests.some(row => row.quest.id === state.frontier.trackedQuest);
+        const missionHint = requests.length ? `<div class="expedition-mission-label"><strong>${trackedRequest ? 'RICHIESTA DALLA MISSIONE SEGUITA' : 'RICHIESTA DA UNA MISSIONE ATTIVA'}</strong><p>${requests.map(row => `${escape(row.quest.title)} · ${row.entry.progress[row.index]} / ${row.objective.count}`).join('<br>')}</p><small>Avvia questa spedizione, attendi il termine e riscuoti il risultato per far avanzare la missione.</small></div>` : '';
         const locked = state.level < activity.requiredLevel;
         const reason = locked ? `Richiede livello ${activity.requiredLevel}; il tuo livello è ${state.level}.`
           : state.activeExpedition ? 'Hai già una spedizione in corso. Attendi il termine oppure annullala.'
           : state.pendingExpeditionResult ? 'Riscuoti il risultato della spedizione precedente prima di partire.'
           : !snapshot.profile.kitValid ? `Equipaggiamento incompleto: ${ClassSystem.selected().requirement}. Usa “Prepara equipaggiamento”.`
           : busy ? 'Operazione in corso.' : '';
-        return `<article class="expedition-card" data-activity="${activity.id}"><h3>${activity.name}</h3><p>${duration(activity.durationMs)} · ${activity.encounters} incontri + eventuali eventi</p><p>Rischio: <strong>${estimates[activity.id]}</strong> · grado ${activity.difficulty}</p><small>XP ${activity.encounters * activity.xpPerEncounter + activity.completionXP} base se completata · Corone, materiali, possibilità di loot</small>${reason ? `<p class="expedition-requirement" id="expedition-requirement-${activity.id}">${escape(reason)}</p>` : ""}<button ${reason ? `aria-describedby="expedition-requirement-${activity.id}"` : ""} data-start-expedition="${activity.id}" ${locked || !snapshot.profile.kitValid || state.activeExpedition || state.pendingExpeditionResult || busy ? "disabled" : ""}>${locked ? `Si sblocca al livello ${activity.requiredLevel}` : state.activeExpedition ? "Spedizione in corso" : state.pendingExpeditionResult ? "Riscuoti prima di partire" : !snapshot.profile.kitValid ? "Prepara equipaggiamento" : ProgressionSystem.testMode ? "Avvia spedizione · TEST" : "Avvia spedizione"}</button></article>`;
+        return `<article class="expedition-card ${requests.length ? 'expedition-mission-required' : ''}" data-activity="${activity.id}">${missionHint}<h3>${activity.name}</h3><p>${duration(activity.durationMs)} · ${activity.encounters} incontri + eventuali eventi</p><p>Rischio: <strong>${estimates[activity.id]}</strong> · grado ${activity.difficulty}</p><small>XP ${activity.encounters * activity.xpPerEncounter + activity.completionXP} base se completata · Corone, materiali, possibilità di loot</small>${reason ? `<p class="expedition-requirement" id="expedition-requirement-${activity.id}">${escape(reason)}</p>` : ""}<button ${reason ? `aria-describedby="expedition-requirement-${activity.id}"` : ""} data-start-expedition="${activity.id}" ${locked || !snapshot.profile.kitValid || state.activeExpedition || state.pendingExpeditionResult || busy ? "disabled" : ""}>${locked ? `Si sblocca al livello ${activity.requiredLevel}` : state.activeExpedition ? "Spedizione in corso" : state.pendingExpeditionResult ? "Riscuoti prima di partire" : !snapshot.profile.kitValid ? "Prepara equipaggiamento" : ProgressionSystem.testMode ? "Avvia spedizione · TEST" : "Avvia spedizione"}</button></article>`;
       })
       .join("");
   }
@@ -206,6 +220,14 @@ const ExpeditionUI = (() => {
       render();
     }
   }
+  node("journey-open-world").addEventListener("click", () => NymeriaNavigation.root("world"));
+  node("expedition-quest-context").addEventListener("click", event => {
+    const button = event.target.closest('[data-expedition-quest]');
+    if (button) {
+      NymeriaNavigation.root("world");
+      NymeriaNavigation.open("world", {view:"quest", questId:button.dataset.expeditionQuest});
+    }
+  });
   node("expedition-activities").addEventListener("click", (event) => {
     const button = event.target.closest("[data-start-expedition]");
     if (button) {
