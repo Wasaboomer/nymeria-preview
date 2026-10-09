@@ -37,12 +37,12 @@ function startLogcat() {
   let device, lastPage, completed=false;
   const check = name => {report.checks.push(name);console.log('PASS native Android '+name);};
   // Background WebViews may stop RAF delivery; poll from the test host instead.
-  async function waitNative(page,predicate,label) {
+  async function waitNative(page,predicate,label,evaluationTimeout=5000) {
     const deadline=Date.now()+30000;
     while(Date.now()<deadline) {
       let timer;
       const result=await Promise.race([page.evaluate(predicate),new Promise((_,reject)=>{
-        timer=setTimeout(()=>reject(Error('WebView evaluation stalled: '+label)),5000);
+        timer=setTimeout(()=>reject(Error('WebView evaluation stalled: '+label)),evaluationTimeout);
       })]).finally(()=>clearTimeout(timer));
       if(result) return;
       await delay(100);
@@ -57,7 +57,7 @@ function startLogcat() {
     await page.waitForFunction(()=>typeof Equipment!=='undefined' && typeof Character!=='undefined');
     await page.evaluate(()=>Character.ready());
     await page.waitForFunction(()=>typeof window.NymeriaNativeReady?.then==='function');
-    await waitNative(page,async()=>{await window.NymeriaNativeReady;return true;},'native adapter ready');
+    await waitNative(page,async()=>{await window.NymeriaNativeReady;return true;},'native adapter ready',30000);
     await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'initial foreground');
     return page;
   }
@@ -223,6 +223,8 @@ function startLogcat() {
       if(!completed) {
         const lines=log.split('\n').filter(line=>/RenderProcess|Fatal signal|lmkd|lowmemorykiller|AndroidRuntime|Killing.*nymeria|(?:chromium|cr_).*?(?:ERROR|FATAL)/i.test(line)).slice(-12);
         report.failureDiagnostics=lines;
+        const bridge=log.split('\n').filter(line=>/pluginId: App|App\.(?:getState|addListener)|Native adapter|native navigation adapter|Serious error executing plugin|Unable to execute plugin method/.test(line)).slice(-10);
+        console.log('::notice::Native bridge trace '+bridge.join(' | ').slice(-3000));
         console.log('::notice::Native failure log '+lines.join(' | ').slice(-2000));
         try {console.log('::notice::Native app PID '+(await execAsync('adb',['-e','shell','pidof',id],{encoding:'utf8',timeout:5000})).stdout.trim());}catch{console.log('::notice::Native app process absent');}
         fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));

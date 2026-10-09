@@ -219,3 +219,10 @@ configurazione di smoke viene portata ad API 34 AOSP (senza servizi Google),
 RAM 3072M esplicita, stessa APK/target SDK e stessi assert. La compatibilità
 funzionale Android 15 rimane aperta; il risultato su API 34 sarà distinto
 dai tentativi precedenti, senza reinterpretarli come successi.
+
+Run 37906645895: AOSP API 34 conserva dispositivo ADB e processo dell’app,
+ma supera il limite iniziale di 5 s sulla readiness. L’attesa di avvio usa ora
+il limite complessivo di 30 s; gli altri probe mantengono il limite breve.
+La diagnostica espone anche le ultime chiamate App per separare caricamento
+lento e mancata risposta del bridge. Questo non equivale a un avvio riuscito
+é a una prova delle cause osservate su API 35.
