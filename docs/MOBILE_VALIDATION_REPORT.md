@@ -67,6 +67,14 @@ I file più grandi sono modelli GLB dei proof opt-in già esistenti (circa 1,8�
 ciascuno), non nuovi artwork. Non sono state applicate ottimizzazioni speculative,
 compressioni/revisioni degli asset o cambiamenti al renderer.
 
+Una seconda esecuzione completa ha misurato avvio 574–627 ms e un outlier a
+375 px: Menu 3.881 ms, Eroe 3.139 ms, long task fino a 750 ms. Nessun test
+funzionale è fallito. La ripetizione isolata a 375 px ha misurato avvio 630 ms,
+cambi schermata 78–131 ms e long task 62 ms. Il rallentamento non è stato
+riprodotto: la causa non è dimostrata e il campione anomalo non viene escluso
+dalla valutazione. Serve misurazione su dispositivo reale prima di promettere
+fluidità. NYMERIA_PERFORMANCE_WIDTH consente una ripetizione diagnostica mirata.
+
 ## Smoke nativi e prove da scaricare
 
 **Android:** installazione della vera APK debug nell'emulatore effimero, avvio con
@@ -139,15 +147,20 @@ aggiunta una diagnostica per distinguere il punto di blocco senza indebolire le
 asserzioni o dichiarare passate verifiche non completate. Consultare gli esiti
 delle run successive per la risoluzione, non dedurla dalla compilazione verde.
 
-Diagnosi del timeout Android nella seconda run: creazione/equip/avatar, cinque
-schermate, Back contestuale/modal e tastiera erano passati; il test attendeva
-`document.hidden` dopo il Back alla radice, ma il WebView lo manteneva falso.
-Lo smoke ora verifica `App.getState().isActive` (stato nativo), non una proprietà
-del documento. Lo stesso limite rende insufficiente usare solo visibilitychange
-per la pausa: l'adapter nativo ascolta appStateChange e usa i pulsanti Pausa già
-esistenti per gli engine in esecuzione. Non modifica gli engine, non assegna
-ricompense e non riprende automaticamente al ritorno; eventi duplicati non togglano
-una pausa in resume. Il browser continua a usare il comportamento precedente.
+Diagnosi precisa del timeout Android: le prove precedenti fino alla tastiera
+erano passate, ma lo smoke assumeva erroneamente che il tab Eroe azzerasse lo stack.
+M6.2 ripristina il contesto del tab: dopo equip lo stack era ancora su Equipment;
+Back tornava a Hero invece di minimizzare. Il test ora usa il Back reale e verifica
+la radice prima di verificare background. Nessuna modifica a navigation.js.
+L'osservazione document.hidden=false in quelle run non provava da sola un difetto
+di background: il test non aveva ancora minimizzato l'app.
+
+Lo smoke ora verifica App.getState().isActive e interroga il WebView dal test host
+senza affidarsi a RAF in background. L'adapter usa anche appStateChange per una
+pausa esplicitamente legata al ciclo di vita nativo, usando i controlli già presenti.
+Non cambia gli engine, non assegna ricompense e non riprende automaticamente;
+eventi duplicati non togglano una pausa in resume. La prova con Home/incontro
+registra lo stato del documento per distinguere quello nativo da visibilitychange.
 
 Lo smoke Android aggiunge un fixture di incontro creato tramite le API esistenti
 di classe/equip/World nell'emulatore isolato: verifica pausa del clock in background,

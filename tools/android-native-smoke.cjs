@@ -93,7 +93,9 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     await touch(page,'[data-open-slot="'+alternative.slot+'"]');
     await touch(page,'[data-item-id="'+alternative.id+'"]');
     await touch(page,'#equip-item');
-    await touch(page,'#tab-character');
+    adb('shell','input','keyevent','4');
+    await page.waitForFunction(()=>NymeriaNavigation.route.screen==='character');
+    assert.ok(await page.locator('#character').isVisible());
     await page.waitForFunction(old=>document.querySelector('#character').innerHTML!==old,avatarBefore);
     assert.equal(await page.evaluate(slot=>Equipment.equipped(slot)?.id,alternative.slot),alternative.id);
     await page.evaluate(()=>Character.ready());
@@ -114,9 +116,17 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     report.metrics.keyboardViewport=await page.evaluate(()=>({height:visualViewport.height,innerHeight,navBottom:document.querySelector('.bottom-nav').getBoundingClientRect().bottom}));
     assert.ok(report.metrics.keyboardViewport.navBottom<=report.metrics.keyboardViewport.height+1,'Navigation remains visible with IME');
-    adb('shell','input','keyevent','4');await delay(300);
+    adb('shell','input','keyevent','4');
+    for(let i=0;i<20 && /mInputShown=true/.test(adb('shell','dumpsys','input_method'));i++)await delay(100);
+    assert.ok(!/mInputShown=true/.test(adb('shell','dumpsys','input_method')),'Back dismisses IME');
     check('text focus/keyboard viewport and navigation');
     await touch(page,'#tab-character');
+    while(await page.evaluate(()=>NymeriaNavigation.depth)>0) {
+      const depth=await page.evaluate(()=>NymeriaNavigation.depth);
+      adb('shell','input','keyevent','4');
+      await page.waitForFunction(old=>NymeriaNavigation.depth<old,depth);
+    }
+    assert.equal(await page.evaluate(()=>NymeriaNavigation.route.screen),'character');
     adb('shell','input','keyevent','4');
     await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
     check('native Back minimizes at the root');
@@ -135,6 +145,7 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     const encounter=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id);
     adb('shell','input','keyevent','3');
     await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
+    report.metrics.documentHiddenInBackground=await page.evaluate(()=>document.hidden);
     await waitNative(page,()=>WorldUI.engine.status==='paused','combat paused');
     const pausedTime=await page.evaluate(()=>WorldUI.engine.time);await delay(500);
     assert.equal(await page.evaluate(()=>WorldUI.engine.time),pausedTime);
@@ -172,7 +183,7 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
   } finally {
     if(lastPage) {
       try {
-        const state=await lastPage.evaluate(()=>({url:location.href,title:document.title,ready:document.readyState,characterCreated:typeof Equipment==='undefined'?null:Equipment.state.characterCreated,route:window.NymeriaNavigation?.route,hidden:document.hidden,dialog:document.querySelector('#item-dialog')?.open}));
+        const state=await lastPage.evaluate(()=>({url:location.href,title:document.title,ready:document.readyState,characterCreated:typeof Equipment==='undefined'?null:Equipment.state.characterCreated,route:window.NymeriaNavigation?.route,depth:window.NymeriaNavigation?.depth,hidden:document.hidden,dialog:document.querySelector('#item-dialog')?.open}));
         console.log('::notice::Native smoke end-state '+JSON.stringify(state));
       } catch {}
     }

@@ -10,7 +10,8 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
   const browser = await chromium.launch({executablePath: process.env.NYMERIA_CHROMIUM || '/usr/bin/chromium', args:['--no-sandbox']});
   const report = {environment:'headless Chromium on Linux/CI; simulated touch, not iPhone', browser:browser.version(), samples:[]};
   try {
-    for (const width of [320,375,390,430]) {
+    for (const width of (process.env.NYMERIA_PERFORMANCE_WIDTH ? [Number(process.env.NYMERIA_PERFORMANCE_WIDTH)] : [320,375,390,430])) {
+      assert.ok([320,375,390,430].includes(width), "Supported diagnostic viewport");
       const context = await browser.newContext({viewport:{width,height:844},hasTouch:true,isMobile:true});
       const page = await context.newPage(), errors = [];
       page.on('pageerror', e => errors.push(e.message));
@@ -51,7 +52,8 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
       await press(page,'[data-item-id="'+candidate.id+'"]');
       await press(page,'#equip-item');
       assert.equal(await page.evaluate(slot => Equipment.equipped(slot)?.id,candidate.slot),candidate.id);
-      await press(page,'#tab-character');
+      await press(page,'#navigation-back');
+      assert.ok(await page.locator('#character').isVisible());
       await page.waitForFunction(old => document.querySelector('#character').innerHTML !== old,beforeAvatar);
       await page.evaluate(()=>Character.ready());
       assert.deepEqual(await page.evaluate(()=>Character.diagnostics()),[]);

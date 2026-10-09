@@ -146,8 +146,15 @@ logs/screenshots are additional artifacts; APK/app artifacts remain available af
 successful compilation even if a later smoke fails. Run timeouts are bounded;
 there is no signing, store upload, preview deployment or paid service integration.
 
-The Android smoke exposed that document.hidden can remain false while the native
-activity backgrounds. The native adapter therefore listens to appStateChange and
+The smoke originally confused a restored Equipment navigation stack with the Hero
+root; the corrected harness reaches depth zero before minimizing. Native activity
+state is checked with App.getState, independently of document visibility.
+The native adapter also listens to appStateChange and
 requests existing Pause controls for running world/manual combat; game engines
 and save formats are unchanged. Smoke checks use App.getState for activity state.
 Repeated native/document events cannot toggle paused combat into running.
+
+Debug APK signing uses the runner’s ephemeral debug keystore. APKs from different
+runs may not install as updates: do not uninstall an app containing valuable saves.
+A stable development signing identity requires separately authorized secure key
+management; no signing secrets or private keys are added by Sprint 2.3.
