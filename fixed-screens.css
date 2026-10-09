@@ -176,7 +176,7 @@ body #combat-exit-confirm h2 { font-size:19px; margin:0 0 8px; }
 body #combat-exit-confirm p { font-size:15px; line-height:1.4; }
 body #combat-exit-confirm button { width:100%; min-height:44px; margin-top:8px; }
 body .combat-hit { animation:nymeria-hit .55s ease-out; outline:2px solid #e5ad78; border-radius:3px; }
-@keyframes nymeria-hit { from { background:#c66048; color:#fff; } to { background:transparent; } }
+@keyframes nymeria-hit { from { background:var(--combat-hit-background,#c66048); color:#fff; } to { background:transparent; } }
 @media(prefers-reduced-motion:reduce) { body .combat-hit { animation:none; background:#683928; } }
 
 /* During an encounter the disabled navigation yields its space to the HUD. */

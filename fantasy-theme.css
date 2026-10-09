@@ -1,0 +1,158 @@
+/* Nymeria Sprint 2. Presentation tokens/components; viewport geometry remains in fixed-screens.css. */
+:root {
+  --ny-night:#0c1613; --ny-stone:#15241e; --ny-stone-raised:#20332b;
+  --ny-parchment:#efe6d2; --ny-muted:#b5bba9; --ny-bronze:#76684c;
+  --ny-gold:#d7b77d; --ny-forest:#82af96; --ny-danger:#e4a096; --ny-magic:#b3bfdb;
+  --combat-hit-background:#813c2e; /* White HP text keeps contrast during the existing hit flash. */
+  --ny-rule:#52624c; --ny-radius:8px; --ny-space:8px; --ny-space-large:16px;
+  --ny-display:Georgia,'Times New Roman',serif; --ny-text:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --bg:var(--ny-night); --panel:var(--ny-stone); --ink:var(--ny-parchment);
+  --muted:var(--ny-muted); --accent:var(--ny-gold); --line:var(--ny-rule);
+}
+body.nymeria-theme { background:radial-gradient(ellipse at 45% 5%,#314333,var(--ny-night) 70%); font-family:var(--ny-text); }
+.nymeria-theme .app { background:linear-gradient(135deg,#c3a76b05,transparent 45%),linear-gradient(0deg,#080f0dcc,transparent 80%); }
+.nymeria-theme .mobile-topbar { border-color:var(--ny-bronze); }
+.nymeria-theme .brand { font-family:var(--ny-display); color:var(--ny-gold); text-shadow:0 1px #000; letter-spacing:4px; }
+.nymeria-theme .mobile-topbar::before { content:'✧'; color:var(--ny-gold); font-size:22px; margin-right:6px; }
+.nymeria-theme #topbar-context { color:var(--ny-muted); font-size:12px; }
+.nymeria-theme .hint { color:var(--ny-muted); }
+.nymeria-theme h1, .nymeria-theme h2, .nymeria-theme h3 { font-family:var(--ny-display); color:var(--ny-parchment); }
+.nymeria-theme :is(.world-eyebrow,.eyebrow,.option-label) { color:var(--ny-gold); letter-spacing:1.4px; }
+.nymeria-theme .ny-surface {
+  background:linear-gradient(130deg,#b8a3760a,transparent 65%),var(--ny-stone);
+  border:1px solid var(--ny-rule); border-radius:var(--ny-radius); box-shadow:inset 0 1px #dcc79b12;
+}
+.nymeria-theme button:not(.swatch) { color:var(--ny-parchment); border-color:var(--ny-bronze); background-color:var(--ny-stone-raised); border-radius:var(--ny-radius); }
+.nymeria-theme button:disabled { color:var(--ny-muted); opacity:.65; cursor:default; }
+.nymeria-theme button:focus-visible, .nymeria-theme summary:focus-visible { outline:2px solid var(--ny-gold); outline-offset:2px; }
+.nymeria-theme :is(input,select,textarea) { color:var(--ny-parchment); background-color:var(--ny-night); border-color:var(--ny-rule); }
+.nymeria-theme .bottom-nav { background:linear-gradient(180deg,#243329,#101c17); border-top:1px solid var(--ny-bronze); }
+.nymeria-theme .bottom-nav button { background:transparent; border-color:transparent; color:var(--ny-muted); border-radius:6px; }
+.nymeria-theme .bottom-nav button[aria-selected='true'] { background:linear-gradient(180deg,#bd9b4730,#bd9b4710); border-color:var(--ny-gold); color:var(--ny-parchment); box-shadow:inset 0 -2px var(--ny-gold); }
+.nymeria-theme .bottom-nav .nymeria-icon { color:var(--ny-gold); }
+.nymeria-theme .fixed-pager { border-top:1px solid var(--ny-bronze); }
+.nymeria-theme .fixed-pager output { color:var(--ny-muted); }
+.nymeria-theme .context-bar { border-color:var(--ny-bronze); }
+.nymeria-theme #current-quest-link { color:var(--ny-gold); background:#3a3724; border-color:var(--ny-bronze); }
+.nymeria-theme #panel-world .quest-primary,
+.nymeria-theme :is(#save,#equip-item,#combat-exit-accept) { background:linear-gradient(135deg,#55472c,#343323); border-color:var(--ny-gold); color:#fff1d1; }
+.nymeria-theme .ny-heading { position:relative; padding-left:16px; border-bottom:1px solid var(--ny-bronze); padding-bottom:5px; }
+.nymeria-theme .ny-heading::before { content:'◆'; position:absolute; left:0; top:3px; color:var(--ny-gold); font:10px var(--ny-text); }
+/* Original decorative environment art. No character imagery, filters or remote requests. */
+[data-ny-place='veyra'] { --ny-scene:url('assets/environments/veyra.svg?v=sprint2-1'); --ny-place-light:#bdab76; }
+[data-ny-place='broken-path'] { --ny-scene:url('assets/environments/broken-path.svg?v=sprint2-1'); --ny-place-light:#abb394; }
+[data-ny-place='lantern-wood'] { --ny-scene:url('assets/environments/lantern-wood.svg?v=sprint2-1'); --ny-place-light:#97c0ab; }
+[data-ny-place='elar-ruins'] { --ny-scene:url('assets/environments/elar-ruins.svg?v=sprint2-1'); --ny-place-light:#b5cad2; }
+[data-ny-place='vesper-ford'] { --ny-scene:url('assets/environments/vesper-ford.svg?v=sprint2-1'); --ny-place-light:#b0bfba; }
+[data-ny-place='silent-tower'] { --ny-scene:url('assets/environments/silent-tower.svg?v=sprint2-1'); --ny-place-light:#a9b6bd; }
+[data-ny-place='vesper-outpost'] { --ny-scene:url('assets/environments/vesper-outpost.svg?v=sprint2-1'); --ny-place-light:#c9b986; }
+.nymeria-theme .ny-place-banner { position:relative; display:flex; align-items:flex-end; min-height:0; height:min(160px,calc(var(--fixed-content-height,500px)*.5)); padding:12px; background-image:linear-gradient(0deg,#08130feb,transparent 85%),var(--ny-scene); background-position:center; background-size:cover; border:1px solid var(--ny-bronze); border-radius:var(--ny-radius); box-shadow:inset 0 1px #dcc79b20; overflow:hidden; }
+.nymeria-theme #world-current .world-place-heading { margin:0; gap:10px; width:100%; }
+.nymeria-theme #world-current h1 { font:22px/1.15 var(--ny-display); text-shadow:0 1px 2px #000; }
+.nymeria-theme #world-current .world-mark { flex:none; width:32px; height:32px; color:var(--ny-place-light); }
+.nymeria-theme #world-current > p { font-size:14px; line-height:1.45; color:var(--ny-muted); margin:8px 0; }
+.nymeria-theme #world-locations .map-node, .nymeria-theme #world-discovered-locations .world-node {
+  background-image:linear-gradient(90deg,#0d1b16f5 5%,#0d1b16b0 75%),var(--ny-scene); background-size:cover; background-position:center;
+  border:1px solid var(--ny-rule); border-radius:var(--ny-radius); padding:10px; min-height:72px;
+}
+.nymeria-theme #world-locations .world-node-current { border-color:var(--ny-gold); box-shadow:inset 3px 0 var(--ny-gold); }
+.nymeria-theme #world-locations .map-objective { border-color:var(--ny-forest); }
+.nymeria-theme .map-title, .nymeria-theme .map-legend { color:var(--ny-muted); }
+.nymeria-theme #world-locations .map-node-label small { color:var(--ny-muted); font-size:13px; }
+/* NPCs have role emblems, not fabricated portraits. Existing speech is retained. */
+.nymeria-theme #panel-world .world-npc { padding:10px; margin:8px 0; border:1px solid var(--ny-rule); border-radius:var(--ny-radius); background:linear-gradient(135deg,#a5905820,transparent 45%),var(--ny-stone); }
+.nymeria-theme #panel-world .npc-heading { display:grid; grid-template-columns:44px minmax(0,1fr); gap:8px; }
+.nymeria-theme #panel-world .npc-heading h4 { font:16px/1.3 var(--ny-display); }
+.nymeria-theme .npc-heading small { color:var(--ny-muted); font-size:13px; line-height:1.35; }
+.nymeria-theme .npc-seal { width:44px; height:44px; display:grid; place-items:center; background:linear-gradient(140deg,#554b31,#1d2c23); border:1px solid var(--ny-bronze); border-radius:50%; color:var(--ny-gold); }
+.nymeria-theme .npc-seal .nymeria-icon { width:26px; height:26px; }
+.nymeria-theme #panel-world .npc-heading > button { grid-column:1/-1; width:100%; font-size:14px; }
+.nymeria-theme #panel-world .ny-dialogue { color:var(--ny-parchment); font:italic 15px/1.5 var(--ny-display); border-left:2px solid var(--ny-gold); padding:8px 10px; background:#b6a2710d; margin:8px 0; }
+.nymeria-theme .npc-offer { padding:8px 0; border-top:1px solid var(--ny-rule); }
+.nymeria-theme #panel-world .world-point { background:linear-gradient(120deg,#314337,#1b2c23); border-color:var(--ny-rule); }
+/* Combat keeps its compact HUD. Optional existing figures disappear on short viewports/history. */
+.nymeria-theme #world-battle { border-color:var(--ny-bronze); background:linear-gradient(150deg,#23362ba0,#101c18); }
+.nymeria-theme .ny-battle-vignette { border-radius:6px; border:1px solid var(--ny-rule); background-image:linear-gradient(0deg,#09140f99,#09140f22),var(--ny-scene); background-size:cover; background-position:center; }
+.nymeria-theme.fixed-combat .ny-battle-vignette { height:min(160px,calc(var(--fixed-content-height) - 340px)); min-height:0; }
+.nymeria-theme.fixed-combat .ny-battle-vignette > .visual-character,
+.nymeria-theme.fixed-combat .ny-battle-vignette > .visual-enemy { height:100%; width:44%; max-width:none; max-height:none; margin:0; object-fit:contain; }
+.nymeria-theme .ny-battle-vignette .visual-skill-feedback { display:none; } /* Same action already appears in the HUD. */
+.nymeria-theme.fixed-combat .world-fighters > div { background:#0c1713; border-color:var(--ny-rule); border-radius:5px; }
+.nymeria-theme .xp-bar, .nymeria-theme .world-resource-track { background:#0b1512; border:1px solid #69755b; border-radius:4px; }
+.nymeria-theme .xp-bar > span { background:linear-gradient(90deg,#6a8868,#cfb784); }
+.nymeria-theme #world-player-bar { background:linear-gradient(90deg,#496b50,#9cb98c); }
+.nymeria-theme #world-enemy-bar { background:linear-gradient(90deg,#77483c,#d08c79); }
+.nymeria-theme #world-resource-fill { background:linear-gradient(90deg,#66789e,#b7c5d5); }
+.nymeria-theme.fixed-combat .world-damage-summary { border-radius:4px; background:#c8ae6710; }
+.nymeria-theme #world-damage-dealt { color:var(--ny-gold); }
+.nymeria-theme #world-damage-taken { color:var(--ny-danger); }
+.nymeria-theme.fixed-combat #world-battle-recent { border-left:0; }
+.nymeria-theme #world-recent-player { color:#d7e6cd; border-left:2px solid var(--ny-forest); padding-left:5px; }
+.nymeria-theme #world-recent-enemy { color:#efd6ce; border-left:2px solid var(--ny-danger); padding-left:5px; }
+.nymeria-theme #world-battle.world-battle-miniboss { border-color:var(--ny-gold); box-shadow:inset 0 0 0 1px #d7b77d30; }
+.nymeria-theme .world-battle-miniboss #world-battle-name { color:#f2d39c; }
+.nymeria-theme #world-battle .world-battle-controls button { border-color:var(--ny-bronze); }
+.nymeria-theme #world-battle-pause { background:#223a2c; }
+.nymeria-theme #world-battle-abandon { background:#3b2b23; }
+.nymeria-theme .world-enemy.enemy-miniboss { border-color:var(--ny-gold); background:linear-gradient(135deg,#51492b,#14261c); }
+.nymeria-theme .ny-result-victory { border-color:var(--ny-gold); background:linear-gradient(135deg,#4a4424,#1e3023); }
+.nymeria-theme .ny-result-defeat { border-color:#b98679; background:linear-gradient(135deg,#423029,#19241f); }
+.nymeria-theme .ny-result-victory h3 { color:#f0d19a; }
+.nymeria-theme .ny-result-defeat h3 { color:var(--ny-danger); }
+.nymeria-theme :is(#world-message,#profession-status,#notice):not(:empty) { color:var(--ny-parchment); border-left:2px solid var(--ny-gold); padding-left:8px; }
+/* Hero/equipment frames supplement, never recolour or replace, the frozen artwork. */
+.nymeria-theme .stage, .nymeria-theme .equipment-stage { background:radial-gradient(ellipse at 50% 75%,#bda56c18,transparent 65%),linear-gradient(135deg,#263a2c,#111f1a); border-color:var(--ny-bronze); }
+.nymeria-theme .identity h1 { color:var(--ny-parchment); }
+.nymeria-theme .identity .level { color:var(--ny-gold); border-color:var(--ny-bronze); background:#343523; }
+.nymeria-theme .stats { border-color:var(--ny-bronze); }
+.nymeria-theme .power strong { color:var(--ny-gold); }
+.nymeria-theme #inventory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.nymeria-theme #inventory-grid .inventory-item { background:linear-gradient(155deg,#26372c,#101d17); border-color:var(--ny-rule); border-top-color:var(--rarity); }
+.nymeria-theme #inventory-grid .inventory-name { color:var(--ny-parchment); font:16px/1.3 var(--ny-display); }
+.nymeria-theme #inventory-grid :is(small,.rarity-text) { color:var(--ny-muted); font-size:13px; line-height:1.4; }
+.nymeria-theme #inventory-grid .rarity-text { color:var(--rarity); }
+.nymeria-theme .inventory-icon { background:#c8ad6a0c; border:1px solid var(--ny-rule); border-radius:6px; padding:4px; box-sizing:content-box; }
+.nymeria-theme #inventory-grid [data-ny-item='weapons'] .inventory-icon { color:#d6bd8c; }
+.nymeria-theme #inventory-grid [data-ny-item='armor'] .inventory-icon { color:#afc0b5; }
+.nymeria-theme #inventory-grid [data-ny-item='accessories'] .inventory-icon { color:var(--ny-magic); }
+.nymeria-theme #equipment-grid .slot-card { background:linear-gradient(150deg,#2c3c2f,#14241c); border-color:var(--ny-rule); }
+.nymeria-theme #equipment-grid .slot-icon { color:var(--ny-gold); }
+.nymeria-theme #item-dialog, .nymeria-theme #combat-exit-confirm { background:linear-gradient(125deg,#293b2f,#111e18); border-color:var(--ny-bronze); color:var(--ny-parchment); }
+.nymeria-theme .detail-header { border-color:var(--ny-bronze); }
+.nymeria-theme .detail-meta, .nymeria-theme .comparison { border-color:var(--ny-rule); }
+.nymeria-theme .item-verdict { background:#45664425; border-left:2px solid var(--ny-forest); padding:8px; color:var(--ny-parchment); }
+.nymeria-theme .gear-advice { color:#c6dcb5; font-size:13px; }
+.nymeria-theme :is(.armor-incompatible,.compatibility,.profession-requirement) { color:var(--ny-danger); }
+/* Journal and workshops: paper-like detail without pretending to change rarity or progression. */
+.nymeria-theme #panel-world .journal-entry { background:linear-gradient(135deg,#334333,#17291f); border-color:var(--ny-rule); }
+.nymeria-theme #panel-world :is(.quest-card,.main-quest-panel,.profession-action-card) { border-color:var(--ny-bronze); background:linear-gradient(135deg,#3b3d2826,#13251e); }
+.nymeria-theme #panel-world .quest-state-label { border-color:var(--ny-bronze); color:var(--ny-parchment); }
+.nymeria-theme #panel-world .quest-completed { border-left-color:var(--ny-gold); background:#363c28; }
+.nymeria-theme #panel-world .quest-active { border-left-color:var(--ny-forest); }
+.nymeria-theme #panel-world .quest-locked .quest-state-label { color:var(--ny-muted); }
+.nymeria-theme .quest-rewards { color:#ebd3a5; border-top:1px solid var(--ny-rule); padding-top:8px; }
+.nymeria-theme .fixed-tabs button[aria-pressed='true'], .nymeria-theme .filters button[aria-pressed='true'] { color:#fff0cd; border-color:var(--ny-gold); background:#4b422a; }
+.nymeria-theme #panel-professions :is(.profession-card,.profession-action-card) { background:linear-gradient(145deg,#334331,#16281d); border-color:var(--ny-rule); }
+.nymeria-theme #panel-professions .profession-card strong, .nymeria-theme #panel-professions .profession-actions strong { font-size:16px; }
+.nymeria-theme #panel-professions :is(.profession-card small,.profession-actions small,.profession-materials small) { font-size:13px; line-height:1.4; color:var(--ny-muted); }
+.nymeria-theme .profession-materials > span { background:var(--ny-stone); border-color:var(--ny-rule); }
+.nymeria-theme .profession-materials strong { color:var(--ny-gold); }
+.nymeria-theme .ny-profession-seal { flex:none; color:var(--ny-gold); width:24px; height:24px; }
+.nymeria-theme .notification-card { border-color:var(--ny-bronze); background:linear-gradient(135deg,#3c432b,#18261c); }
+@media (prefers-reduced-motion:reduce) { .nymeria-theme *, .nymeria-theme *::before, .nymeria-theme *::after { scroll-behavior:auto; } }
+.nymeria-theme #panel-world .ny-enemy-card { position:relative; }
+.nymeria-theme #panel-world .ny-enemy-card > div:first-child { padding-left:60px; min-height:86px; }
+.nymeria-theme #panel-world .ny-enemy-card::before { content:''; position:absolute; top:8px; left:4px; width:58px; height:86px; background:var(--ny-enemy) center/contain no-repeat; pointer-events:none; }
+.nymeria-theme #panel-professions .profession-card > div:first-child { display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 8px; }
+.nymeria-theme #panel-professions .profession-card small { grid-column:2; }
+.nymeria-theme .ny-profession-seal .nymeria-icon { width:24px; height:24px; }
+/* Save space in the smallest viewport; decorative brand mark never displaces Back/actions. */
+.nymeria-theme.fixed-compact .mobile-topbar::before { display:none; }
+.nymeria-theme .panel-summary p, .nymeria-theme .resource-summary { font-size:13px; line-height:1.5; }
+.nymeria-theme .stats dl div { font-size:13px; }
+.nymeria-theme #panel-world .npc-offer { background:#37432c; }
+.nymeria-theme #panel-world .npc-offer > small { display:block; font-size:13px; }
+.nymeria-theme #panel-world .npc-offer > button { width:100%; font-size:14px; }
+.nymeria-theme #panel-world .npc-offer > strong { font-size:15px; }
+
+.nymeria-theme .ny-dialogue-name { display:block; margin-bottom:5px; color:var(--ny-gold); font:600 13px/1.35 var(--ny-text); }

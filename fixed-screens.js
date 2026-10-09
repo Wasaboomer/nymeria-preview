@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var atoms=[], pages=[], index=0, root=null, frame=0, signature='', category='main', pageMemory={};
-  var historyMode=false, lastEncounterId=null;
+  var historyMode=false, lastEncounterId=null, preferredContent=null;
   var ns='http://www.w3.org/2000/svg';
   var app=document.querySelector('.app'), dialog=document.getElementById('item-dialog');
   var pager=document.createElement('nav'); pager.className='fixed-pager';pager.setAttribute('aria-label','Pagine della schermata');
@@ -22,7 +22,7 @@
     if(box.height<1 && box.width<1)return;
     // A rendered unit is kept whole if it can fit, preserving headings with actions.
     if(node.tagName==='DETAILS'&&!node.open){result.push(node);return;}
-    var atomic=node.matches('button, input, select, textarea, label, summary, p, h1, h2, h3, h4, svg, img, canvas, .stage, .world-fighters, .world-battle-controls, #world-resource, #fixed-battle-essential, .inventory-item, .slot-card');
+    var atomic=node.matches('button, input, select, textarea, label, summary, p, h1, h2, h3, h4, svg, img, canvas, .stage, .ny-place-banner, .world-fighters, .world-battle-controls, #world-resource, #fixed-battle-essential, .inventory-item, .slot-card');
     if(atomic || box.height<=Math.min(budget*.7,220) || !node.children.length){result.push(node);return;}
     Array.from(node.children).forEach(function(child){collect(child,budget,result);});
   }
@@ -57,7 +57,7 @@
       var battle=document.getElementById('world-battle');
       if(battle&&!battle.querySelector('#fixed-battle-essential')){
         var essential=document.createElement('section');essential.id='fixed-battle-essential';
-        ['.section-title','.world-fighters','#world-damage-summary','#world-battle-recent','.world-battle-controls'].forEach(function(selector){var item=battle.querySelector(selector);if(item)essential.append(item);});
+        ['.section-title','.visual-battle-arena','.world-fighters','#world-damage-summary','#world-battle-recent','.world-battle-controls'].forEach(function(selector){var item=battle.querySelector(selector);if(item)essential.append(item);});
         essential.insertBefore(document.getElementById('world-resource'),essential.querySelector('#world-damage-summary'));
         var history=document.createElement('section');history.id='fixed-battle-history';history.hidden=true;
         history.innerHTML='<h3>Registro · ultimi '+CombatData.logLimit+' eventi</h3>';
@@ -101,6 +101,8 @@
       if(combat || contextual){
         atoms=[];pages=[[]];index=0;root.style.height=(budget+4)+'px';
         if(combat){
+          var arena=battle.querySelector('.visual-battle-arena');
+          if(arena)arena.hidden=budget<520 || historyMode;
           document.getElementById('fixed-battle-history').hidden=!historyMode;
           document.getElementById('world-battle-recent').hidden=historyMode;
           var toggle=document.getElementById('world-history-toggle');
@@ -133,6 +135,12 @@
         var focusedPage=pages.findIndex(function(rows){return rows.some(function(a){return a===focused||a.contains(focused);});});
         if(focusedPage>=0)index=focusedPage;
       }
+      if(preferredContent){
+        var content=root.querySelector(preferredContent);
+        var contentPage=content ? pages.findIndex(function(rows){return rows.some(function(a){return a===content||a.contains(content);});}) : -1;
+        if(contentPage>=0)index=contentPage;
+        preferredContent=null;
+      }
       paint(pages[index]);
       root.style.height=(budget+4)+'px';
       var activePager=open?modalPager:pager;
@@ -162,7 +170,10 @@
   });
   document.addEventListener('focusin',schedule);document.addEventListener('focusout',schedule);
   document.addEventListener('toggle',schedule,true);
-  document.addEventListener('nymeria:navigation',schedule);
+  document.addEventListener('nymeria:navigation',function(){preferredContent=null;schedule();});
+  document.addEventListener('nymeria:content-focus',function(event){
+    if(typeof event.detail?.selector==='string'){preferredContent=event.detail.selector;schedule();}
+  });
   window.addEventListener('resize',schedule);if(window.visualViewport){visualViewport.addEventListener('resize',schedule);visualViewport.addEventListener('scroll',schedule);}
   window.addEventListener('pageshow',schedule);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')schedule();});

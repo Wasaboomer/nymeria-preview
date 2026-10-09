@@ -7,7 +7,7 @@ const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
   const p=await b.newPage({viewport:{width,height:844},hasTouch:true,isMobile:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));
   await p.addInitScript(()=>{window.rejections=[];addEventListener('unhandledrejection',e=>rejections.push(String(e.reason)));});await p.goto(url);
   assert.equal(await p.locator('.bottom-nav button').count(),5);
-  assert.deepEqual(await p.locator('.bottom-nav button').allTextContents(),['Mappa','◆Missioni','Eroe','▣Inventario','Menu']);
+  assert.deepEqual(await p.locator('.bottom-nav button').allTextContents(),['Mappa','Missioni','Eroe','Inventario','Menu']);
   const saved=await p.evaluate(()=>JSON.stringify({...localStorage}));
   await p.locator('#tab-missions').tap();await p.waitForTimeout(100);
   assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'journal');

@@ -991,3 +991,17 @@ Debug per entrambe le classi; l'advance del motore accelera soltanto le attese i
 Safari reale e le barre del browser su iPhone richiedono ancora test fisico.
 La CI DEV esegue le 22 suite; non effettua deployment manuale né modifica main
 oppure il repository separato di pubblicazione.
+
+### Sprint 2 — Visual Identity & Fantasy World
+
+Tema fantasy condiviso con palette pietra/bosco, bronzo e pergamena; sette fondali
+SVG originali per i luoghi già esistenti, cornici NPC con emblemi del ruolo
+(non ritratti), scena di combattimento adattiva con gli asset originali, inventario
+più leggibile, cornici Eroe/equipaggiamento, Diario e Professioni coerenti.
+Gameplay, salvataggi, navigazione e asset congelati restano invariati.
+
+Il design system, provenance/licenze, budget delle risorse, architettura e limiti
+sono documentati in [docs/visual-identity.md](docs/visual-identity.md).
+La nuova suite `tests/fantasy-identity-browser.cjs` si aggiunge alle 22 suite attive.
+Serve ancora la validazione fisica Safari/iPhone, inclusi barre browser, touch e
+prestazioni su hardware meno recente. Nessun deploy manuale.

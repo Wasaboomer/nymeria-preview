@@ -1,0 +1,19 @@
+NYMERIA Sprint 2 — original environmental illustrations
+
+Files: veyra.svg, broken-path.svg, lantern-wood.svg, elar-ruins.svg,
+vesper-ford.svg, silent-tower.svg, vesper-outpost.svg.
+
+Provenance: original vector compositions authored specifically for this sprint.
+No photographs, stock illustrations, third-party textures, remote images or
+character assets were used to create these seven files. They illustrate places
+already defined in world-data.js and are decorative, not geographic maps.
+
+These seven new SVG files are dedicated to the public domain under
+CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+To the extent possible under law, copyright and related rights in these original
+illustrations are waived. They may be copied, modified and distributed without
+permission. No warranty is provided.
+
+This statement applies only to the seven SVG files listed above. It does not
+relicense existing Nymeria artwork, character/enemy assets, code or other files.
+The link is documentation; the application never requests it at runtime.

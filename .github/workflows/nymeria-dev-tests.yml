@@ -69,6 +69,7 @@ jobs:
             tests/contextual-combat-browser.cjs
             tests/contextual-panels-browser.cjs
             tests/sprint12-navigation-browser.cjs
+            tests/fantasy-identity-browser.cjs
           )
           printf '## NYMERIA DEV test results\n\n' >> "$GITHUB_STEP_SUMMARY"
           printf '| Test | Result |\n|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
