@@ -208,6 +208,19 @@ function captureLogcat() {
         try {console.log('::notice::Native app PID '+adb('shell','pidof',id));}catch{console.log('::notice::Native app process absent');}
         fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
       }
-    } catch (error) {console.log('::notice::Native log capture failed '+error.message);}
+    } catch (error) {
+      console.log('::notice::Native log capture failed '+error.message);
+      // A timed-out collector may still have saved the decisive crash lines.
+      try {
+        const lines=fs.readFileSync('test-results/android/logcat.txt','utf8').split('\n').filter(line=>/RenderProcess|Fatal signal|lmkd|lowmemorykiller|AndroidRuntime|Killing.*nymeria|(?:chromium|cr_).*?(?:ERROR|FATAL)/i.test(line)).slice(-12);
+        report.failureDiagnostics=lines;
+        for(const line of lines)console.log('::notice::Partial native failure log '+line.slice(0,1000));
+        fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
+      }catch{}
+    }
+    if(!completed) {
+      try {console.log('::notice::ADB device state '+execFileSync('adb',['devices','-l'],{encoding:'utf8',timeout:5000}).replace(/[\r\n]/g,' '));}catch(error){console.log('::notice::ADB device state unavailable '+error.code);}
+      try {console.log('::notice::Runner memory '+fs.readFileSync('/proc/meminfo','utf8').split('\n').filter(line=>/^Mem(Total|Available):/.test(line)).join(' '));}catch{}
+    }
   }
 })().catch(e=>{console.error(e);console.error('::error::Native Android smoke: '+String(e.stack || e.message).replace(/[\r\n]/g,' ').slice(0,1600));process.exitCode=1;});
