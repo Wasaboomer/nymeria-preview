@@ -22,7 +22,11 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
   async function waitNative(page,predicate,label) {
     const deadline=Date.now()+30000;
     while(Date.now()<deadline) {
-      if(await page.evaluate(predicate)) return;
+      let timer;
+      const result=await Promise.race([page.evaluate(predicate),new Promise((_,reject)=>{
+        timer=setTimeout(()=>reject(Error('WebView evaluation stalled: '+label)),5000);
+      })]).finally(()=>clearTimeout(timer));
+      if(result) return;
       await delay(100);
     }
     throw Error('Native lifecycle timeout: '+label);
@@ -183,7 +187,8 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
   } finally {
     if(lastPage) {
       try {
-        const state=await lastPage.evaluate(()=>({url:location.href,title:document.title,ready:document.readyState,characterCreated:typeof Equipment==='undefined'?null:Equipment.state.characterCreated,route:window.NymeriaNavigation?.route,depth:window.NymeriaNavigation?.depth,hidden:document.hidden,dialog:document.querySelector('#item-dialog')?.open}));
+        let endTimer;
+        const state=await Promise.race([lastPage.evaluate(()=>({url:location.href,title:document.title,ready:document.readyState,characterCreated:typeof Equipment==='undefined'?null:Equipment.state.characterCreated,route:window.NymeriaNavigation?.route,depth:window.NymeriaNavigation?.depth,hidden:document.hidden,dialog:document.querySelector('#item-dialog')?.open})),new Promise((_,reject)=>{endTimer=setTimeout(()=>reject(Error('End-state unavailable')),2000);})]).finally(()=>clearTimeout(endTimer));
         console.log('::notice::Native smoke end-state '+JSON.stringify(state));
       } catch {}
     }
