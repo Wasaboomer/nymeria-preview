@@ -3,6 +3,9 @@ on:
   push:
     branches: [dev/kaelith-modular-character]
   workflow_dispatch:
+defaults:
+  run:
+    shell: bash
 permissions:
   contents: read
 concurrency:
@@ -12,7 +15,7 @@ jobs:
   android-debug:
     if: github.ref == 'refs/heads/dev/kaelith-modular-character'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,13 +38,35 @@ jobs:
       - run: npm run sync:mobile
       - run: npm run test:mobile
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          mkdir -p ../test-results/android
+          ./gradlew assembleDebug --no-daemon 2>&1 | tee ../test-results/android/build.log
         working-directory: android
       - uses: actions/upload-artifact@v4
         with:
           name: nymeria-android-debug-${{ github.sha }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 14
+      - name: Enable hardware acceleration on the ephemeral runner
+        run: test -c /dev/kvm && sudo chmod 666 /dev/kvm
+      - name: Launch and test the real APK in an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: CI=true node tools/android-native-smoke.cjs
+      - name: Preserve Android build and native smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nymeria-android-validation-${{ github.sha }}
+          path: test-results/android/
+          if-no-files-found: warn
           retention-days: 14
   ios-unsigned:
     if: github.ref == 'refs/heads/dev/kaelith-modular-character'
@@ -64,15 +89,26 @@ jobs:
       - run: npm run sync:mobile
       - run: npm run test:mobile
       - name: Compile simulator without signing
-        run: >-
-          xcodebuild -project ios/App/App.xcodeproj -scheme App
-          -configuration Debug -sdk iphonesimulator
-          -destination 'generic/platform=iOS Simulator'
-          -derivedDataPath /tmp/nymeria-ios-derived
-          CODE_SIGNING_ALLOWED=NO build
+        run: |
+          mkdir -p test-results/ios
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath /tmp/nymeria-ios-derived \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee test-results/ios/build.log
       - uses: actions/upload-artifact@v4
         with:
           name: nymeria-ios-simulator-unsigned-${{ github.sha }}
           path: /tmp/nymeria-ios-derived/Build/Products/Debug-iphonesimulator/App.app
           if-no-files-found: error
+          retention-days: 14
+      - name: Install and relaunch in an iPhone simulator
+        run: bash tools/ios-simulator-smoke.sh
+      - name: Preserve iOS build and simulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nymeria-ios-validation-${{ github.sha }}
+          path: test-results/ios/
+          if-no-files-found: warn
           retention-days: 14

@@ -127,3 +127,20 @@ Capacitor demo application ID). Native runtime testing must exercise NYMERIA on
 an emulator/device; the web/foundation suites and compilation do not replace it.
 Android CI uses the SDK already installed on ubuntu-24.04, then explicitly verifies
 required SDK packages with sdkmanager; no redundant SDK setup action is needed.
+
+## Sprint 2.3 — validation and readiness
+
+Read the [validation report](MOBILE_VALIDATION_REPORT.md) and
+[iPhone-first TestFlight preparation guide](IOS_TESTFLIGHT_PREPARATION.md).
+The active suite is now 16 engine + 12 browser suites; `npm test` includes measured
+browser timings, storage faults and real UI equipment/renderer persistence checks.
+Reports are written into ignored test-results and uploaded with the CI logs.
+Browser CI checks out the run's exact SHA, not a moving branch tip.
+
+Mobile Builds also attempts a real Android API 35 emulator smoke and an iPhone
+simulator install/launch/relaunch smoke. Android uses Playwright's existing Android
+WebView support plus native adb Back/Home/force-stop; no runtime plugin was added.
+iOS process smoke is not touch/gameplay/XCTest or physical validation. Native smoke
+logs/screenshots are additional artifacts; APK/app artifacts remain available after
+successful compilation even if a later smoke fails. Run timeouts are bounded;
+there is no signing, store upload, preview deployment or paid service integration.

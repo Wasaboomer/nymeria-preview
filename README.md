@@ -1030,3 +1030,8 @@ firma sono predisposte in Actions sul solo DEV. Non è una release per gli store
 - [Architettura mobile, build, artifact e limiti iPhone](docs/MOBILE_APP_DEVELOPMENT.md)
 
 I salvataggi Safari non vengono trasferiti automaticamente nell'app installata.
+
+Sprint 2.3 adds [mobile validation evidence](docs/MOBILE_VALIDATION_REPORT.md) and
+[a preparatory TestFlight guide](docs/IOS_TESTFLIGHT_PREPARATION.md), plus CI-only
+Android emulator / iPhone simulator smoke tests. Native process launch, browser
+functional checks and physical device approval remain separate levels of evidence.
