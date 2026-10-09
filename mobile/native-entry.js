@@ -4,10 +4,14 @@ import { pauseExistingCombats } from './lifecycle-controller.cjs';
 const registrations=[];
 // Native activity state is separate from document visibility.
 registrations.push(App.addListener('appStateChange',({isActive})=>{
+  if (isActive === true) {
+    document.dispatchEvent(new Event('nymeria:app-active'));
+    return;
+  }
   if (isActive !== false) return;
   try {
     pauseExistingCombats({document,
-      worldEngine:typeof WorldUI==='undefined'?null:WorldUI.engine,
+      worldUI:typeof WorldUI==='undefined'?null:WorldUI,
       combatEngine:typeof CombatUI==='undefined'?null:CombatUI.engine});
   } catch (error) { console.error('Native background pause failed',error); }
 }));

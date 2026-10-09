@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),{chromium}=require('playwright');
 (async()=>{const b=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [320,375,390,430]){
  const p=await b.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000');
- await p.evaluate(async()=>{ClassSystem.selectClass('warden');Equipment.equip('sword','mainHand');Equipment.equip('shield','support');await WorldSystem.enter('broken-path');const r=await WorldSystem.startEncounter('vesper-raider');if(!r.ok)throw Error(r.message);NymeriaNavigation.open('world',{view:'battle'});});
+ await p.evaluate(async()=>{ClassSystem.selectClass('warden');Equipment.equip('sword','mainHand');Equipment.equip('shield','support');await WorldSystem.enter('broken-path');const r=await WorldSystem.startEncounter('vesper-raider');if(!r.ok)throw Error(r.message);await WorldSystem.pauseEncounter(r.ticket.id);NymeriaNavigation.open('world',{view:'battle'});});
  await p.waitForTimeout(150);
  for(const height of [568,667,844,508,375]){
   await p.setViewportSize({width,height});await p.waitForTimeout(150);

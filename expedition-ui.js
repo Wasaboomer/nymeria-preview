@@ -265,6 +265,7 @@ const ExpeditionUI = (() => {
     try {
       await ProgressionSystem.refresh();
       renderClock();
+      renderReport();
     } finally {
       tickBusy = false;
     }
@@ -283,6 +284,9 @@ const ExpeditionUI = (() => {
       renderReport();
     }
   });
+  const recover = () => { ProgressionStore.refresh(); tick(); };
+  window.addEventListener("pageshow", recover);
+  document.addEventListener("nymeria:app-active", recover);
   ProgressionStore.subscribe(render);
   Equipment.subscribe(render);
   ClassSystem.subscribe(render);

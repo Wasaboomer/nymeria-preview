@@ -5,6 +5,7 @@ const WorldEngine = (() => {
   const events = node ? require("./quest-events.js") : QuestEvents;
   const combat = node ? require("./combat-engine.js") : CombatEngine;
   const progressionData = node ? require("./progression-data.js") : ProgressionData;
+  const clock = node ? require("./activity-clock.js") : ActivityClock;
   const copy = x => JSON.parse(JSON.stringify(x));
   function simulate(ticket, captureLog = false) {
     const engine = combat.create({ ...ticket.snapshot, enemyTemplate: ticket.template, seed: ticket.seed, captureLog });
@@ -64,43 +65,86 @@ const WorldEngine = (() => {
         if (!available(state)) return { ok: false, message: "Hai già un incontro in corso." };
         const snapshot = progression.snapshot();
         if (!snapshot.profile.kitValid) return { ok: false, message: "Prepara il kit della tua classe in Equipaggiamento." };
+        const startedAt = now();
+        if (!clock.validTime(startedAt)) return {ok:false, message:"Orologio locale non valido: riprova."};
         state.sequence++;
         const ticket = {
           id: `world-${state.sequence}`, enemyId, location: location.id,
           seed: (options.seed ?? Math.floor(random() * 4294967296)) >>> 0,
-          startedAt: now(), snapshot, template: copy(enemy),
+          startedAt, clock: clock.create(startedAt, options.speed), snapshot, template: copy(enemy),
           lootPolicy: progression.personalPreparation(),
         };
         state.frontier.activeEncounter = ticket;
         return { ok: true, ticket: copy(ticket), message: `${enemy.name} · incontro iniziato` };
       });
     }
-    function finishEncounter(id) {
+    function changeClock(id, running, speed) {
+      return store.transact(state => {
+        const ticket = state.frontier.activeEncounter;
+        if (!ticket || ticket.id !== id) return {ok:false, message:"Incontro non disponibile."};
+        const at = now();
+        if (!clock.validTime(at) || (speed !== undefined && ![1,2,4].includes(speed)))
+          return {ok:false, message:"Orologio o velocità non validi: riprova."};
+        // Completion and a late pause are ordered inside the same durable transaction.
+        if (ticket.clock?.running && isComplete(ticket, at)) return settleTicket(state, ticket);
+        if (ticket.clock?.running === running && (speed === undefined || ticket.clock.speed === speed))
+          return {ok:true, unchanged:true};
+        const next = clock.transition(ticket.clock, at, running, speed);
+        if (!next) return {ok:false, message:"Orologio locale non valido: riprova."};
+        ticket.clock = next;
+        return {ok:true};
+      });
+    }
+    function elapsed(ticket = store.state.frontier.activeEncounter) {
+      return clock.elapsed(ticket?.clock, now()) / 1000;
+    }
+    function refresh() {
+      return store.transact(state => {
+        const at = now(), ticket = state.frontier.activeEncounter;
+        if (!clock.validTime(at)) return {ok:false, message:"Orologio locale non valido: riprova."};
+        if (!ticket?.clock?.running) return {ok:true, unchanged:true};
+        try {
+          return isComplete(ticket, at) ? settleTicket(state, ticket) : {ok:true, unchanged:true};
+        } catch { return {ok:false, message:"Incontro non ricostruibile; nessuna ricompensa applicata."}; }
+      });
+    }
+    function settleTicket(state, ticket) {
+      const engine = simulate(ticket);
+      const outcome = engine.result?.outcome || "defeat";
+      const victory = outcome === "victory";
+      const rewards = victory ? copy(ticket.template.rewards) : { xp: 0, crowns: 0 };
+      const progress = progression.grantRewards(state, rewards);
+      if (victory) {
+        events.dispatch(state, { type: "kill", target: ticket.enemyId });
+        if (ticket.template.kind !== "normal") events.dispatch(state, { type: "defeatBoss", target: ticket.enemyId });
+        state.frontier.defeatedEnemies = [...new Set([...state.frontier.defeatedEnemies, ticket.enemyId])];
+        ticket.template.drops.forEach(id => collect(state, id));
+      } else state.frontier.location = "veyra";
+      const receipt = {
+        id: ticket.id, enemyId: ticket.enemyId, enemyName: ticket.template.name, location: ticket.location,
+        outcome, rewards, drops: victory ? ticket.template.drops : [],
+        result: engine.result, className: ticket.snapshot.profile.className,
+        awardedAt: now(), ...progress,
+      };
+      state.frontier.lastEncounter = receipt;
+      state.frontier.activeEncounter = null;
+      return { ok: true, receipt: copy(receipt), message: victory ? "Vittoria · ricompense salvate" : "Sconfitta · ritorno a Veyra. Nessuna perdita, nessuna ricompensa." };
+    }
+    function isComplete(ticket, at) {
+      const seconds = clock.elapsed(ticket.clock, at) / 1000;
+      const replay = combat.create({...ticket.snapshot, enemyTemplate:ticket.template, seed:ticket.seed, captureLog:false});
+      replay.start(); replay.advance(seconds);
+      return !!replay.result || seconds >= 180;
+    }
+    function finishEncounter(id, {respectPause = false} = {}) {
       return store.transact(state => {
         if (state.frontier.lastEncounter?.id === id && !state.frontier.activeEncounter)
           return { ok: true, unchanged: true, receipt: copy(state.frontier.lastEncounter) };
         const ticket = state.frontier.activeEncounter;
         if (!ticket || ticket.id !== id) return { ok: false, message: "Incontro già concluso o non disponibile." };
-        const engine = simulate(ticket);
-        const outcome = engine.result?.outcome || "defeat";
-        const victory = outcome === "victory";
-        const rewards = victory ? copy(ticket.template.rewards) : { xp: 0, crowns: 0 };
-        const progress = progression.grantRewards(state, rewards);
-        if (victory) {
-          events.dispatch(state, { type: "kill", target: ticket.enemyId });
-          if (ticket.template.kind !== "normal") events.dispatch(state, { type: "defeatBoss", target: ticket.enemyId });
-          state.frontier.defeatedEnemies = [...new Set([...state.frontier.defeatedEnemies, ticket.enemyId])];
-          ticket.template.drops.forEach(id => collect(state, id));
-        } else state.frontier.location = "veyra";
-        const receipt = {
-          id, enemyId: ticket.enemyId, enemyName: ticket.template.name, location: ticket.location,
-          outcome, rewards, drops: victory ? ticket.template.drops : [],
-          result: engine.result, className: ticket.snapshot.profile.className,
-          awardedAt: now(), ...progress,
-        };
-        state.frontier.lastEncounter = receipt;
-        state.frontier.activeEncounter = null;
-        return { ok: true, receipt: copy(receipt), message: victory ? "Vittoria · ricompense salvate" : "Sconfitta · ritorno a Veyra. Nessuna perdita, nessuna ricompensa." };
+        if (respectPause && ticket.clock?.running === false)
+          return {ok:false, message:"Incontro in pausa: riprendi prima di proseguire."};
+        return settleTicket(state, ticket);
       });
     }
     function abandonEncounter() {
@@ -120,7 +164,9 @@ const WorldEngine = (() => {
         return { ok: true, message: "DEBUG · salvataggio locale aggiornato" };
       });
     }
-    return { enter, talk, explore, startEncounter, finishEncounter, abandonEncounter, debug, testMode,
+    return { enter, talk, explore, startEncounter, finishEncounter, refresh, elapsed,
+      pauseEncounter: id => changeClock(id, false),
+      resumeEncounter: (id, speed) => changeClock(id, true, speed), abandonEncounter, debug, testMode,
       get state() { return store.state.frontier; },
       estimate: enemyId => estimate(data.enemy(enemyId), progression.snapshot()) };
   }

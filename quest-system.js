@@ -4,6 +4,7 @@ const QuestEngine = (() => {
   const data = node ? require("./quest-data.js") : QuestData;
   const world = node ? require("./world-data.js") : WorldData;
   const events = node ? require("./quest-events.js") : QuestEvents;
+  const clock = node ? require("./activity-clock.js") : ActivityClock;
   const copy = (x) => JSON.parse(JSON.stringify(x));
   const statuses = ["locked", "available", "active", "completed", "claimed"];
   function normalize(raw = {}) {
@@ -37,13 +38,19 @@ const QuestEngine = (() => {
         Object.values(active.snapshot.stats).every(x => Number.isFinite(x) && x >= 0) &&
         Number.isFinite(active.template?.maxHp) && active.template.maxHp > 0 &&
         Array.isArray(active.template?.attacks) && active.template.attacks.length)
-      frontier.activeEncounter = copy(active);
+      { frontier.activeEncounter = copy(active);
+        if (active.clock !== undefined) {
+          const normalized = clock.normalize(active.clock);
+          if (normalized) frontier.activeEncounter.clock = normalized;
+          else delete frontier.activeEncounter.clock; // Safe legacy/manual resume, never invent offline time.
+        }
+      }
     for (const key of ["lastEncounter", "lastQuestClaim"])
       if (raw?.[key] && typeof raw[key].id === "string") frontier[key] = copy(raw[key]);
     return frontier;
   }
   function unsupported(raw) {
-    return raw?.questVersion > 2 || ["version", "zoneVersion", "discoveryVersion", "achievementVersion"].some(key => raw?.[key] > 1);
+    return raw?.activeEncounter?.clock?.version > 1 || raw?.questVersion > 2 || ["version", "zoneVersion", "discoveryVersion", "achievementVersion"].some(key => raw?.[key] > 1);
   }
   function reconcile(state) {
     const frontier = state.frontier;

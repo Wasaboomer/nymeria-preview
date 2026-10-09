@@ -174,9 +174,9 @@ const ProgressionStorage = (() => {
       textValue(active.id) &&
       activities.activity(active.activityId) &&
       Number.isFinite(active.startedAt) &&
-      active.startedAt >= 0 &&
+      active.startedAt >= 0 && active.startedAt <= 1e15 &&
       Number.isFinite(active.endsAt) &&
-      active.endsAt > active.startedAt &&
+      active.endsAt > active.startedAt && active.endsAt <= 1e15 &&
       active.endsAt - active.startedAt <= 604800000 &&
       Number.isInteger(active.seed) &&
       active.seed >= 0 &&

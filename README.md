@@ -1035,3 +1035,5 @@ Sprint 2.3 adds [mobile validation evidence](docs/MOBILE_VALIDATION_REPORT.md) a
 [a preparatory TestFlight guide](docs/IOS_TESTFLIGHT_PREPARATION.md), plus CI-only
 Android emulator / iPhone simulator smoke tests. Native process launch, browser
 functional checks and physical device approval remain separate levels of evidence.
+
+- [Sprint 2.4 — persistenza temporale e progressione offline](docs/OFFLINE_PROGRESSION.md)

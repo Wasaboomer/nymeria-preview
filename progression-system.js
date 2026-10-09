@@ -22,6 +22,7 @@ const ProgressionLifecycle = (() => {
       : CombatData;
   const questEvents = typeof module !== "undefined" && module.exports
     ? require("./quest-events.js") : QuestEvents;
+  const clock = typeof module !== "undefined" && module.exports ? require("./activity-clock.js") : ActivityClock;
   const copy = (value) => JSON.parse(JSON.stringify(value));
   function create({
     store,
@@ -91,6 +92,8 @@ const ProgressionLifecycle = (() => {
             (options.seed === undefined
               ? Math.floor(random() * 4294967296)
               : options.seed) >>> 0;
+        if (!clock.validTime(startedAt) || !clock.validTime(startedAt + activity.durationMs))
+          return {ok:false, message:"Orologio locale non valido: riprova."};
         state.sequence++;
         state.activeExpedition = {
           id: `exp-${state.sequence}-${startedAt}-${seed}`,
@@ -140,9 +143,10 @@ const ProgressionLifecycle = (() => {
       });
     }
     function refresh() {
-      const active = store.state.activeExpedition;
-      return active && now() >= active.endsAt
-        ? finish(now())
+      const active = store.state.activeExpedition, at = now();
+      if (!clock.validTime(at)) return Promise.resolve({ok:false, message:"Orologio locale non valido: riprova."});
+      return active && at >= active.endsAt
+        ? finish(at)
         : Promise.resolve({ ok: true, unchanged: true });
     }
     function cancel() {

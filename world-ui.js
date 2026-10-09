@@ -2,8 +2,9 @@
 const WorldUI = (() => {
   const node = id => document.getElementById(id), escape = QuestUI.escape;
   let view = "places", talked = null, talkedLocation = null, busy = false, engine = null, ticketId = null;
-  let messageTimer = null, frameId = null, lastTime = null, renderingAt = 0, settling = false;
+  let messageTimer = null, frameId = null, renderingAt = 0, settling = false;
   let estimateKey = "", estimates = {};
+  let clockKey = "", recovering = false, presentationSuspended = false;
   let damageTicket = null, lastDamage = {dealt:0,taken:0};
   const damageTimers = {};
   function damageFeedback(id, amount) {
@@ -189,7 +190,7 @@ const WorldUI = (() => {
       if (ticketId !== frontier.activeEncounter.id) {
         stopClock(); engine = null; ticketId = frontier.activeEncounter.id;
       }
-      renderBattle();
+      syncEncounter();
     } else if (engine && !settling) { stopClock(); engine = null; ticketId = null; }
     node("world-battle-abandon").disabled = settling || busy;
     if (busy || frontier.activeEncounter) {
@@ -209,18 +210,39 @@ const WorldUI = (() => {
   }
   function stopClock() {
     if (frameId !== null) cancelAnimationFrame(frameId);
-    frameId = null; lastTime = null;
+    frameId = null;
   }
-  function resume() {
+  function syncEncounter() {
     const ticket = ProgressionStore.state.frontier.activeEncounter;
     if (!ticket || settling) return;
-    if (!engine || ticketId !== ticket.id) {
-      ticketId = ticket.id;
-      engine = CombatEngine.create({ ...ticket.snapshot, enemyTemplate: ticket.template, seed: ticket.seed });
-      engine.start();
-    } else engine.resume();
-    if (engine.result || engine.time >= 180) { settle(); return; }
-    stopClock(); renderBattle(); frameId = requestAnimationFrame(frame);
+    const key = JSON.stringify([ticket.id, ticket.clock]);
+    if (!engine || ticketId !== ticket.id || key !== clockKey) {
+      stopClock(); ticketId = ticket.id; clockKey = key;
+      engine = CombatEngine.create({...ticket.snapshot, enemyTemplate:ticket.template, seed:ticket.seed});
+      engine.start(); engine.advance(WorldSystem.elapsed(ticket));
+      if (!ticket.clock?.running) engine.pause();
+    }
+    if (ticket.clock?.running && engine.status === "running" && !document.hidden && !presentationSuspended && frameId === null)
+      frameId = requestAnimationFrame(frame);
+    renderBattle();
+  }
+  async function resume() {
+    const ticket = ProgressionStore.state.frontier.activeEncounter;
+    if (!ticket || settling || busy) return;
+    const result = await action(() => WorldSystem.resumeEncounter(ticket.id, CombatUI.settings.speed));
+    if (result?.ok) { syncEncounter(); if (engine?.result || engine?.time >= 180) await settle(); }
+  }
+  function suspend() { presentationSuspended = true; stopClock(); } // Stop presentation only; durable automatic time continues.
+  async function recover() {
+    if (recovering || document.hidden) return;
+    recovering = true; presentationSuspended = false;
+    try {
+      ProgressionStore.refresh();
+      const result = await WorldSystem.refresh();
+      if (!result.ok) node("world-message").textContent = result.message;
+      syncEncounter(); render();
+    } catch { node("world-message").textContent = "Ripristino non riuscito: nessuna ricompensa duplicata. Riprova."; }
+    finally { recovering = false; }
   }
   function combatEventText(event, ticket) {
     const ability = ticket.snapshot.profile.abilities.find(a => a.id === event.abilityId)?.name;
@@ -251,8 +273,8 @@ const WorldUI = (() => {
     node("world-battle-clock").textContent = `${(engine?.time || 0).toFixed(1)}s`;
     node("world-battle-resume").hidden = engine?.status === "running";
     node("world-battle-resume").textContent = engine?.result || engine?.time >= 180 ? "Salva risultato · riprova" : "Riprendi incontro";
-    node("world-battle-resume").disabled = settling;
-    node("world-battle-pause").disabled = engine?.status !== "running" || settling;
+    node("world-battle-resume").disabled = settling || busy;
+    node("world-battle-pause").disabled = engine?.status !== "running" || settling || busy;
     const resource = engine?.player.resource || { current: ticket.snapshot.profile.resource.initial, max: ticket.snapshot.profile.resource.max };
     const resourceName = ticket.snapshot.profile.resource.name;
     const resourceCurrent = Math.max(0, Math.min(resource.max, resource.current));
@@ -307,7 +329,7 @@ const WorldUI = (() => {
   async function settle() {
     if (settling || !ticketId) return;
     stopClock(); settling = true; renderBattle();
-    await action(() => WorldSystem.finishEncounter(ticketId));
+    await action(() => WorldSystem.finishEncounter(ticketId, {respectPause:true}));
     settling = false;
     if (!ProgressionStore.state.frontier.activeEncounter) { engine = null; ticketId = null; }
     render();
@@ -315,8 +337,8 @@ const WorldUI = (() => {
   function frame(time) {
     frameId = null;
     if (!engine || engine.status !== "running") return;
-    if (lastTime !== null) engine.advance(Math.min(0.25, Math.max(0, (time - lastTime) / 1000)) * CombatUI.settings.speed);
-    lastTime = time;
+    const target = WorldSystem.elapsed();
+    engine.advance(Math.max(0, target - engine.time - engine.accumulator));
     if (time - renderingAt > 100) { renderingAt = time; renderBattle(); }
     if (engine.result || engine.time >= 180) settle();
     else frameId = requestAnimationFrame(frame);
@@ -402,7 +424,18 @@ const WorldUI = (() => {
     if (b.dataset.questDebug) return action(() => QuestSystem.debug(node("world-debug-quest").value, b.dataset.questDebug));
   });
   node("world-battle-resume").addEventListener("click", resume);
-  node("world-battle-pause").addEventListener("click", () => { engine?.pause(); stopClock(); renderBattle(); });
+  node("world-battle-pause").addEventListener("click", async () => {
+    const ticket = ProgressionStore.state.frontier.activeEncounter;
+    if (!ticket || busy || settling) return;
+    const result = await action(() => WorldSystem.pauseEncounter(ticket.id));
+    if (result?.ok) { stopClock(); syncEncounter(); }
+  });
+  document.addEventListener("click", event => {
+    const button = event.target.closest("[data-combat-speed]");
+    const ticket = ProgressionStore.state.frontier.activeEncounter;
+    if (button && ticket?.clock?.running)
+      action(() => WorldSystem.resumeEncounter(ticket.id, Number(button.dataset.combatSpeed))).then(syncEncounter);
+  });
   const abandonDialog = document.createElement("dialog");
   abandonDialog.id = "combat-exit-confirm";
   abandonDialog.setAttribute("aria-labelledby", "combat-exit-title");
@@ -433,9 +466,10 @@ const WorldUI = (() => {
   });
   if (typeof WorldDiscovery !== "undefined" && WorldDiscovery) WorldDiscovery.subscribe(render);
   ProgressionStore.subscribe(render); Equipment.subscribe(render); ClassSystem.subscribe(render);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden && engine?.status === "running") { engine.pause(); stopClock(); renderBattle(); }
-  });
-  render();
-  return { mark, selectView, render, resume, settle, get engine() { return engine; } };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) suspend(); else recover(); });
+  window.addEventListener("pageshow", recover);
+  window.addEventListener("storage", event => { if (event.key === ProgressionStorage.KEY || event.key === null) recover(); });
+  document.addEventListener("nymeria:app-active", recover);
+  render(); recover();
+  return { mark, selectView, render, resume, settle, suspend, recover, get engine() { return engine; } };
 })();

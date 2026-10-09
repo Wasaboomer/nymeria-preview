@@ -196,18 +196,28 @@ function startLogcat() {
     report.metrics.lifecycleEvents=evidence;
     const background=evidence.find(event=>event.isActive===false && event.at>=beforeHome);
     assert.ok(background,'The actual native background event was delivered');
-    assert.equal(background.status,'paused','Existing pause handler runs before lifecycle observer');
-    assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
-    assert.equal(await page.evaluate(()=>WorldUI.engine.time),background.time,'Combat clock did not advance after native pause');
-    check('native background pauses the existing world combat clock');
-    assert.equal(await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY)),saved);
-    assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
-    assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
+    await page.evaluate(()=>WorldUI.recover());
+    const recovered=await page.evaluate(()=>({active:ProgressionStore.state.frontier.activeEncounter,receipt:ProgressionStore.state.frontier.lastEncounter,time:WorldUI.engine?.time}));
+    assert.ok(recovered.active?.id===encounter || recovered.receipt?.id===encounter);
+    if (recovered.active) {
+      assert.equal(recovered.active.clock.running,true,'Background is not a manual pause');
+      assert.ok(recovered.time>=background.time,'Elapsed automatic time is reconstructed');
+    }
+    check('native background/foreground preserves or settles the automatic World activity');
     await audit(page);
-    assert.ok(await page.locator('#world-enemy-hp').innerText());
-    assert.ok(await page.locator('#world-player-hp').innerText());
-    assert.ok(await page.locator('#world-battle-resume').isVisible());
-    check('background/foreground persistence, real combat HUD and no automatic resume');
+    // Separately verify an explicit pause, including process termination.
+    await page.evaluate(async()=>{
+      if (!ProgressionStore.state.frontier.activeEncounter) {
+        await WorldSystem.enter('broken-path');await WorldSystem.startEncounter('vesper-raider',{seed:23});
+      }
+      await WorldSystem.pauseEncounter(ProgressionStore.state.frontier.activeEncounter.id);
+      await WorldUI.recover();
+    });
+    const pausedEncounter=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id);
+    const pausedTime=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.clock.elapsedMs);
+    assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
+    saved=await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY));
+    check('explicit manual pause remains separate from background');
     await adb('shell','settings','put','system','accelerometer_rotation','0');
     await adb('shell','settings','put','system','user_rotation','1');await delay(300);
     assert.ok(await page.evaluate(()=>innerHeight>innerWidth));check('portrait despite requested landscape');
@@ -217,7 +227,9 @@ function startLogcat() {
     await adb('shell','am','force-stop',id);page=await attach();
     assert.equal(await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY)),saved);
     assert.equal(await page.evaluate(()=>Equipment.state.characterCreated),true);
-    assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
+    assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),pausedEncounter);
+    assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.clock.elapsedMs),pausedTime);
+    assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.clock.running),false);
     assert.ok(!await page.evaluate(()=>WorldUI.engine?.status==='running'));
     check('process kill and offline relaunch restore save and pending encounter');
     const logs=(await logCapture.finish()).text;

@@ -164,3 +164,13 @@ registration plus an App.getState round-trip on the plugin queue. Native smoke
 waits for it and foreground state before input; renderer asset readiness alone
 does not establish native input readiness. Registration errors remain observable.
 The web bootstrap stays inert and no save data or debug UI is added.
+
+
+## Sprint 2.4 — tempo persistente
+
+Gli incontri automatici del Mondo ora continuano logicamente offline; background
+ferma solo la presentazione. Pausa manuale persistita, recupero da timestamp e
+ricompense transazionali sono descritti in [OFFLINE_PROGRESSION.md](OFFLINE_PROGRESSION.md).
+Il tab Combattimento con priorità modificabili durante lo scontro resta escluso
+dal replay offline e mantiene la pausa al background. Nessuna distribuzione nativa
+o preview è stata effettuata in questo sprint.
