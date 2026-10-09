@@ -22,7 +22,7 @@ function captureLogcat() {
   adb('logcat','-c');
   adb('shell','svc','wifi','disable'); adb('shell','svc','data','disable');
   const report = {sourceCommit:process.env.GITHUB_SHA,platform:'Android emulator, real debug APK/WebView',version:adb('shell','getprop','ro.build.version.release'),checks:[],metrics:{}};
-  let device, lastPage;
+  let device, lastPage, completed=false;
   const check = name => {report.checks.push(name);console.log('::notice::PASS native Android '+name);};
   // Background WebViews may stop RAF delivery; poll from the test host instead.
   async function waitNative(page,predicate,label) {
@@ -187,7 +187,7 @@ function captureLogcat() {
     assert.ok(!/Capacitor\/Console.*(?:Uncaught|Unhandled|native navigation adapter could not load)/i.test(logs),'No uncaught startup/bridge error');
     report.metrics.webView=await page.evaluate(()=>({userAgent:navigator.userAgent,width:innerWidth,height:innerHeight,dpr:devicePixelRatio}));
     report.metrics.memory=adb('shell','dumpsys','meminfo',id);
-    check('no observed app crash or uncaught JS error');
+    check('no observed app crash or uncaught JS error');completed=true;
     if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Native Android smoke\n\n'+report.checks.map(n=>'- PASS '+n).join('\n')+'\n\nAndroid '+report.version+'; launch + attach + renderer ready: '+report.metrics.launchAndAttachMs.toFixed(0)+' ms (CI emulator, not physical performance).\n');
   } finally {
     if(lastPage) {
@@ -199,6 +199,15 @@ function captureLogcat() {
     }
     fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
     if(device) await device.close();
-    try {captureLogcat();} catch {}
+    try {
+      const log=captureLogcat();
+      if(!completed) {
+        const lines=log.split('\n').filter(line=>/RenderProcess|Fatal signal|lmkd|lowmemorykiller|AndroidRuntime|Killing.*nymeria|(?:chromium|cr_).*?(?:ERROR|FATAL)/i.test(line)).slice(-12);
+        report.failureDiagnostics=lines;
+        for(const line of lines)console.log('::notice::Native failure log '+line.slice(0,1000));
+        try {console.log('::notice::Native app PID '+adb('shell','pidof',id));}catch{console.log('::notice::Native app process absent');}
+        fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
+      }
+    } catch (error) {console.log('::notice::Native log capture failed '+error.message);} 
   }
 })().catch(e=>{console.error(e);console.error('::error::Native Android smoke: '+String(e.stack || e.message).replace(/[\r\n]/g,' ').slice(0,1600));process.exitCode=1;});
