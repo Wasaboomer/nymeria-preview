@@ -121,3 +121,9 @@ The Android debug APK compiled successfully with JDK 21 / SDK 36; its signature
 verified and sampled packaged files matched www byte-for-byte. iOS cannot compile
 on this Linux host; the committed macOS workflow performs that check after push.
 No native emulator or physical iPhone/Android was available for this delivery.
+
+The CLI's unrelated example native tests were removed (including a hard-coded
+Capacitor demo application ID). Native runtime testing must exercise NYMERIA on
+an emulator/device; the web/foundation suites and compilation do not replace it.
+Android CI uses the SDK already installed on ubuntu-24.04, then explicitly verifies
+required SDK packages with sdkmanager; no redundant SDK setup action is needed.
