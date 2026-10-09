@@ -59,7 +59,7 @@ larghezza. Il test scrive dati grezzi in
 | Tap e due frame fino al cambio schermata | 78–151 ms |
 | JS heap del WebView Chromium simulato dopo riapertura | 2,98–3,05 MB |
 | Long task rilevati nelle sessioni | 52–71 ms |
-| Pacchetto www | 16.079.770 byte, 148 file |
+| Pacchetto www | 16.079.836 byte, 148 file |
 
 JS heap non è memoria totale dell'app. Questi dati non rappresentano prestazioni
 di iPhone vecchi né FPS reali; quattro campioni non sono un benchmark statistico.
@@ -187,3 +187,11 @@ prima dell’Home del fixture di combattimento (Target page/context/browser clos
 Il precedente incontro era riuscito nella run 37895401230: il comportamento
 non è ancora spiegato e non viene mascherato con retry. Le run successive
 espongono anche estratti log di renderer/processo per distinguere il problema.
+
+Run 37897975167: timeout sul primo Back con app ancora in Equipment, senza
+crash nei log esposti. Il test attendeva asset ma non la conferma di registrazione
+dei listener App. L’entry native espone ora NymeriaNativeReady dopo la registrazione
+dei listener e un round-trip getState sulla coda plugin; lo smoke attende anche attività in primo piano. Il fixture
+di combattimento attende inoltre i layer dopo la preparazione. Nessuna nuova
+UI, chiave di salvataggio o regola di gameplay. Non si presume risolta la
+disconnessione successiva del WebView senza una nuova prova.

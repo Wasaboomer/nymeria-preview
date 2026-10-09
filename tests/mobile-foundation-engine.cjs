@@ -23,3 +23,22 @@ pauseExistingCombats(lifecycle);assert.equal(worldPauses,1);assert.equal(manualP
 world.status='running';lifecycle.document.getElementById=()=>({disabled:true,click:()=>assert.fail('Blocked control clicked')});pauseExistingCombats(lifecycle);
 pauseExistingCombats({document:{getElementById:()=>null},worldEngine:null,combatEngine:null});
 console.log('PASS native lifecycle: existing world/manual pause controls, repeated background is idempotent, missing/disabled controls safe, no auto-resume');
+
+(async()=>{
+  const entry=require('node:fs').readFileSync(require('node:path').join(__dirname,'../mobile/native-entry.js'),'utf8').replace(/^import[^\n]*;\n/gm,'');
+  const run=Function('App','handleBack','pauseExistingCombats','window','console',entry);
+  const registrations=[],events=[];let finishNative,stateCalls=0;
+  const App={addListener:name=>{events.push(name);return new Promise(resolve=>registrations.push(resolve));},getState:()=>{stateCalls++;return new Promise(resolve=>{finishNative=resolve;});}};
+  const win={Capacitor:{getPlatform:()=> 'android'}},logs=[];
+  run(App,()=>{},()=>{},win,{error:(...args)=>logs.push(args)});
+  assert.deepEqual(events,['appStateChange','backButton']);assert.equal(stateCalls,0);
+  let ready=false;win.NymeriaNativeReady.then(()=>{ready=true;});
+  registrations.forEach(resolve=>resolve({remove:()=>{}}));await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(stateCalls,1);assert.equal(ready,false,'Listener handles alone do not prove native readiness');
+  finishNative({isActive:true});assert.equal(await win.NymeriaNativeReady,true);assert.equal(ready,true);assert.deepEqual(logs,[]);
+  const failed={Capacitor:{getPlatform:()=> 'android'}};
+  run({addListener:()=>Promise.resolve({}),getState:()=>Promise.reject(Error('Native bridge unavailable'))},()=>{},()=>{},failed,{error:(...args)=>logs.push(args)});
+  await assert.rejects(failed.NymeriaNativeReady,/Native bridge unavailable/);
+  assert.match(logs[0][0],/registration failed/);
+  console.log('PASS native startup: both listeners, real round-trip barrier, failures remain observable');
+})().catch(error=>{console.error(error);process.exitCode=1;});

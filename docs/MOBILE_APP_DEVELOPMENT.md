@@ -158,3 +158,9 @@ Debug APK signing uses the runner’s ephemeral debug keystore. APKs from differ
 runs may not install as updates: do not uninstall an app containing valuable saves.
 A stable development signing identity requires separately authorized secure key
 management; no signing secrets or private keys are added by Sprint 2.3.
+
+Native startup exposes NymeriaNativeReady only inside the adapter: listener
+registration plus an App.getState round-trip on the plugin queue. Native smoke
+waits for it and foreground state before input; renderer asset readiness alone
+does not establish native input readiness. Registration errors remain observable.
+The web bootstrap stays inert and no save data or debug UI is added.

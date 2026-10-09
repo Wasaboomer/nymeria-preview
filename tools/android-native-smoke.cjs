@@ -44,6 +44,9 @@ function captureLogcat() {
     const page = await view.page();lastPage=page;
     await page.waitForFunction(()=>typeof Equipment!=='undefined' && typeof Character!=='undefined');
     await page.evaluate(()=>Character.ready());
+    await page.waitForFunction(()=>typeof window.NymeriaNativeReady?.then==='function');
+    await waitNative(page,async()=>{await window.NymeriaNativeReady;return true;},'native adapter ready');
+    await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'initial foreground');
     return page;
   }
   async function touch(page,selector) {
@@ -69,7 +72,7 @@ function captureLogcat() {
     assert.deepEqual(await page.evaluate(()=>Character.diagnostics()),[]);
     assert.equal(await page.evaluate(()=>Capacitor.isNativePlatform()),true);
     assert.equal(await page.evaluate(()=>Capacitor.getPlatform()),'android');
-    assert.ok(await page.locator('.bottom-nav').isVisible());check('offline packaged launch');
+    assert.ok(await page.locator('.bottom-nav').isVisible());check('offline packaged launch');check('native listeners acknowledged and activity foreground');
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await touch(page,'#tab-character');await touch(page,'#save');
     await page.waitForFunction(()=>Equipment.state.characterCreated);check('touch creation and save');
@@ -146,6 +149,8 @@ function captureLogcat() {
     // not Debug UI or altered combat values. Normal story journey is browser-tested.
     await page.evaluate(async()=>{
       ClassSystem.selectClass('warden');Equipment.equip('sword','mainHand');Equipment.equip('shield','support');
+      await Character.ready();
+      if(Character.diagnostics().length)throw Error('Fixture character assets not ready');
       const entered=await WorldSystem.enter('broken-path');if(!entered.ok)throw Error(entered.message);
       const started=await WorldSystem.startEncounter('vesper-raider',{seed:23});if(!started.ok)throw Error(started.message);
       NymeriaNavigation.open('world',{view:'battle'});WorldUI.resume();
