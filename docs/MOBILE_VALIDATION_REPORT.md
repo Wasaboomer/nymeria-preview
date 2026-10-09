@@ -226,3 +226,10 @@ il limite complessivo di 30 s; gli altri probe mantengono il limite breve.
 La diagnostica espone anche le ultime chiamate App per separare caricamento
 lento e mancata risposta del bridge. Questo non equivale a un avvio riuscito
 é a una prova delle cause osservate su API 35.
+
+Run 37907929427: AOSP 14 avvia e attraversa le schermate, ma la risposta JS
+getState in background resta in attesa. Lo smoke ora verifica il background
+tramite dumpsys dell’attività e registra gli eventi nativi App con stato/clock
+dell’engine; rilegge gli eventi dopo il ritorno in primo piano. Non dipende
+da callback RPC o RAF durante il background e continua ad asserire pausa,
+clock fermo, assenza di auto-resume e persistenza. Nessuna modifica all’engine.

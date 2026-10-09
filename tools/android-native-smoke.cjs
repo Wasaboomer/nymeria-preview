@@ -49,6 +49,16 @@ function startLogcat() {
     }
     throw Error('Native lifecycle timeout: '+label);
   }
+  async function waitBackground() {
+    const deadline=Date.now()+30000;
+    while(Date.now()<deadline) {
+      const activity=await adb('shell','dumpsys','activity','activities');
+      const resumed=activity.split('\n').filter(line=>/mResumedActivity|topResumedActivity/.test(line));
+      if(resumed.length && resumed.every(line=>!line.includes(id)))return;
+      await delay(200);
+    }
+    throw Error('Native activity did not leave foreground');
+  }
   async function attach() {
     await adb('shell','am','start','-W','-n',id+'/.MainActivity');
     device = (await _android.devices())[0]; assert.ok(device,'Emulator visible to Playwright');
@@ -153,7 +163,7 @@ function startLogcat() {
     }
     assert.equal(await page.evaluate(()=>NymeriaNavigation.route.screen),'character');
     await adb('shell','input','keyevent','4');
-    await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
+    await waitBackground();
     check('native Back minimizes at the root');
     await adb('shell','am','start','-W','-n',id+'/.MainActivity');
     await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'foreground');
@@ -170,15 +180,26 @@ function startLogcat() {
     await page.waitForFunction(()=>WorldUI.engine?.status==='running');
     saved=await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY));
     const encounter=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id);
+    await page.evaluate(async()=>{
+      window.nativeLifecycleEvidence=[];
+      await Capacitor.Plugins.App.addListener('appStateChange',({isActive})=>{
+        nativeLifecycleEvidence.push({isActive,status:WorldUI.engine?.status,time:WorldUI.engine?.time,at:Date.now()});
+      });
+      await Capacitor.Plugins.App.getState();
+    });
+    const beforeHome=await page.evaluate(()=>Date.now());
     await adb('shell','input','keyevent','3');
-    await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
-    report.metrics.documentHiddenInBackground=await page.evaluate(()=>document.hidden);
-    await waitNative(page,()=>WorldUI.engine.status==='paused','combat paused');
-    const pausedTime=await page.evaluate(()=>WorldUI.engine.time);await delay(500);
-    assert.equal(await page.evaluate(()=>WorldUI.engine.time),pausedTime);
-    check('native background pauses the existing world combat clock');
+    await waitBackground();await delay(1500);
     await adb('shell','am','start','-W','-n',id+'/.MainActivity');
     await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'foreground');
+    const evidence=await page.evaluate(()=>nativeLifecycleEvidence);
+    report.metrics.lifecycleEvents=evidence;
+    const background=evidence.find(event=>event.isActive===false && event.at>=beforeHome);
+    assert.ok(background,'The actual native background event was delivered');
+    assert.equal(background.status,'paused','Existing pause handler runs before lifecycle observer');
+    assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
+    assert.equal(await page.evaluate(()=>WorldUI.engine.time),background.time,'Combat clock did not advance after native pause');
+    check('native background pauses the existing world combat clock');
     assert.equal(await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY)),saved);
     assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
     assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
