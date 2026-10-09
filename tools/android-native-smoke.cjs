@@ -16,13 +16,13 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
   adb('logcat','-c');
   adb('shell','svc','wifi','disable'); adb('shell','svc','data','disable');
   const report = {sourceCommit:process.env.GITHUB_SHA,platform:'Android emulator, real debug APK/WebView',version:adb('shell','getprop','ro.build.version.release'),checks:[],metrics:{}};
-  let device;
-  const check = name => {report.checks.push(name);console.log('PASS native Android '+name);};
+  let device, lastPage;
+  const check = name => {report.checks.push(name);console.log('::notice::PASS native Android '+name);};
   async function attach() {
     adb('shell','am','start','-W','-n',id+'/.MainActivity');
     device = (await _android.devices())[0]; assert.ok(device,'Emulator visible to Playwright');
     const view = await device.webView({pkg:id});
-    const page = await view.page();
+    const page = await view.page();lastPage=page;
     await page.waitForFunction(()=>typeof Equipment!=='undefined' && typeof Character!=='undefined');
     await page.evaluate(()=>Character.ready());
     return page;
@@ -127,8 +127,14 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     check('no observed app crash or uncaught JS error');
     if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Native Android smoke\n\n'+report.checks.map(n=>'- PASS '+n).join('\n')+'\n\nAndroid '+report.version+'; launch + attach + renderer ready: '+report.metrics.launchAndAttachMs.toFixed(0)+' ms (CI emulator, not physical performance).\n');
   } finally {
+    if(lastPage) {
+      try {
+        const state=await lastPage.evaluate(()=>({url:location.href,title:document.title,ready:document.readyState,characterCreated:typeof Equipment==='undefined'?null:Equipment.state.characterCreated,route:window.NymeriaNavigation?.route,hidden:document.hidden,dialog:document.querySelector('#item-dialog')?.open}));
+        console.log('::notice::Native smoke end-state '+JSON.stringify(state));
+      } catch {}
+    }
     fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
     if(device) await device.close();
     try {fs.writeFileSync('test-results/android/logcat.txt',adb('logcat','-d'));} catch {}
   }
-})().catch(e=>{console.error(e);console.error('::error::Native Android smoke: '+String(e.message).replace(/[\r\n]/g,' ').slice(0,1000));process.exitCode=1;});
+})().catch(e=>{console.error(e);console.error('::error::Native Android smoke: '+String(e.stack || e.message).replace(/[\r\n]/g,' ').slice(0,1600));process.exitCode=1;});

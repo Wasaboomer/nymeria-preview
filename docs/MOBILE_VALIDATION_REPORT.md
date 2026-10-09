@@ -131,3 +131,10 @@ eseguite con npm test, più la nuova suite di validazione eseguita separatamente
 La suite esistente mobile foundation è stata rieseguita con l’attesa corretta
 del renderer. Esiti nativi Sprint 2.3: prodotti dai job CI dopo il push, da leggere
 negli artifact del commit; nessun esito nativo è anticipato da questo report locale.
+
+Prima run CI Sprint 2.3: [37890722836](https://github.com/Wasaboomer/nymeria-preview/actions/runs/37890722836).
+Entrambe le build e lo smoke di installazione/avvio/riavvio iOS sono riusciti.
+Lo smoke Android ha incontrato un timeout funzionale: sono conservati i log e
+aggiunta una diagnostica per distinguere il punto di blocco senza indebolire le
+asserzioni o dichiarare passate verifiche non completate. Consultare gli esiti
+delle run successive per la risoluzione, non dedurla dalla compilazione verde.
