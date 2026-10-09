@@ -1,0 +1,31 @@
+/* Reuse Sprint 2 tokens; internal scrolling belongs to the fixed shell. */
+.nymeria-theme #panel-character .identity { margin-bottom:8px; }
+.nymeria-theme #panel-character .stage { height:220px; max-height:none; margin:8px 0; }
+.nymeria-theme #hero-vitals { padding:12px; margin:8px 0; }
+.nymeria-theme #hero-vitals p { margin:5px 0; font-size:14px; }
+.nymeria-theme #hero-vitals small { font-size:13px; color:var(--ny-muted); }
+.nymeria-theme #hero-secondary, .nymeria-theme .journey-guide { padding:12px; margin:10px 0; border:1px solid var(--ny-rule); border-radius:var(--ny-radius,8px); }
+.nymeria-theme #hero-secondary summary, .nymeria-theme .journey-guide summary { min-height:44px; display:flex; align-items:center; font-size:16px; cursor:pointer; }
+.nymeria-theme #hero-secondary-stats div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; }
+.nymeria-theme .inventory-filters { display:flex; flex-wrap:wrap; gap:6px; }
+.nymeria-theme .inventory-filters button { flex:1 1 110px; min-height:44px; font-size:14px; white-space:normal; }
+.nymeria-theme #inventory-stacks { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.nymeria-theme .inventory-stack { display:grid; gap:6px; padding:12px; min-height:90px; text-align:left; overflow-wrap:anywhere; }
+.nymeria-theme .inventory-stack strong { font-size:15px; }
+.nymeria-theme .inventory-stack small { font-size:13px; color:var(--ny-muted); }
+.nymeria-theme .map-node-label small { white-space:normal; line-height:1.4; }
+.nymeria-theme .menu-group { margin:16px 0; }
+.nymeria-theme .menu-group h2 { font-size:18px; }
+.nymeria-theme .menu-group .hub-links { display:grid; gap:8px; }
+.nymeria-theme .menu-group button { display:flex; align-items:center; gap:12px; text-align:left; padding:14px; min-height:64px; }
+.nymeria-theme .menu-group button strong, .nymeria-theme .menu-group button small { display:block; }
+.nymeria-theme .menu-group button strong { font-size:16px; }
+.nymeria-theme .menu-group button small { font-size:13px; line-height:1.4; margin-top:4px; color:var(--ny-muted); }
+.nymeria-theme #world-locations .map-node:disabled { opacity:1; color:var(--ny-muted); border-style:dashed; }
+.nymeria-theme #world-locations .map-node-label strong { font-size:16px; line-height:1.35; }
+.nymeria-theme #world-locations .map-node-label small { font-size:13px; line-height:1.5; }
+.nymeria-theme .menu-group button > span[aria-hidden] { display:inline-flex; flex:none; color:var(--ny-gold); }
+.nymeria-theme .menu-group button > span:not([aria-hidden]):not(.nav-badge) { min-width:0; }
+/* Legacy .world-node small uses !important at 9px. Scope the readability override to the map. */
+.nymeria-theme #world-locations .map-node-label small,
+.nymeria-theme #world-discovered-locations .world-node small { font-size:13px!important; line-height:1.5; }

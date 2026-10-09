@@ -1005,3 +1005,16 @@ sono documentati in [docs/visual-identity.md](docs/visual-identity.md).
 La nuova suite `tests/fantasy-identity-browser.cjs` si aggiunge alle 22 suite attive.
 Serve ancora la validazione fisica Safari/iPhone, inclusi barre browser, touch e
 prestazioni su hardware meno recente. Nessun deploy manuale.
+
+### Sprint 2.1 — World Map & Interface Refinement
+
+Mappa ed Eroe sono pannelli unici senza paginazione, con scrolling interno nel
+contenitore fisso. Il luogo corrente si apre direttamente dalla mappa; i luoghi
+bloccati mostrano il requisito reale. «Ho capito» salva una preferenza UI separata.
+Inventario: Tutti, Equipaggiamento, Consumabili, Materiali e risorse, Oggetti missione,
+Altro, mantenendo i filtri armi/armature/accessori e il confronto. Materiali e raccolte
+sono una proiezione di sola lettura dei rispettivi ledger: nessun trasferimento o
+consumo. Il modello attuale non contiene consumabili. Menu raggruppato per attività,
+conoscenze e comunità, usando soltanto funzioni esistenti.
+
+Architettura, limiti dei dati e verifiche: [Sprint 2.1](docs/interface-refinement.md).

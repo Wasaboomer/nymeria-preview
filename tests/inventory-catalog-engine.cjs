@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),catalog=require('../inventory-catalog.js');
+const input={equipment:[{id:'sword',slot:'weapon'},{id:'plate',slot:'torso'},{id:'ring',slot:'ring'}],progression:{crowns:4,materials:{iron:3},frontier:{supplies:{'elar-fragment':2}}},profession:{materials:{'raw-iron':6,'wild-herbs':2,zero:0}},materialNames:{iron:'Ferro'},professionMaterials:[{id:'raw-iron',name:'Ferro grezzo'},{id:'wild-herbs',name:'Erbe selvatiche'}],supplyNames:{'elar-fragment':'Frammento di Elar'}};
+const saved=JSON.stringify(input),rows=catalog.collect(input);
+assert.equal(rows.length,8);assert.equal(new Set(rows.map(x=>x.key)).size,8);assert.equal(JSON.stringify(input),saved);
+for(const r of rows.slice(0,3))assert.equal(catalog.category(r),'equipment');
+assert.equal(rows.find(r=>r.id==='raw-iron').quantity,6);assert.equal(rows.find(r=>r.id==='elar-fragment').source,'quest');
+assert.equal(catalog.category({source:'quest'}),'quest');assert.equal(catalog.category({source:'profession'}),'materials');assert.equal(catalog.category({source:'unknown'}),'other');assert.equal(catalog.category({}),'other');
+const unknown=catalog.collect({progression:{materials:{uncatalogued:3,negative:-1,bad:NaN,fraction:1.5}}});assert.equal(unknown.length,1);assert.equal(unknown[0].name,'uncatalogued');assert.equal(catalog.category(unknown[0]),'materials','Ledger context, not an invented item property');
+const overlap=catalog.collect({progression:{materials:{iron:3}},profession:{materials:{iron:4}}});assert.equal(overlap.length,2);assert.notEqual(overlap[0].key,overlap[1].key);assert.deepEqual(overlap.map(x=>x.quantity),[3,4]);
+assert.deepEqual(catalog.collect(),[]);console.log('PASS read-only catalog: distinct gear, materials/resources, quest quantities, unknown fallback, absent/invalid stacks, immutable sources');

@@ -4,6 +4,7 @@ const InventoryUI = (() => {
     order = "itemLevel",
     slotFilter = null,
     selectedId = null,
+    selectedStack = null,
     target = null;
   const dialog = document.querySelector("#item-dialog");
   const rarityLabel = (item) =>
@@ -35,7 +36,7 @@ const InventoryUI = (() => {
     return Equipment.state.inventory
       .filter(
         (i) =>
-          (filter === "all" || group(i) === filter) &&
+          (filter === "all" || filter === "equipment" || group(i) === filter) &&
           (!slotFilter || (Equipment.compatibleSlots(i).includes(slotFilter) && !ArmorRules.unavailableLabel(i, ClassSystem.selected()) && BuildSystem.compatible(i, ClassSystem.state.classId))),
       )
       .sort((a, b) =>
@@ -61,11 +62,26 @@ const InventoryUI = (() => {
       ? `<span class="gear-advice">${advice.improvement ? "<span>↑ Miglioramento</span>" : ""}${advice.bestOwned ? "<span>★ Migliore posseduto</span>" : ""}</span>`
       : "";
   }
+  const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function catalog() {
+    return InventoryCatalog.collect({equipment:Equipment.state.inventory,
+      progression:typeof ProgressionStore !== 'undefined' ? ProgressionStore.state : {},
+      profession:typeof ProfessionUI !== 'undefined' ? ProfessionUI.engine.state : {},
+      materialNames:typeof ProgressionData !== 'undefined' ? ProgressionData.materialNames : {},
+      professionMaterials:typeof ProfessionData !== 'undefined' ? ProfessionData.materials : [],
+      supplyNames:typeof WorldData !== 'undefined' ? WorldData.supplyNames : {}});
+  }
+  const sourceLabel = source => ({progression:'Risorse del personaggio',profession:'Materiali delle Professioni',quest:'Raccolte delle missioni'}[source] || 'Altro');
+  function stackDetail() {
+    const row = catalog().find(r=>r.key===selectedStack);
+    document.querySelector('#detail-heading').textContent = row?.name || 'Oggetto non più posseduto';
+    document.querySelector('#detail-body').innerHTML = row ? `<p>${escape(sourceLabel(row.source))}</p><p>Quantità: <strong>${row.quantity}</strong></p><p class="hint">${row.source==='quest'?'Raccolta registrata dal sistema missioni. Consulta il Diario per gli obiettivi.':row.source==='profession'?'Materiale conservato nelle Professioni. Consulta le ricette disponibili per utilizzarlo.':'Risorsa conservata dal sistema di progressione.'}</p><p>Non equipaggiabile.</p>` : '<p>La quantità è cambiata: consulta la lista aggiornata.</p>';
+  }
   function renderInventory() {
     const rows = visibleItems(),
       owned = Equipment.state.inventory;
     document.querySelector("#inventory-count").textContent =
-      `${owned.filter((i) => !i.equipped).length} in sacca · ${owned.filter((i) => i.equipped).length} equipaggiati`;
+      `${owned.filter((i) => !i.equipped).length} equipaggiamenti in sacca · ${owned.filter((i) => i.equipped).length} equipaggiati`;
     document.querySelector("#slot-filter").innerHTML = slotFilter
       ? `<span>Slot: ${slotLabel(slotFilter)}</span><button id="clear-slot-filter">Mostra tutto</button>`
       : "";
@@ -82,10 +98,14 @@ const InventoryUI = (() => {
           )
           .join("")
       : '<p class="hint">Nessun oggetto per questo filtro.</p>';
+    const stacks = !slotFilter ? catalog().filter(row => row.source !== 'equipment' && (filter === 'all' || InventoryCatalog.category(row) === filter)) : [];
+    document.querySelector('#inventory-stacks').innerHTML = stacks.map(row=>`<button class="inventory-stack" data-stack-key="${escape(row.key)}"><strong>${escape(row.name)}</strong><span>×${row.quantity}</span><small>${escape(sourceLabel(row.source))} · non equipaggiabile</small></button>`).join('');
+    if (stacks.length && !rows.length) document.querySelector('#inventory-grid').innerHTML='';
     document.querySelector("#visible-count").textContent =
-      `${rows.length} oggetti`;
+      `${rows.length + stacks.length} voci`;
   }
   function renderDetail() {
+    if (selectedStack) { stackDetail(); return; }
     const item = Equipment.state.inventory.find((i) => i.id === selectedId);
     if (!item) return;
     const slots = Equipment.compatibleSlots(item);
@@ -127,6 +147,7 @@ const InventoryUI = (() => {
       }<div class="power-delta"><dt>Potere</dt><dd>${comparison.power > 0 ? "+" : ""}${comparison.power}</dd></div></dl></div>${error ? `<p class="compatibility" role="status">${error}</p>` : ""}<div class="detail-actions"><button id="equip-item" ${ownSlot === target || error ? "disabled" : ""}>${ownSlot === target ? "Già equipaggiato" : error ? "Non utilizzabile" : "Equipaggia"}</button>${ownSlot ? `<button data-remove="${ownSlot}">Rimuovi da ${slotLabel(ownSlot)}</button>` : ""}<button id="browse-slot">Altri oggetti per questo slot</button></div>`;
   }
   function openItem(id, preferred) {
+    selectedStack = null;
     selectedId = id;
     const item = Equipment.state.inventory.find((i) => i.id === id);
     if (!item) return;
@@ -168,6 +189,10 @@ const InventoryUI = (() => {
     const b = event.target.closest("button");
     if (!b) return;
     if (b.dataset.openSlot) openSlot(b.dataset.openSlot);
+    if (b.dataset.stackKey) {
+      selectedStack = b.dataset.stackKey;
+      stackDetail(); dialog.showModal(); dialog.scrollTop=0;
+    }
     if (b.dataset.itemId) openItem(b.dataset.itemId, slotFilter);
     if (b.dataset.filter) {
       filter = b.dataset.filter;
@@ -226,6 +251,12 @@ const InventoryUI = (() => {
     renderInventory();
   });
   ClassSystem.subscribe(render);
+  document.addEventListener('DOMContentLoaded', () => {
+    const refreshCollections = () => { renderInventory(); if (dialog.open && selectedStack) stackDetail(); };
+    ProgressionStore.subscribe(refreshCollections);
+    ProfessionUI.engine.subscribe(refreshCollections);
+    render();
+  });
   return {
     render,
     filterForSlot,

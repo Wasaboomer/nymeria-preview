@@ -85,7 +85,7 @@
       root=nextRoot;
       var route=window.NymeriaNavigation?NymeriaNavigation.route:{};
       var combat= !open && root.id==='panel-world' && route.view==='battle' && battle && !battle.hidden;
-      var contextual=!open && (['panel-inventory','panel-equipment','panel-professions','panel-menu','panel-class','panel-expeditions','panel-guild'].includes(root.id) || (root.id==='panel-world' && ['journal','quest'].includes(route.view)));
+      var contextual=!open && (['panel-character','panel-inventory','panel-equipment','panel-professions','panel-menu','panel-class','panel-expeditions','panel-guild'].includes(root.id) || (root.id==='panel-world' && ['overview','journal','quest'].includes(route.view)));
       document.body.classList.toggle('fixed-combat',!!combat);
       app.querySelectorAll('.fixed-scroll-panel').forEach(function(n){n.classList.remove('fixed-scroll-panel');});
       root.classList.toggle('fixed-scroll-panel',contextual);

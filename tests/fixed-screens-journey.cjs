@@ -19,6 +19,9 @@ const navigate=require('./mobile-navigation-fixture.cjs'),dismiss=require('./not
  assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.quests.mq03.status),'completed');await tap('#world-tracked [data-quest-claim="mq03"]');assert.match(await textThroughPages(p,'#world-quest-reward'),/Luci senza fiamma.*240 XP.*20 Corone.*Rovine di Elar/s);
  await dismiss(p);await p.locator('#tab-world').tap();await tap('#world-locations [data-world-enter="elar-ruins"]');assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.location),'elar-ruins');assert.ok(await p.locator('#world-location-detail [data-world-talk="ilyen"]').count());
  const state=await p.evaluate(()=>ProgressionStore.state);assert.ok(state.unlockedContent.includes('world:elar-ruins'));assert.equal(state.frontier.quests['sq-bram-preparation'].status,'claimed');assert.equal(state.ownedLootIds.filter(x=>x==='frontier-ring').length,1);
+ await p.locator('#tab-inventory').tap();await press(p,'[data-filter="quest"]');
+ const supplies=await p.evaluate(()=>Object.entries(ProgressionStore.state.frontier.supplies).filter(([,n])=>n>0));assert.ok(supplies.length>0,'Real journey produced quest supplies');
+ assert.equal(await p.locator('.inventory-stack').count(),supplies.length);for(const [id,n]of supplies)assert.match(await p.locator('[data-stack-key="quest:'+id+'"]').innerText(),new RegExp('×'+n));
  await p.reload();await navigate(p,'world');assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.quests.mq03.status),'claimed');assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
  console.log('PASS '+width+'px '+cls+': Bram→ring equipped→MQ01→MQ02→MQ03→Cervo at L2→Elar visit→reload; '+JSON.stringify(fights));await p.close();
 }}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -29,7 +29,7 @@ const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
   await p.locator('#tab-missions').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.questId),'sq-bram-preparation');
   await p.locator('#navigation-back').tap();await p.waitForTimeout(100);assert.equal(await p.locator('[data-fixed-category="profession"]').getAttribute('aria-pressed'),'true');
   await p.locator('#tab-world').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'overview');assert.equal(await p.evaluate(()=>NymeriaNavigation.depth),0);
-  await press(p,'#world-return-place');assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'places');await p.locator('#navigation-back').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'overview');
+  await press(p,'#world-locations [data-world-enter="'+await p.evaluate(()=>ProgressionStore.state.frontier.location)+'"]');assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'places');await p.locator('#navigation-back').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'overview');
   for(const height of [375,508,667,844]){
    await p.setViewportSize({width,height});
    for(const id of ['world','missions','character','inventory','menu']){await p.locator('#tab-'+id).tap();await p.waitForTimeout(80);await audit(p);const rect=await p.locator('.bottom-nav').boundingBox();assert.ok(rect.y+rect.height<=height);}

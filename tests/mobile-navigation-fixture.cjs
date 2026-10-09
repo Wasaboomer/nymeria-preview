@@ -5,7 +5,7 @@ module.exports = async function navigate(page, screen) {
  const press=locator=>touch?locator.tap():locator.click();
  await dismiss(page);
  const dialog=page.locator('#item-dialog');if(await dialog.evaluate(d=>d.open))await press(page.locator('#close-detail'));
- if(screen==='world'){await press(page.locator('#tab-world'));return require('./fixed-navigation-fixture.cjs').press(page,'#world-return-place');}
+ if(screen==='world'){await press(page.locator('#tab-world'));return require('./fixed-navigation-fixture.cjs').press(page,'#world-locations [data-world-enter="'+await page.evaluate(()=>ProgressionStore.state.frontier.location)+'"]');}
  if(screen==='expeditions'){await press(page.locator('#tab-menu'));return press(page.locator('#tab-expeditions'));}
  if(['character','inventory','menu'].includes(screen))return press(page.locator('#tab-'+screen));
  if(['combat','debug'].includes(screen)) {

@@ -81,7 +81,7 @@ const WorldUI = (() => {
     node("world-tracked").innerHTML = QuestUI.tracker(state);
     node("world-tracked").hidden = view !== "places";
     node("world-locations").hidden = view !== "overview";
-    node("world-return-place").hidden = view !== "overview";
+    node("world-return-place").hidden = true;
     node("world-return-place").textContent = `Esplora ${WorldData.location(frontier.location)?.name || "il luogo attuale"} →`;
     node("world-location-detail").hidden = view !== "places";
     node("world-active-link").hidden = !frontier.activeEncounter;
@@ -353,6 +353,12 @@ const WorldUI = (() => {
     if (b.hasAttribute("data-world-profession")) { NymeriaNavigation.open("professions"); return; }
     if (b.hasAttribute("data-world-equipment")) { NymeriaNavigation.showScreen("equipment"); return; }
     if (b.dataset.worldEnter) {
+      // The current map tile replaces the old Explore shortcut: open its view only.
+      if (view === 'overview' && b.dataset.worldEnter === ProgressionStore.state.frontier.location) {
+        NymeriaNavigation.open('world', {view:'places'});
+        node('world-current').focus({preventScroll:true});
+        return;
+      }
       const result = await action(() => WorldSystem.enter(b.dataset.worldEnter));
       if (result?.ok && view === "overview") NymeriaNavigation.open("world", {view:"places"});
       if (result?.ok) { window.scrollTo(0, 0); node("world-current").focus({ preventScroll: true }); }
