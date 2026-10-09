@@ -233,3 +233,29 @@ tramite dumpsys dell’attività e registra gli eventi nativi App con stato/cloc
 dell’engine; rilegge gli eventi dopo il ritorno in primo piano. Non dipende
 da callback RPC o RAF durante il background e continua ad asserire pausa,
 clock fermo, assenza di auto-resume e persistenza. Nessuna modifica all’engine.
+
+
+## Esito conclusivo Sprint 2.3
+
+**Validazione parziale, non approvazione fisica.** Codice applicativo verificato
+al commit `a754ab5a26aa64e74705d214967b0698f7041902`.
+Run nativa [37908679140](https://github.com/Wasaboomer/nymeria-preview/actions/runs/37908679140):
+
+- Android: compilazione APK riuscita; installazione/avvio e interazioni iniziali
+  eseguiti. Lo smoke completo **fallisce**: `adb shell am start` restituisce
+  `error: closed` al ritorno in primo piano e il dispositivo risulta offline.
+  Il passaggio ad AOSP API 34 non elimina quindi la disconnessione. La causa
+  non è dimostrata; non si certificano pausa/ripristino e compatibilità native
+  complete. Non si presenta un dispositivo offline come prova di crash del gioco.
+- iOS: compilazione, installazione, avvio, terminazione e riavvio nel simulatore
+  riusciti. Nessuna verifica touch/gameplay, safe area visuale o salvataggi iOS
+  viene dedotta dal solo processo avviato.
+- Suite engine/browser: 28 suite disponibili; esiti e misure vengono pubblicati
+  negli artifact delle run DEV, distinti dai risultati nativi.
+
+Gli artifact della run nativa contengono APK debug, app simulatore non firmata,
+log e prove prodotte dai test; non sono una distribuzione TestFlight. Rimangono
+necessari diagnosi della disconnessione emulatore, test funzionali iOS e test
+fisici su iPhone/Android. La verifica diretta della preview pubblica da questo
+cloud è bloccata da HTTP 403; il meccanismo di pubblicazione resta invariato.
+La chiusura del report è solo documentale: non modifica il codice verificato.
