@@ -18,7 +18,7 @@ const WorldUI = (() => {
   }
   // Presentation-only receipt for a successful claim in this session; never grants rewards.
   let visibleQuestReceipt = null;
-  let stagPreparation = false;
+  let stagPreparation = false, stagMessage = "";
   const marks = {
     haven: "M12 31 30 10 48 31M18 27V48H42V27M25 48V34H35V48M8 48H52",
     path: "M12 49 23 33 19 25 32 11M28 49 36 35 31 28 42 11M7 18H17M43 41H53",
@@ -159,6 +159,8 @@ const WorldUI = (() => {
     const showStagPrep = stagPreparation && view === "places" && !frontier.activeEncounter && frontier.location === "lantern-wood";
     node("world-stag-preparation").hidden = !showStagPrep;
     if (showStagPrep) {
+      node("world-stag-feedback").textContent = stagMessage;
+      node("world-stag-feedback").hidden = !stagMessage;
       node("world-stag-prep-title").textContent = stag.name;
       node("world-stag-prep-stats").textContent = `Livello ${stag.level} · ${stag.maxHp} HP · Armatura ${stag.armor}`;
       node("world-stag-prep-special").textContent = `Attacco speciale: ${stag.attacks.find(a=>a.id.endsWith("-special")).name}`;
@@ -408,13 +410,14 @@ const WorldUI = (() => {
       if (!stagPreparation || ProgressionStore.state.frontier.activeEncounter || ProgressionStore.state.frontier.location !== "lantern-wood") return;
       const result = await action(() => WorldSystem.startEncounter("twilight-stag"));
       if (result?.ok) { stagPreparation = false; selectView("battle"); resume(); }
+      else { stagMessage = result?.message || "Incontro non avviato. Riprova."; render(); document.dispatchEvent(new CustomEvent("nymeria:content-focus", {detail:{selector:"#world-stag-feedback"}})); }
       return;
     }
     if (b.dataset.worldFight) {
       if (b.dataset.worldFight === "twilight-stag") {
-        stagPreparation = true;
-        render();
-        node("world-stag-preparation").scrollIntoView({block:"start",behavior:"auto"});
+        stagPreparation = true; stagMessage = "";
+        if (view !== "places") selectView("places"); else render();
+        document.dispatchEvent(new CustomEvent("nymeria:content-focus", {detail:{selector:"#world-stag-preparation"}}));
         return;
       }
       const result = await action(() => WorldSystem.startEncounter(b.dataset.worldFight));

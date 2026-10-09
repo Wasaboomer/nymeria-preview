@@ -1067,3 +1067,10 @@ the map, reusable quest next-step projection, preserved quest-to-place Back stac
 distinct ready/active/arrived travel views, timestamp-based remaining-time display,
 and clearer race selection with 48px controls. Game rules, artwork and persistence
 are unchanged. See [implementation and validation](docs/mobile-ux-navigation-polish.md).
+
+## Sprint 2.7.1 — Cervo quest-action hotfix
+
+The quest-detail action now opens the existing stag preparation in the locality
+view, through the existing navigation/pagination APIs. Rejected starts show the
+engine's actual reason inside that preparation. Encounter/reward/save rules are
+unchanged. See [diagnosis and regression coverage](docs/stag-quest-action-hotfix.md).
