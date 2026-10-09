@@ -181,3 +181,9 @@ nella raccolta logcat: il buffer stdout predefinito di Node causava ENOBUFS.
 La raccolta ora scrive direttamente su file, con timeout, conservando il log
 completo senza quel limite di buffer. La run successiva verifica anche la
 scansione degli errori nel log. Non era un crash del gioco.
+
+Run 37896138775: lo smoke Android ha perso il collegamento al WebView
+prima dell’Home del fixture di combattimento (Target page/context/browser closed).
+Il precedente incontro era riuscito nella run 37895401230: il comportamento
+non è ancora spiegato e non viene mascherato con retry. Le run successive
+espongono anche estratti log di renderer/processo per distinguere il problema.

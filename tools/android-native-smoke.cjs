@@ -208,6 +208,6 @@ function captureLogcat() {
         try {console.log('::notice::Native app PID '+adb('shell','pidof',id));}catch{console.log('::notice::Native app process absent');}
         fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
       }
-    } catch (error) {console.log('::notice::Native log capture failed '+error.message);} 
+    } catch (error) {console.log('::notice::Native log capture failed '+error.message);}
   }
 })().catch(e=>{console.error(e);console.error('::error::Native Android smoke: '+String(e.stack || e.message).replace(/[\r\n]/g,' ').slice(0,1600));process.exitCode=1;});
