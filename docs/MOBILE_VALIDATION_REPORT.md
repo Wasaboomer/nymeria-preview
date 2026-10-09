@@ -195,3 +195,11 @@ dei listener e un round-trip getState sulla coda plugin; lo smoke attende anche 
 di combattimento attende inoltre i layer dopo la preparazione. Nessuna nuova
 UI, chiave di salvataggio o regola di gameplay. Non si presume risolta la
 disconnessione successiva del WebView senza una nuova prova.
+
+Le interrogazioni ADB dello smoke sono ora asincrone: execFileSync sul thread
+che riceve anche DevTools poteva sospendere il trasporto durante i cambi attività.
+Il collector logcat usa spawn con stdout direttamente su file, lasciando attivo
+il loop di automazione. Questo corregge un rischio concreto del test, non è
+un’ottimizzazione del gioco; la nuova run verifica l’effetto sul disconnect.
+I PASS rimangono nei log/report/summary; le notice sono riservate a diagnostici
+aggregati per non esaurire il budget di annotazioni GitHub prima dell’errore.

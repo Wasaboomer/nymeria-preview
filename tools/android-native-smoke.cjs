@@ -1,29 +1,34 @@
 /* Actual debug APK/WebView smoke on an ephemeral CI emulator, never a user's phone. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const {execFileSync} = require('node:child_process');
+const {execFile,spawn} = require('node:child_process');
+const execAsync=require('node:util').promisify(execFile);
 const {_android} = require('playwright');
 const {audit,swipe} = require('../tests/contextual-scroll-fixture.cjs');
 const id = 'com.nymeria.game';
-const adb = (...args) => execFileSync('adb',['-e',...args],{encoding:'utf8'}).trim();
+const adb = async(...args) => (await execAsync('adb',['-e',...args],{encoding:'utf8',timeout:120000})).stdout.trim();
 const delay = ms => new Promise(r=>setTimeout(r,ms));
-function captureLogcat() {
+async function captureLogcat() {
   const path='test-results/android/logcat.txt', output=fs.openSync(path,'w');
-  try { execFileSync('adb',['-e','logcat','-d'],{stdio:['ignore',output,'pipe'],timeout:30000}); }
+  try { await new Promise((resolve,reject)=>{
+    const child=spawn('adb',['-e','logcat','-d'],{stdio:['ignore',output,'pipe'],timeout:30000});
+    let errorText='';child.stderr?.on('data',chunk=>{errorText=(errorText+chunk).slice(-2000);});
+    child.on('error',reject);child.on('close',(code,signal)=>code===0?resolve():reject(Error('logcat exited '+(signal||code)+' '+errorText)));
+  }); }
   finally { fs.closeSync(output); }
   return fs.readFileSync(path,'utf8');
 }
 
 (async () => {
   assert.equal(process.env.CI,'true','Only run against an isolated CI emulator');
-  assert.equal(adb('shell','getprop','ro.kernel.qemu'),'1','Physical devices are forbidden');
+  assert.equal(await adb('shell','getprop','ro.kernel.qemu'),'1','Physical devices are forbidden');
   fs.mkdirSync('test-results/android',{recursive:true});
-  adb('install','-r','android/app/build/outputs/apk/debug/app-debug.apk');
-  adb('logcat','-c');
-  adb('shell','svc','wifi','disable'); adb('shell','svc','data','disable');
-  const report = {sourceCommit:process.env.GITHUB_SHA,platform:'Android emulator, real debug APK/WebView',version:adb('shell','getprop','ro.build.version.release'),checks:[],metrics:{}};
+  await adb('install','-r','android/app/build/outputs/apk/debug/app-debug.apk');
+  await adb('logcat','-c');
+  await adb('shell','svc','wifi','disable'); await adb('shell','svc','data','disable');
+  const report = {sourceCommit:process.env.GITHUB_SHA,platform:'Android emulator, real debug APK/WebView',version:await adb('shell','getprop','ro.build.version.release'),checks:[],metrics:{}};
   let device, lastPage, completed=false;
-  const check = name => {report.checks.push(name);console.log('::notice::PASS native Android '+name);};
+  const check = name => {report.checks.push(name);console.log('PASS native Android '+name);};
   // Background WebViews may stop RAF delivery; poll from the test host instead.
   async function waitNative(page,predicate,label) {
     const deadline=Date.now()+30000;
@@ -38,7 +43,7 @@ function captureLogcat() {
     throw Error('Native lifecycle timeout: '+label);
   }
   async function attach() {
-    adb('shell','am','start','-W','-n',id+'/.MainActivity');
+    await adb('shell','am','start','-W','-n',id+'/.MainActivity');
     device = (await _android.devices())[0]; assert.ok(device,'Emulator visible to Playwright');
     const view = await device.webView({pkg:id});
     const page = await view.page();lastPage=page;
@@ -78,7 +83,7 @@ function captureLogcat() {
     await page.waitForFunction(()=>Equipment.state.characterCreated);check('touch creation and save');
     await touch(page,'[data-nav="equipment"]');
     assert.equal(await page.evaluate(()=>NymeriaNavigation.route.screen),'equipment');
-    adb('shell','input','keyevent','4');
+    await adb('shell','input','keyevent','4');
     await page.waitForFunction(()=>NymeriaNavigation.route.screen==='character');check('native Back restores context');
     for(const name of ['inventory','missions','menu','character','world']) {
       const t=performance.now();await touch(page,'#tab-'+name);await audit(page);
@@ -106,7 +111,7 @@ function captureLogcat() {
     await touch(page,'[data-open-slot="'+alternative.slot+'"]');
     await touch(page,'[data-item-id="'+alternative.id+'"]');
     await touch(page,'#equip-item');
-    adb('shell','input','keyevent','4');
+    await adb('shell','input','keyevent','4');
     await page.waitForFunction(()=>NymeriaNavigation.route.screen==='character');
     assert.ok(await page.locator('#character').isVisible());
     await page.waitForFunction(old=>document.querySelector('#character').innerHTML!==old,avatarBefore);
@@ -119,31 +124,31 @@ function captureLogcat() {
     const item=page.locator('[data-item-id]').first();await item.scrollIntoViewIfNeeded();
     await touch(page,'[data-item-id="'+await item.getAttribute('data-item-id')+'"]');
     assert.equal(await page.locator('#item-dialog').evaluate(n=>n.open),true);
-    adb('shell','input','keyevent','4');await page.waitForFunction(()=>!document.querySelector('#item-dialog').open);
+    await adb('shell','input','keyevent','4');await page.waitForFunction(()=>!document.querySelector('#item-dialog').open);
     check('native Back closes comparison dialog');
     await touch(page,'#tab-menu');await touch(page,'[data-nav="guild"]');
     await touch(page,'#guild-create input[name="name"]');
     await delay(1000);
-    assert.match(adb('shell','dumpsys','input_method'),/mInputShown=true/,'Android keyboard is actually shown');
+    assert.match(await adb('shell','dumpsys','input_method'),/mInputShown=true/,'Android keyboard is actually shown');
     assert.ok(await page.evaluate(()=>document.activeElement?.name==='name'));
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     report.metrics.keyboardViewport=await page.evaluate(()=>({height:visualViewport.height,innerHeight,navBottom:document.querySelector('.bottom-nav').getBoundingClientRect().bottom}));
     assert.ok(report.metrics.keyboardViewport.navBottom<=report.metrics.keyboardViewport.height+1,'Navigation remains visible with IME');
-    adb('shell','input','keyevent','4');
-    for(let i=0;i<20 && /mInputShown=true/.test(adb('shell','dumpsys','input_method'));i++)await delay(100);
-    assert.ok(!/mInputShown=true/.test(adb('shell','dumpsys','input_method')),'Back dismisses IME');
+    await adb('shell','input','keyevent','4');
+    for(let i=0;i<20 && /mInputShown=true/.test(await adb('shell','dumpsys','input_method'));i++)await delay(100);
+    assert.ok(!/mInputShown=true/.test(await adb('shell','dumpsys','input_method')),'Back dismisses IME');
     check('text focus/keyboard viewport and navigation');
     await touch(page,'#tab-character');
     while(await page.evaluate(()=>NymeriaNavigation.depth)>0) {
       const depth=await page.evaluate(()=>NymeriaNavigation.depth);
-      adb('shell','input','keyevent','4');
+      await adb('shell','input','keyevent','4');
       await page.waitForFunction(old=>NymeriaNavigation.depth<old,depth);
     }
     assert.equal(await page.evaluate(()=>NymeriaNavigation.route.screen),'character');
-    adb('shell','input','keyevent','4');
+    await adb('shell','input','keyevent','4');
     await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
     check('native Back minimizes at the root');
-    adb('shell','am','start','-W','-n',id+'/.MainActivity');
+    await adb('shell','am','start','-W','-n',id+'/.MainActivity');
     await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'foreground');
     // Isolated native lifecycle fixture uses existing class/equipment/world APIs,
     // not Debug UI or altered combat values. Normal story journey is browser-tested.
@@ -158,14 +163,14 @@ function captureLogcat() {
     await page.waitForFunction(()=>WorldUI.engine?.status==='running');
     saved=await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY));
     const encounter=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id);
-    adb('shell','input','keyevent','3');
+    await adb('shell','input','keyevent','3');
     await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
     report.metrics.documentHiddenInBackground=await page.evaluate(()=>document.hidden);
     await waitNative(page,()=>WorldUI.engine.status==='paused','combat paused');
     const pausedTime=await page.evaluate(()=>WorldUI.engine.time);await delay(500);
     assert.equal(await page.evaluate(()=>WorldUI.engine.time),pausedTime);
     check('native background pauses the existing world combat clock');
-    adb('shell','am','start','-W','-n',id+'/.MainActivity');
+    await adb('shell','am','start','-W','-n',id+'/.MainActivity');
     await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'foreground');
     assert.equal(await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY)),saved);
     assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
@@ -175,23 +180,23 @@ function captureLogcat() {
     assert.ok(await page.locator('#world-player-hp').innerText());
     assert.ok(await page.locator('#world-battle-resume').isVisible());
     check('background/foreground persistence, real combat HUD and no automatic resume');
-    adb('shell','settings','put','system','accelerometer_rotation','0');
-    adb('shell','settings','put','system','user_rotation','1');await delay(300);
+    await adb('shell','settings','put','system','accelerometer_rotation','0');
+    await adb('shell','settings','put','system','user_rotation','1');await delay(300);
     assert.ok(await page.evaluate(()=>innerHeight>innerWidth));check('portrait despite requested landscape');
-    adb('shell','settings','put','system','user_rotation','0');
+    await adb('shell','settings','put','system','user_rotation','0');
     await page.screenshot({path:'test-results/android/battle-paused.png'});
     assert.deepEqual(errors,[]);await device.close();device=null;
-    adb('shell','am','force-stop',id);page=await attach();
+    await adb('shell','am','force-stop',id);page=await attach();
     assert.equal(await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY)),saved);
     assert.equal(await page.evaluate(()=>Equipment.state.characterCreated),true);
     assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
     assert.ok(!await page.evaluate(()=>WorldUI.engine?.status==='running'));
     check('process kill and offline relaunch restore save and pending encounter');
-    const logs=captureLogcat();
+    const logs=await captureLogcat();
     assert.ok(!/FATAL EXCEPTION[\s\S]{0,300}com\.nymeria\.game/.test(logs),'No native app crash');
     assert.ok(!/Capacitor\/Console.*(?:Uncaught|Unhandled|native navigation adapter could not load)/i.test(logs),'No uncaught startup/bridge error');
     report.metrics.webView=await page.evaluate(()=>({userAgent:navigator.userAgent,width:innerWidth,height:innerHeight,dpr:devicePixelRatio}));
-    report.metrics.memory=adb('shell','dumpsys','meminfo',id);
+    report.metrics.memory=await adb('shell','dumpsys','meminfo',id);
     check('no observed app crash or uncaught JS error');completed=true;
     if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Native Android smoke\n\n'+report.checks.map(n=>'- PASS '+n).join('\n')+'\n\nAndroid '+report.version+'; launch + attach + renderer ready: '+report.metrics.launchAndAttachMs.toFixed(0)+' ms (CI emulator, not physical performance).\n');
   } finally {
@@ -205,12 +210,12 @@ function captureLogcat() {
     fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
     if(device) await device.close();
     try {
-      const log=captureLogcat();
+      const log=await captureLogcat();
       if(!completed) {
         const lines=log.split('\n').filter(line=>/RenderProcess|Fatal signal|lmkd|lowmemorykiller|AndroidRuntime|Killing.*nymeria|(?:chromium|cr_).*?(?:ERROR|FATAL)/i.test(line)).slice(-12);
         report.failureDiagnostics=lines;
-        for(const line of lines)console.log('::notice::Native failure log '+line.slice(0,1000));
-        try {console.log('::notice::Native app PID '+adb('shell','pidof',id));}catch{console.log('::notice::Native app process absent');}
+        console.log('::notice::Native failure log '+lines.join(' | ').slice(-2000));
+        try {console.log('::notice::Native app PID '+(await execAsync('adb',['-e','shell','pidof',id],{encoding:'utf8',timeout:5000})).stdout.trim());}catch{console.log('::notice::Native app process absent');}
         fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
       }
     } catch (error) {
@@ -219,12 +224,12 @@ function captureLogcat() {
       try {
         const lines=fs.readFileSync('test-results/android/logcat.txt','utf8').split('\n').filter(line=>/RenderProcess|Fatal signal|lmkd|lowmemorykiller|AndroidRuntime|Killing.*nymeria|(?:chromium|cr_).*?(?:ERROR|FATAL)/i.test(line)).slice(-12);
         report.failureDiagnostics=lines;
-        for(const line of lines)console.log('::notice::Partial native failure log '+line.slice(0,1000));
+        console.log('::notice::Partial native failure log '+lines.join(' | ').slice(-2000));
         fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
       }catch{}
     }
     if(!completed) {
-      try {console.log('::notice::ADB device state '+execFileSync('adb',['devices','-l'],{encoding:'utf8',timeout:5000}).replace(/[\r\n]/g,' '));}catch(error){console.log('::notice::ADB device state unavailable '+error.code);}
+      try {console.log('::notice::ADB device state '+(await execAsync('adb',['devices','-l'],{encoding:'utf8',timeout:5000})).stdout.replace(/[\r\n]/g,' '));}catch(error){console.log('::notice::ADB device state unavailable '+error.code);}
       try {console.log('::notice::Runner memory '+fs.readFileSync('/proc/meminfo','utf8').split('\n').filter(line=>/^Mem(Total|Available):/.test(line)).join(' '));}catch{}
     }
   }
