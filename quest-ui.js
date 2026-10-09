@@ -39,14 +39,29 @@ const QuestUI = (() => {
     if (entry.status === "claimed" && quest.objectives.some(o => o.type === 'professionDelivery')) return '<button data-quest-inventory>Apri Inventario · confronta l’anello →</button>';
     return "";
   }
+  // Shared projection of existing quest data/state; never advances objectives.
+  function nextStep(quest, state) {
+    const entry=state.frontier.quests[quest.id];
+    const index=entry?.status==='active'?quest.objectives.findIndex((o,i)=>entry.progress[i]<o.count):-1;
+    const objective=index>=0?quest.objectives[index]:null;
+    const destination=objective?objectiveLocation(objective):quest.location;
+    const location=WorldData.location(destination);
+    const reachable=destination==='activities'||!!location&&(location.discoveryType
+      ?typeof WorldDiscovery!=='undefined'&&!!WorldDiscovery?.accessible(location.id)
+      :state.unlockedContent.includes('world:'+location.id));
+    return {status:entry?.status,objective,index,progress:objective?entry.progress[index]:null,
+      destination,destinationName:destination==='activities'?'Attività · Spedizioni':location?.name||null,
+      reachable,blockedReason:location&&!reachable?location.unlockHint||'Completa le missioni precedenti e riscuoti le ricompense.':null};
+  }
   function guidance(quest, state, compact = false) {
     const entry = state.frontier.quests[quest.id];
     if (entry.status === "available") return `<section class="quest-next-step"><strong>Missione disponibile</strong><p>Accetta da ${escape(WorldData.npcs.find(n => n.id === quest.giver)?.name || quest.giver)} · ${escape(WorldData.location(quest.location)?.name || quest.location)}. Solo le azioni successive contano.</p></section>`;
     if (entry.status === "completed") return '<section class="quest-next-step"><strong>Obiettivi completati</strong><p>Riscuoti le ricompense per concludere la missione e ottenere gli eventuali sblocchi.</p></section>';
     if (entry.status !== "active") return "";
-    const index = quest.objectives.findIndex((o, i) => entry.progress[i] < o.count);
-    if (index < 0) return "";
-    const objective = quest.objectives[index], destination = objectiveLocation(objective);
+    const step=nextStep(quest,state), {index,objective,destination}=step;
+    if (!objective) return "";
+    const heading=`<strong>Prossimo passo</strong>${compact?'':`<p>${escape(objective.label)} <b>${step.progress} / ${objective.count}</b></p><small>Destinazione: ${escape(step.destinationName||'Non indicata nei dati della missione')}</small>`}`;
+    if(step.blockedReason)return `<section class="quest-next-step">${heading}<p>${escape(step.destinationName)} è bloccato. ${escape(step.blockedReason)}</p></section>`;
     if (objective.type === 'professionDelivery') {
       const profession = typeof ProfessionUI !== 'undefined' ? ProfessionUI.engine.state : null;
       const registered = !!profession?.deliveries[quest.id];
@@ -55,6 +70,7 @@ const QuestUI = (() => {
       const label = !ready ? 'Apri Professioni · prepara il rinforzo' : state.frontier.location !== quest.location ? 'Vai da Bram · Avamposto di Veyra' : registered ? 'Completa la consegna registrata' : 'Consegna 1 Rinforzo della Frontiera';
       return `<section class="quest-next-step"><strong>Prossimo passo · facoltativo</strong><p>${registered ? 'Il rinforzo è già stato consegnato. Completa la registrazione: non ne consumerai un altro.' : ready ? 'Rinforzo pronto per la consegna a Bram.' : 'Raccogli 6 Ferro grezzo al Sentiero Spezzato → forgia due Ferro forgiato → crea un Rinforzo della Frontiera.'}</p><small>La consegna consuma un rinforzo una sola volta. Poi riscuoti l’anello e confrontalo in Inventario.</small><button ${attribute} class="quest-primary">${label} →</button></section>`;
     }
+    if(!destination)return `<section class="quest-next-step">${heading}<p>Consulta l’obiettivo della missione; i dati non indicano una destinazione.</p></section>`;
     let label = "", attribute = "", target = objective.target, hint = "";
     if (destination === "activities") {
       attribute = 'data-quest-expedition'; label = 'Apri Attività · Spedizioni';
@@ -63,7 +79,6 @@ const QuestUI = (() => {
       const location = WorldData.location(destination);
       attribute = `data-quest-destination="${destination}"`; label = `Vai a ${location.name}`;
       hint = `Qui puoi proseguire: ${objective.label.toLowerCase()}.`;
-      if (!state.unlockedContent.includes(`world:${destination}`)) return `<section class="quest-next-step"><strong>Prossimo passo</strong><p>${escape(objective.label)}</p><small>${escape(location.name)} è bloccato. ${escape(location.unlockHint || 'Completa le missioni precedenti e riscuoti le ricompense.')}</small></section>`;
     } else if (objective.type === "talk") {
       attribute = `data-world-talk="${target}"`; label = `Parla con ${WorldData.npcs.find(n => n.id === target)?.name || target}`;
       hint = 'Il dialogo conta per questa missione.';
@@ -87,7 +102,7 @@ const QuestUI = (() => {
         attribute = `data-quest-destination="${target}"`; label = `Visita ${WorldData.location(target).name}`;
       }
     }
-    return `<section class="quest-next-step"><strong>Prossimo passo</strong>${compact ? "" : `<p>${escape(objective.label)} <b>${entry.progress[index]} / ${objective.count}</b></p>`}${hint ? `<small>${escape(hint)}</small>` : ""}${attribute ? `<button ${attribute} class="quest-primary">${escape(label)} →</button>` : ""}</section>`;
+    return `<section class="quest-next-step">${heading}${hint ? `<small>${escape(hint)}</small>` : ""}${attribute ? `<button ${attribute} class="quest-primary">${escape(label)} →</button>` : ""}</section>`;
   }
   function card(quest, state) {
     const entry = state.frontier.quests[quest.id];
@@ -97,9 +112,7 @@ const QuestUI = (() => {
   }
   function journalObjective(quest, state) {
     const entry = state.frontier.quests[quest.id];
-    const index = quest.objectives.findIndex((o,i) => entry.progress[i] < o.count);
-    const objective = entry.status === "active" && index >= 0 ? quest.objectives[index] : null;
-    const destination = objective ? objectiveLocation(objective) : quest.location;
+    const {index,objective,destination}=nextStep(quest,state);
     const place = destination === "activities" ? "Spedizioni" : WorldData.location(destination)?.name;
     const giver = WorldData.npcs.find(n => n.id === quest.giver)?.name;
     const instruction = objective ? `${objective.label} · ${entry.progress[index]}/${objective.count}`
@@ -133,10 +146,8 @@ const QuestUI = (() => {
     const side = QuestData.quests.filter(q => q.type === "side" && ["active", "completed"].includes(state.frontier.quests[q.id]?.status));
     const mainPanel = main ? (() => {
       const entry = state.frontier.quests[main.id];
-      const index = entry.status === "active" ? main.objectives.findIndex((o, i) => entry.progress[i] < o.count) : -1;
-      const objective = index >= 0 ? main.objectives[index] : null;
-      const destination = objective ? objectiveLocation(objective) : main.location;
-      const locationName = destination === "activities" ? "Attività · Spedizioni" : WorldData.location(destination)?.name || WorldData.location(main.location)?.name || "Frontiera";
+      const step=nextStep(main,state),{index,objective}=step;
+      const locationName=step.destinationName||'Non indicata nei dati della missione';
       const count = objective ? `<div class="main-quest-progress"><span>${escape(objective.label)}</span><b>${entry.progress[index]}/${objective.count}</b></div><progress max="${objective.count}" value="${entry.progress[index]}" aria-label="Progresso obiettivo"></progress>` : "";
       const next = entry.status === "available" ? actions(main, entry, state) : entry.status === "completed" ? actions(main, entry, state) : guidance(main, state, true);
       return `<section class="main-quest-panel quest-${entry.status}" aria-label="Missione principale"><span class="world-eyebrow">STORIA PRINCIPALE · ${statusNames[entry.status]}</span><button class="tracker-title" data-quest-open="${main.id}">${escape(main.title)} →</button>${count}<p class="main-quest-destination">Destinazione: <strong>${escape(locationName)}</strong></p>${next}</section>`;
@@ -150,5 +161,7 @@ const QuestUI = (() => {
     const recentReward = state.frontier.lastQuestClaim?.id;
     return (recentReward ? rewardComparison(recentReward, state) : "") + mainPanel + sidePanel;
   }
-  return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison, relevantQuests, category };
+  return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison, relevantQuests, category, nextStep };
 })();
+
+if(typeof module!=="undefined"&&module.exports)module.exports=QuestUI;

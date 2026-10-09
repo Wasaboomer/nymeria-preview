@@ -1,0 +1,15 @@
+/* Sprint 2.7: scoped presentation; preserve the viewport shell and game artwork. */
+body #regional-travel h3, body #character-identity h3 { margin:0 0 10px; font-size:19px; }
+body #regional-travel p, body #character-identity p, body #map-current-context p { font-size:15px; line-height:1.45; margin:8px 0; overflow-wrap:anywhere; }
+body #regional-travel .hint, body #character-identity .hint { font-size:14px; color:#c8d6ce; }
+body .polish-field { display:block; margin:12px 0 6px; font-size:15px; color:#e9d9af; }
+body #travel-route, body #identity-race { display:block; box-sizing:border-box; width:100%; min-width:0; min-height:48px; font-size:16px; padding:10px; color:#efe8d8; background:#12251f; border:1px solid #917c50; border-radius:6px; }
+body #regional-travel button, body #character-identity button, body #map-current-context button { display:block; box-sizing:border-box; width:100%; min-height:48px; margin:10px 0 0; padding:10px; font-size:15px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
+body #identity-reset { border-style:dashed; color:#d8c8a5; background:#16221e; }
+body #regional-travel .travel-clock { padding:10px; border-left:3px solid #c7ae70; background:#1b3027; }
+body #travel-countdown { font-size:21px; font-variant-numeric:tabular-nums; color:#f1d79f; }
+body[data-screen="world"][data-world-view="travel"] .world-intro { display:none; }
+body #travel-feedback:empty, body #identity-feedback:empty { display:none; }
+body #map-current-context { border-color:#766643; margin:0 0 12px; }
+body #panel-world .quest-next-step small { display:block; font-size:14px; line-height:1.45; color:#d0dccf; overflow-wrap:anywhere; }
+body #panel-world .quest-next-step button { min-height:48px; white-space:normal; overflow-wrap:anywhere; }

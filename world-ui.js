@@ -358,7 +358,7 @@ const WorldUI = (() => {
     if (b.hasAttribute("data-quest-expedition")) { NymeriaNavigation.open("expeditions"); return; }
     if (b.dataset.questDestination) {
       const result = await action(() => WorldSystem.enter(b.dataset.questDestination));
-      if (result?.ok) NymeriaNavigation.root("world");
+      if (result?.ok) NymeriaNavigation.open("world", {view:"places"});
       return;
     }
     if (b.dataset.questOpen) { NymeriaNavigation.open("world", { view: "quest", questId: b.dataset.questOpen }); return; }
@@ -400,7 +400,7 @@ const WorldUI = (() => {
     if (b.dataset.questTrack) return action(() => QuestSystem.track(b.dataset.questTrack));
     if (b.dataset.questGiver) {
       const result = await action(() => WorldSystem.enter(QuestData.get(b.dataset.questGiver).location));
-      if (result?.ok) NymeriaNavigation.root("world"); return;
+      if (result?.ok) NymeriaNavigation.open("world", {view:"places"}); return;
     }
     if (b.hasAttribute("data-world-stag-cancel")) { stagPreparation = false; render(); return; }
     if (b.hasAttribute("data-world-stag-equipment")) { NymeriaNavigation.showScreen("equipment"); return; }

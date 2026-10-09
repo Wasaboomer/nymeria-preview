@@ -9,10 +9,10 @@ const CharacterIdentityUI=(()=>{
     const s=ProgressionStore.state,id=s.characterIdentity.raceId,race=CharacterIdentityData.get(id);
     const blocked=!!s.travel.active||s.travel.recoveryRequired;
     const key=JSON.stringify([id,blocked,busy,chosen,message,ProgressionStore.error]);if(key===signature)return;signature=key;
-    root.innerHTML='<h3>Identità del personaggio</h3>'+`<p>Razza di gameplay: <strong>${escape(race?.name||'Non assegnata')}</strong></p>`+
+    root.innerHTML='<h3>Identità del personaggio</h3>'+`<p>Razza attuale: <strong>${escape(race?.name||'Non assegnata')}</strong></p>`+
       '<p class="hint">Le differenze razziali ambientali sono ancora incomplete. La scelta non cambia avatar, classe o statistiche. Puoi continuare a giocare anche senza assegnarla.</p>'+
-      ((!id||CharacterIdentitySystem.testMode)?`<label>Scelta esplicita<select style="font-size:16px;min-height:44px;max-width:100%" id="identity-race" ${blocked||busy?'disabled':''}><option value="">Scegli una razza</option>${CharacterIdentityData.races.map(r=>`<option value="${r.id}" ${chosen===r.id?'selected':''}>${escape(r.name)}</option>`).join('')}</select></label>
-      <button id="identity-confirm" class="quest-primary" ${blocked||busy||!CharacterIdentityData.get(chosen)?'disabled':''}>Conferma identità</button>`:'<p>Identità registrata. Il cambio non è disponibile nell’esperienza normale.</p>')+
+      ((!id||CharacterIdentitySystem.testMode)?`<label class="polish-field" for="identity-race">${id?'Cambia razza · solo TEST':'Scelta iniziale'}</label><select id="identity-race" ${blocked||busy?'disabled':''}><option value="">Scegli una razza</option>${CharacterIdentityData.races.map(r=>`<option value="${r.id}" ${chosen===r.id?'selected':''}>${escape(r.name)}</option>`).join('')}</select>
+      <button id="identity-confirm" class="quest-primary" ${blocked||busy||!CharacterIdentityData.get(chosen)?'disabled':''}>${id?'Conferma cambio · TEST':'Conferma identità'}</button>`:'<p>Identità registrata. Il cambio non è disponibile nell’esperienza normale.</p>')+
       (CharacterIdentitySystem.testMode?`<p class="hint">TEST · scelta reversibile solo in questa modalità.</p><button id="identity-reset" ${blocked||busy?'disabled':''}>TEST · Reset identità</button>`:'')+
       (blocked?'<p>Viaggio in corso o da recuperare: scelta temporaneamente bloccata.</p>':'')+
       `<p id="identity-feedback" role="status" aria-live="polite">${escape(ProgressionStore.error||message)}</p>`;

@@ -1059,3 +1059,11 @@ it naturally; tools/guides are not implemented and cannot grant fictional access
 New travel snapshots use version 2; version-1 departures remain valid and arrival
 never reevaluates current racial rules. No combat bonus or new geography is added.
 See [identity, policy, migration and local test instructions](docs/character-identity-environment.md).
+
+# Sprint 2.7 — Mobile UX & Navigation Polish
+
+Presentation-only refinements: current-location context and regional travel from
+the map, reusable quest next-step projection, preserved quest-to-place Back stack,
+distinct ready/active/arrived travel views, timestamp-based remaining-time display,
+and clearer race selection with 48px controls. Game rules, artwork and persistence
+are unchanged. See [implementation and validation](docs/mobile-ux-navigation-polish.md).

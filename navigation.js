@@ -6,7 +6,7 @@
   function combatLocked() { return route.screen === "world" && route.view === "battle" && typeof ProgressionStore !== "undefined" && !!ProgressionStore.state.frontier.activeEncounter; }
   var screens = roots.concat(["equipment", "inventory", "class", "combat", "debug", "guild", "professions"]);
   var route = { screen: "world", root: "world", view: "places" }, stack = [];
-  var labels = { character: "Eroe", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professioni", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Missioni", quest: "Missione", discoveries: "Scoperte", overview: "Mappa dei luoghi", travel: "Viaggio regionale", battle: "Incontro" };
+  var labels = { character: "Eroe", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professioni", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Missioni", quest: "Missione", discoveries: "Scoperte", places: "Località", overview: "Mappa dei luoghi", travel: "Itinerario", battle: "Incontro" };
   function snapshot() {
     return { route: Object.assign({}, route), scroll: window.scrollY, panelScroll: document.getElementById("panel-" + route.screen)?.scrollTop || 0, focus: document.activeElement && document.activeElement.id, focusData: document.activeElement ? Object.assign({}, document.activeElement.dataset) : {} };
   }
@@ -35,7 +35,7 @@
     if (shortcut) shortcut.disabled = combatLocked();
     if (backButton) backButton.disabled = combatLocked();
     var context = document.getElementById("topbar-context");
-    if (context) context.textContent = route.screen === "world" && route.view === "places" ? "Mondo" : labels[route.view] || labels[route.screen] || "Mondo";
+    if (context) context.textContent = route.screen === "world" && route.view === "places" ? "Località" : labels[route.view] || labels[route.screen] || "Mondo";
     document.dispatchEvent(new CustomEvent("nymeria:navigation", { detail: Object.assign({}, route) }));
     window.scrollTo(0, restore ? restore.scroll : 0);
     var appliedRoute = route;
