@@ -53,8 +53,9 @@ jobs:
       - name: Launch and test the real APK in an emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
-          target: google_apis
+          api-level: 34
+          target: default
+          ram-size: 3072M
           arch: x86_64
           profile: pixel_7
           disable-animations: true

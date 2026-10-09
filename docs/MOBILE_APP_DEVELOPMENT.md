@@ -138,7 +138,7 @@ browser timings, storage faults and real UI equipment/renderer persistence check
 Reports are written into ignored test-results and uploaded with the CI logs.
 Browser CI checks out the run's exact SHA, not a moving branch tip.
 
-Mobile Builds also attempts a real Android API 35 emulator smoke and an iPhone
+Mobile Builds also attempts a real Android API 34 AOSP / 3 GB emulator smoke and an iPhone
 simulator install/launch/relaunch smoke. Android uses Playwright's existing Android
 WebView support plus native adb Back/Home/force-stop; no runtime plugin was added.
 iOS process smoke is not touch/gameplay/XCTest or physical validation. Native smoke

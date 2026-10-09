@@ -15,7 +15,7 @@ SHA: la configurazione di uno smoke test non ne prova l'esecuzione riuscita.
 | --- | --- |
 | Linux cloud, Node 24.19, Chromium 151.0.7922.173 | Test browser touch simulato e engine |
 | Linux, Temurin JDK 21, SDK 36/build-tools 35+36 | Nuova compilazione APK debug locale |
-| Runner Ubuntu 24.04, Android API 35 Google APIs, Pixel 7 x86_64 | CI installa APK e verifica il WebView reale via Playwright Android/CDP |
+| Runner Ubuntu 24.04, Android API 34 AOSP / 3 GB, Pixel 7 x86_64 | CI installa APK e verifica il WebView reale via Playwright Android/CDP |
 | Runner macOS 15, Xcode stabile, iPhone Pro disponibile | CI compila, installa, avvia, termina e riavvia il processo iOS; raccoglie screenshot/log |
 | iPhone/Android fisico | **Non disponibile e non testato** |
 
@@ -212,3 +212,10 @@ in diretta prima dell’avvio, senza dipendere da un dispositivo ancora disponib
 a fine test. La configurazione CI passa da swiftshader_indirect a swiftshader
 con Vulkan disabilitato: correzione dell’ambiente grafico software da verificare,
 non modifica del renderer Nymeria né prova definitiva della causa del disconnect.
+
+Run 37904884190: Android API 35 resta offline anche con Vulkan disabilitato.
+I log di avvio lmkd esposti non sono log di un’app uccisa per poca RAM. La
+configurazione di smoke viene portata ad API 34 AOSP (senza servizi Google),
+RAM 3072M esplicita, stessa APK/target SDK e stessi assert. La compatibilità
+funzionale Android 15 rimane aperta; il risultato su API 34 sarà distinto
+dai tentativi precedenti, senza reinterpretarli come successi.
