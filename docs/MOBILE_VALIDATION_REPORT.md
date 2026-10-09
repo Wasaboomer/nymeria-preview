@@ -173,3 +173,11 @@ su smartphone o memoria totale del dispositivo fisico.
 
 Le latenze del report Android includono attach/trasporto CDP e attese della
 harness (100 ms dopo un tap); non sono latenze pure del motore.
+
+Run [37895401230](https://github.com/Wasaboomer/nymeria-preview/actions/runs/37895401230):
+compilazioni e smoke iOS riusciti; verifiche funzionali Android completate fino
+al ripristino del ticket dopo force-stop. Il job Android è fallito successivamente
+nella raccolta logcat: il buffer stdout predefinito di Node causava ENOBUFS.
+La raccolta ora scrive direttamente su file, con timeout, conservando il log
+completo senza quel limite di buffer. La run successiva verifica anche la
+scansione degli errori nel log. Non era un crash del gioco.

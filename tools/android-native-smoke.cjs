@@ -7,6 +7,12 @@ const {audit,swipe} = require('../tests/contextual-scroll-fixture.cjs');
 const id = 'com.nymeria.game';
 const adb = (...args) => execFileSync('adb',['-e',...args],{encoding:'utf8'}).trim();
 const delay = ms => new Promise(r=>setTimeout(r,ms));
+function captureLogcat() {
+  const path='test-results/android/logcat.txt', output=fs.openSync(path,'w');
+  try { execFileSync('adb',['-e','logcat','-d'],{stdio:['ignore',output,'pipe'],timeout:30000}); }
+  finally { fs.closeSync(output); }
+  return fs.readFileSync(path,'utf8');
+}
 
 (async () => {
   assert.equal(process.env.CI,'true','Only run against an isolated CI emulator');
@@ -176,8 +182,7 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
     assert.ok(!await page.evaluate(()=>WorldUI.engine?.status==='running'));
     check('process kill and offline relaunch restore save and pending encounter');
-    const logs=adb('logcat','-d');
-    fs.writeFileSync('test-results/android/logcat.txt',logs);
+    const logs=captureLogcat();
     assert.ok(!/FATAL EXCEPTION[\s\S]{0,300}com\.nymeria\.game/.test(logs),'No native app crash');
     assert.ok(!/Capacitor\/Console.*(?:Uncaught|Unhandled|native navigation adapter could not load)/i.test(logs),'No uncaught startup/bridge error');
     report.metrics.webView=await page.evaluate(()=>({userAgent:navigator.userAgent,width:innerWidth,height:innerHeight,dpr:devicePixelRatio}));
@@ -194,6 +199,6 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     }
     fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
     if(device) await device.close();
-    try {fs.writeFileSync('test-results/android/logcat.txt',adb('logcat','-d'));} catch {}
+    try {captureLogcat();} catch {}
   }
 })().catch(e=>{console.error(e);console.error('::error::Native Android smoke: '+String(e.stack || e.message).replace(/[\r\n]/g,' ').slice(0,1600));process.exitCode=1;});
