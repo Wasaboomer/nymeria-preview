@@ -18,6 +18,15 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
   const report = {sourceCommit:process.env.GITHUB_SHA,platform:'Android emulator, real debug APK/WebView',version:adb('shell','getprop','ro.build.version.release'),checks:[],metrics:{}};
   let device, lastPage;
   const check = name => {report.checks.push(name);console.log('::notice::PASS native Android '+name);};
+  // Background WebViews may stop RAF delivery; poll from the test host instead.
+  async function waitNative(page,predicate,label) {
+    const deadline=Date.now()+30000;
+    while(Date.now()<deadline) {
+      if(await page.evaluate(predicate)) return;
+      await delay(100);
+    }
+    throw Error('Native lifecycle timeout: '+label);
+  }
   async function attach() {
     adb('shell','am','start','-W','-n',id+'/.MainActivity');
     device = (await _android.devices())[0]; assert.ok(device,'Emulator visible to Playwright');
@@ -109,10 +118,10 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     check('text focus/keyboard viewport and navigation');
     await touch(page,'#tab-character');
     adb('shell','input','keyevent','4');
-    await page.waitForFunction(async()=>!(await Capacitor.Plugins.App.getState()).isActive);
+    await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
     check('native Back minimizes at the root');
     adb('shell','am','start','-W','-n',id+'/.MainActivity');
-    await page.waitForFunction(async()=>(await Capacitor.Plugins.App.getState()).isActive);
+    await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'foreground');
     // Isolated native lifecycle fixture uses existing class/equipment/world APIs,
     // not Debug UI or altered combat values. Normal story journey is browser-tested.
     await page.evaluate(async()=>{
@@ -125,13 +134,13 @@ const delay = ms => new Promise(r=>setTimeout(r,ms));
     saved=await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY));
     const encounter=await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id);
     adb('shell','input','keyevent','3');
-    await page.waitForFunction(async()=>!(await Capacitor.Plugins.App.getState()).isActive);
-    await page.waitForFunction(()=>WorldUI.engine.status==='paused');
+    await waitNative(page,async()=>!(await Capacitor.Plugins.App.getState()).isActive,'background');
+    await waitNative(page,()=>WorldUI.engine.status==='paused','combat paused');
     const pausedTime=await page.evaluate(()=>WorldUI.engine.time);await delay(500);
     assert.equal(await page.evaluate(()=>WorldUI.engine.time),pausedTime);
     check('native background pauses the existing world combat clock');
     adb('shell','am','start','-W','-n',id+'/.MainActivity');
-    await page.waitForFunction(async()=>(await Capacitor.Plugins.App.getState()).isActive);
+    await waitNative(page,async()=>(await Capacitor.Plugins.App.getState()).isActive,'foreground');
     assert.equal(await page.evaluate(()=>localStorage.getItem(Equipment.SAVE_KEY)),saved);
     assert.equal(await page.evaluate(()=>WorldUI.engine.status),'paused');
     assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
