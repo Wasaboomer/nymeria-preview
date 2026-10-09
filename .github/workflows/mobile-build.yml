@@ -27,7 +27,10 @@ jobs:
           distribution: temurin
           java-version: '21'
       # ubuntu-24.04 already supplies ANDROID_HOME and sdkmanager.
-      - run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+      - name: Verify required Android SDK packages
+        run: >-
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
       - run: npm ci
       - run: npm run sync:mobile
       - run: npm run test:mobile
