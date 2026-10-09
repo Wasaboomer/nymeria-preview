@@ -203,3 +203,12 @@ il loop di automazione. Questo corregge un rischio concreto del test, non è
 un’ottimizzazione del gioco; la nuova run verifica l’effetto sul disconnect.
 I PASS rimangono nei log/report/summary; le notice sono riservate a diagnostici
 aggregati per non esaurire il budget di annotazioni GitHub prima dell’errore.
+
+Run 37902063403: suite web verde e iOS compile/install/launch/relaunch riusciti;
+Android perde il dispositivo ADB intero durante il fixture. ADB devices risulta
+vuoto; il runner ha 16 GB totali e circa 15 GB disponibili. Non è evidenza di
+un crash JS del gioco o di esaurimento della RAM host. Ora logcat viene catturato
+in diretta prima dell’avvio, senza dipendere da un dispositivo ancora disponibile
+a fine test. La configurazione CI passa da swiftshader_indirect a swiftshader
+con Vulkan disabilitato: correzione dell’ambiente grafico software da verificare,
+non modifica del renderer Nymeria né prova definitiva della causa del disconnect.

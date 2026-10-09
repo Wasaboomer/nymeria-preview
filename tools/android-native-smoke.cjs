@@ -8,15 +8,21 @@ const {audit,swipe} = require('../tests/contextual-scroll-fixture.cjs');
 const id = 'com.nymeria.game';
 const adb = async(...args) => (await execAsync('adb',['-e',...args],{encoding:'utf8',timeout:120000})).stdout.trim();
 const delay = ms => new Promise(r=>setTimeout(r,ms));
-async function captureLogcat() {
-  const path='test-results/android/logcat.txt', output=fs.openSync(path,'w');
-  try { await new Promise((resolve,reject)=>{
-    const child=spawn('adb',['-e','logcat','-d'],{stdio:['ignore',output,'pipe'],timeout:30000});
-    let errorText='';child.stderr?.on('data',chunk=>{errorText=(errorText+chunk).slice(-2000);});
-    child.on('error',reject);child.on('close',(code,signal)=>code===0?resolve():reject(Error('logcat exited '+(signal||code)+' '+errorText)));
-  }); }
-  finally { fs.closeSync(output); }
-  return fs.readFileSync(path,'utf8');
+function startLogcat() {
+  const path='test-results/android/logcat.txt',output=fs.openSync(path,'w');
+  const child=spawn('adb',['-e','logcat','-v','threadtime'],{stdio:['ignore',output,'pipe']});
+  let stderr='',finished=false;
+  child.stderr?.on('data',chunk=>{stderr=(stderr+chunk).slice(-2000);});
+  const closed=new Promise(resolve=>{child.on('error',error=>{stderr+=error.message;resolve();});child.on('close',resolve);});
+  return {async finish() {
+    if(!finished) {
+      if(child.exitCode===null && !child.killed) child.kill();
+      let timer;
+      await Promise.race([closed,new Promise(resolve=>{timer=setTimeout(resolve,3000);})]).finally(()=>clearTimeout(timer));
+      fs.closeSync(output);finished=true;
+    }
+    return {text:fs.readFileSync(path,'utf8'),stderr};
+  }};
 }
 
 (async () => {
@@ -27,6 +33,7 @@ async function captureLogcat() {
   await adb('logcat','-c');
   await adb('shell','svc','wifi','disable'); await adb('shell','svc','data','disable');
   const report = {sourceCommit:process.env.GITHUB_SHA,platform:'Android emulator, real debug APK/WebView',version:await adb('shell','getprop','ro.build.version.release'),checks:[],metrics:{}};
+  const logCapture=startLogcat();
   let device, lastPage, completed=false;
   const check = name => {report.checks.push(name);console.log('PASS native Android '+name);};
   // Background WebViews may stop RAF delivery; poll from the test host instead.
@@ -192,7 +199,7 @@ async function captureLogcat() {
     assert.equal(await page.evaluate(()=>ProgressionStore.state.frontier.activeEncounter.id),encounter);
     assert.ok(!await page.evaluate(()=>WorldUI.engine?.status==='running'));
     check('process kill and offline relaunch restore save and pending encounter');
-    const logs=await captureLogcat();
+    const logs=(await logCapture.finish()).text;
     assert.ok(!/FATAL EXCEPTION[\s\S]{0,300}com\.nymeria\.game/.test(logs),'No native app crash');
     assert.ok(!/Capacitor\/Console.*(?:Uncaught|Unhandled|native navigation adapter could not load)/i.test(logs),'No uncaught startup/bridge error');
     report.metrics.webView=await page.evaluate(()=>({userAgent:navigator.userAgent,width:innerWidth,height:innerHeight,dpr:devicePixelRatio}));
@@ -210,7 +217,9 @@ async function captureLogcat() {
     fs.writeFileSync('test-results/android/report.json',JSON.stringify(report,null,2));
     if(device) await device.close();
     try {
-      const log=await captureLogcat();
+      const captured=await logCapture.finish(),log=captured.text;
+      report.logcatTransport=captured.stderr;
+      if(captured.stderr)console.log('::notice::Logcat transport '+captured.stderr.replace(/[\r\n]/g,' ').slice(-1000));
       if(!completed) {
         const lines=log.split('\n').filter(line=>/RenderProcess|Fatal signal|lmkd|lowmemorykiller|AndroidRuntime|Killing.*nymeria|(?:chromium|cr_).*?(?:ERROR|FATAL)/i.test(line)).slice(-12);
         report.failureDiagnostics=lines;
