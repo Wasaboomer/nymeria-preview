@@ -29,11 +29,12 @@ locally without modifying their files. Generated native icons/splash are Capacit
 template placeholders, not approved final NYMERIA branding.
 
 `native-bootstrap.js` is inert in a browser. Only a native Capacitor WebView loads
-native-bridge.js. @capacitor/app is needed for Android Back: dismiss the top dialog,
+native-bridge.js. @capacitor/app is needed for Android Back and native lifecycle: dismiss the top dialog,
 return through the existing navigation stack, request the existing combat-exit
 confirmation, or minimize at the root. It never grants rewards, writes game state,
 or abandons combat directly. Existing visibility handlers pause combat when hidden.
-No new resume/refresh event rewrites or resets an active encounter.
+Native appStateChange also requests the existing Pause controls on background;
+foreground never auto-resumes. No refresh/reset rewrites an active encounter.
 
 iOS deployment starts at 15.4 because the existing compact UI uses CSS :has;
 Android needs an updated system WebView (including CSS :has support).
@@ -144,3 +145,9 @@ iOS process smoke is not touch/gameplay/XCTest or physical validation. Native sm
 logs/screenshots are additional artifacts; APK/app artifacts remain available after
 successful compilation even if a later smoke fails. Run timeouts are bounded;
 there is no signing, store upload, preview deployment or paid service integration.
+
+The Android smoke exposed that document.hidden can remain false while the native
+activity backgrounds. The native adapter therefore listens to appStateChange and
+requests existing Pause controls for running world/manual combat; game engines
+and save formats are unchanged. Smoke checks use App.getState for activity state.
+Repeated native/document events cannot toggle paused combat into running.

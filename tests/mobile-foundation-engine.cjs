@@ -13,3 +13,13 @@ const plist=fs.readFileSync(path.join(root,'ios/App/App/Info.plist'),'utf8');ass
 for(const f of ['index.html','visual-manifest.js','visual-renderer.js','character.js','equipment.js','progression-store.js','vendor/model-viewer-4.1.0.min.js'])assert.equal(fs.readFileSync(path.join(root,f)).compare(fs.readFileSync(path.join(root,'www',f))),0,'Exact packaged file '+f);
 assert.ok(fs.statSync(path.join(root,'www/native-bridge.js')).size>0);assert.ok(!fs.existsSync(path.join(root,'www/.git')));assert.ok(!fs.existsSync(path.join(root,'www/tests')));
 console.log('PASS mobile foundation: Back context/modal/combat/background, browser no-op, native bootstrap, portrait/config, exact offline assets and unchanged gameplay source');
+
+const {pauseExistingCombats}=require('../mobile/lifecycle-controller.cjs');
+let worldPauses=0,manualPauses=0;
+const world={status:'running'},manual={status:'running'};
+const lifecycle={worldEngine:world,combatEngine:manual,document:{getElementById:id=>({disabled:false,click:()=>{if(id==='world-battle-pause'){worldPauses++;world.status='paused';}else{manualPauses++;manual.status='paused';}}})}};
+pauseExistingCombats(lifecycle);assert.equal(worldPauses,1);assert.equal(manualPauses,1);
+pauseExistingCombats(lifecycle);assert.equal(worldPauses,1);assert.equal(manualPauses,1,'Never toggle a paused combat back to running');
+world.status='running';lifecycle.document.getElementById=()=>({disabled:true,click:()=>assert.fail('Blocked control clicked')});pauseExistingCombats(lifecycle);
+pauseExistingCombats({document:{getElementById:()=>null},worldEngine:null,combatEngine:null});
+console.log('PASS native lifecycle: existing world/manual pause controls, repeated background is idempotent, missing/disabled controls safe, no auto-resume');

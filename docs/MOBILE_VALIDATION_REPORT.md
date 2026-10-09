@@ -59,7 +59,7 @@ larghezza. Il test scrive dati grezzi in
 | Tap e due frame fino al cambio schermata | 78–151 ms |
 | JS heap del WebView Chromium simulato dopo riapertura | 2,98–3,05 MB |
 | Long task rilevati nelle sessioni | 52–71 ms |
-| Pacchetto www | 16.079.142 byte, 148 file |
+| Pacchetto www | 16.079.770 byte, 148 file |
 
 JS heap non è memoria totale dell'app. Questi dati non rappresentano prestazioni
 di iPhone vecchi né FPS reali; quattro campioni non sono un benchmark statistico.
@@ -138,3 +138,25 @@ Lo smoke Android ha incontrato un timeout funzionale: sono conservati i log e
 aggiunta una diagnostica per distinguere il punto di blocco senza indebolire le
 asserzioni o dichiarare passate verifiche non completate. Consultare gli esiti
 delle run successive per la risoluzione, non dedurla dalla compilazione verde.
+
+Diagnosi del timeout Android nella seconda run: creazione/equip/avatar, cinque
+schermate, Back contestuale/modal e tastiera erano passati; il test attendeva
+`document.hidden` dopo il Back alla radice, ma il WebView lo manteneva falso.
+Lo smoke ora verifica `App.getState().isActive` (stato nativo), non una proprietà
+del documento. Lo stesso limite rende insufficiente usare solo visibilitychange
+per la pausa: l'adapter nativo ascolta appStateChange e usa i pulsanti Pausa già
+esistenti per gli engine in esecuzione. Non modifica gli engine, non assegna
+ricompense e non riprende automaticamente al ritorno; eventi duplicati non togglano
+una pausa in resume. Il browser continua a usare il comportamento precedente.
+
+Lo smoke Android aggiunge un fixture di incontro creato tramite le API esistenti
+di classe/equip/World nell'emulatore isolato: verifica pausa del clock in background,
+assenza di auto-resume e conservazione dell'incontro dopo force-stop. Questa prova
+non sostituisce il percorso missioni via UI né un combattimento completo nativo.
+
+Lo smoke raccoglie inoltre 60 intervalli RAF durante/attorno a una vera gesture
+di scroll nel WebView. Sono tempi di frame dell’emulatore CI, non FPS certificati
+su smartphone o memoria totale del dispositivo fisico.
+
+Le latenze del report Android includono attach/trasporto CDP e attese della
+harness (100 ms dopo un tap); non sono latenze pure del motore.
