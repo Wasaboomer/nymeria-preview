@@ -10,7 +10,7 @@
     <title>Nymeria Frontiera del Vespro &amp; Quest System 0.1</title>
     <!-- Version changed UI assets together; retain frozen game asset versions. -->
     <link rel="stylesheet" href="styles.css?v=sprint1-mobile-1" />
-    <script src="navigation.js?v=sprint12-mobile-1" defer></script>
+    <script src="navigation.js?v=sprint25-1" defer></script>
     <script src="guild-data.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-system.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-project-data.js?v=sprint1-mobile-1" defer></script>
@@ -27,13 +27,15 @@
     <script src="personal-loot.js?v=sprint1-mobile-1" defer></script>
     <script src="world-data.js?v=sprint1-mobile-1" defer></script>
     <script src="profession-data.js?v=sprint1-mobile-1" defer></script>
-    <script src="profession-system.js?v=sprint1-mobile-1" defer></script>
+    <script src="profession-system.js?v=sprint25-1" defer></script>
     <script src="quest-data.js?v=sprint1-mobile-1" defer></script>
     <script src="quest-events.js?v=sprint1-mobile-1" defer></script>
     <script src="activity-clock.js?v=sprint24-1" defer></script>
-    <script src="quest-system.js?v=sprint24-1" defer></script>
-    <script src="progression-events.js?v=sprint1-mobile-1" defer></script>
-    <script src="progression-store.js?v=sprint24-1" defer></script>
+    <script src="quest-system.js?v=sprint25-1" defer></script>
+    <script src="progression-events.js?v=sprint25-1" defer></script>
+    <script src="travel-data.js?v=sprint25-1" defer></script>
+    <script src="travel-system.js?v=sprint25-1" defer></script>
+    <script src="progression-store.js?v=sprint25-1" defer></script>
     <script src="equipment.js?v=sprint1-mobile-1" defer></script>
     <script src="visual-manifest.js?v=sprint1-mobile-1" defer></script>
     <script src="visual-renderer.js?v=sprint1-mobile-1" defer></script>
@@ -45,12 +47,12 @@
     <script src="combat-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="class-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="expedition-engine.js?v=sprint1-mobile-1" defer></script>
-    <script src="progression-system.js?v=sprint24-1" defer></script>
+    <script src="progression-system.js?v=sprint25-1" defer></script>
     <script src="expedition-ui.js?v=sprint24-1" defer></script>
     <script src="world-discovery.js?v=sprint1-mobile-1" defer></script>
-    <script src="world-system.js?v=sprint24-1" defer></script>
+    <script src="world-system.js?v=sprint25-1" defer></script>
     <script src="quest-ui.js?v=sprint12-mobile-1" defer></script>
-    <script src="world-ui.js?v=sprint21-1" defer></script>
+    <script src="world-ui.js?v=sprint25-1" defer></script>
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
     <script src="notification-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
@@ -59,7 +61,8 @@
     <script src="visual-ui.js?v=sprint21-1" defer></script>
     <script src="guild-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-project-ui.js?v=sprint1-mobile-1" defer></script>
-    <script src="profession-ui.js?v=sprint1-mobile-1" defer></script>
+    <script src="travel-ui.js?v=sprint25-1" defer></script>
+    <script src="profession-ui.js?v=sprint25-1" defer></script>
       <link rel="stylesheet" href="kaelith-dev.css?v=1" />
     <script src="kaelith-dev.js?v=1" defer></script>
     <script src="modular-proof.js?v=1" defer></script>
@@ -508,6 +511,7 @@
         <section id="world-places">
           <button id="world-return-place" data-world-view="places" hidden>Esplora il luogo attuale</button>
           <div id="world-locations" class="world-locations" hidden></div>
+          <section id="regional-travel" class="quest-card" aria-label="Viaggio regionale" hidden></section>
           <section id="world-location-detail" class="world-location-detail"></section>
         </section>
         <section id="world-journal" hidden><h3>Diario della Frontiera</h3><p class="hint">Gli obiettivi avanzano dopo l'accettazione. Le ricompense si riscuotono una sola volta.</p><div id="quest-journal"></div><div id="quest-detail" hidden></div></section>

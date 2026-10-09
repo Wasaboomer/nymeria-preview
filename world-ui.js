@@ -31,7 +31,7 @@ const WorldUI = (() => {
     return `<svg viewBox="0 0 60 60" aria-hidden="true" class="world-mark"><path d="${marks[id]}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
   function selectView(value) {
-    if (!["places", "journal", "quest", "discoveries", "overview", "battle"].includes(value)) return;
+    if (!["places", "journal", "quest", "discoveries", "overview", "battle", "travel"].includes(value)) return;
     NymeriaNavigation.open("world", { view: value });
   }
   async function action(work) {
@@ -78,7 +78,7 @@ const WorldUI = (() => {
     node("world-summary").innerHTML = `<span>Livello <b>${state.level}</b> · ${state.currentXP}/${state.requiredXP || "MAX"} XP</span><span><b>${state.crowns}</b> Corone</span><small>Storia ${main.filter(q => frontier.quests[q.id].status === "claimed").length}/${main.length}</small>`;
     node("world-storage").textContent = [ProgressionStore.error, typeof WorldDiscovery !== "undefined" && WorldDiscovery?.storageIssue ? "Salvataggio discovery non disponibile. Il progetto resta conservato; riprova riaprendo la pagina." : ""].filter(Boolean).join(" ");
     for (const b of document.querySelectorAll("[data-world-view]")) b.setAttribute("aria-pressed", String(b.dataset.worldView === view));
-    for (const [id, value] of [["world-places", "places"], ["world-journal", "journal"], ["world-discoveries", "discoveries"]]) node(id).hidden = value === "places" ? !["places", "overview"].includes(view) : value === "journal" ? !["journal", "quest"].includes(view) : view !== value;
+    for (const [id, value] of [["world-places", "places"], ["world-journal", "journal"], ["world-discoveries", "discoveries"]]) node(id).hidden = value === "places" ? !["places", "overview", "travel"].includes(view) : value === "journal" ? !["journal", "quest"].includes(view) : view !== value;
     node("world-tracked").innerHTML = QuestUI.tracker(state);
     node("world-tracked").hidden = view !== "places";
     node("world-locations").hidden = view !== "overview";
@@ -94,7 +94,7 @@ const WorldUI = (() => {
     node("journal-badge").textContent = Object.values(frontier.quests).filter(q => q.status === "completed").length || "";
     node("world-locations").innerHTML = WorldData.locations.filter(location => !location.discoveryType || discovery(location.id)).map(location => {
       const unlocked = location.discoveryType ? discovery(location.id) : state.unlockedContent.includes(`world:${location.id}`), current = location.id === frontier.location;
-      return `<button class="world-node ${current ? "world-node-current" : ""}" data-world-enter="${location.id}" aria-pressed="${current}" ${!unlocked || frontier.activeEncounter || busy ? "disabled" : ""}>${mark(location.mark)}<span><strong>${escape(location.name)}</strong><small>${unlocked ? current ? "Ti trovi qui" : `Esplora · Liv. indicativo ${location.level}` : escape(location.unlockHint)}</small></span><b aria-hidden="true">${unlocked ? '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3 9 9 3M3 3H9V9" fill="none" stroke="currentColor"/></svg>' : '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6 1 11 6 6 11 1 6Z" fill="none" stroke="currentColor"/></svg>'}</b></button>`;
+      return `<button class="world-node ${current ? "world-node-current" : ""}" data-world-enter="${location.id}" aria-pressed="${current}" ${!unlocked || frontier.activeEncounter || state.travel.active || state.travel.recoveryRequired || busy ? "disabled" : ""}>${mark(location.mark)}<span><strong>${escape(location.name)}</strong><small>${unlocked ? current ? "Ti trovi qui" : `Esplora · Liv. indicativo ${location.level}` : escape(location.unlockHint)}</small></span><b aria-hidden="true">${unlocked ? '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M3 9 9 3M3 3H9V9" fill="none" stroke="currentColor"/></svg>' : '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M6 1 11 6 6 11 1 6Z" fill="none" stroke="currentColor"/></svg>'}</b></button>`;
     }).join("");
     const savedLocation = WorldData.location(frontier.location);
     const location = savedLocation.discoveryType && !discovery(savedLocation.id) ? WorldData.location("veyra") : savedLocation;
@@ -115,7 +115,7 @@ const WorldUI = (() => {
     }).join("")}</div>${location.enemies.length && !ClassSystem.kitRequirement(Equipment.equipped("mainHand"), Equipment.equipped("support")) ? '<p class="compatibility">Prepara il kit della classe prima degli incontri.</p><button data-world-equipment>Prepara equipaggiamento</button>' : ""}`;
     node("world-location-detail").innerHTML += `<section class="world-destinations"><h4>Destinazioni</h4>${(WorldData.connections[location.id] || []).concat(location.id === "veyra" && discovery("vesper-outpost") ? ["vesper-outpost"] : []).map(id => {
       const destination = WorldData.location(id), unlocked = destination.discoveryType ? discovery(id) : state.unlockedContent.includes(`world:${id}`);
-      return `<button data-world-enter="${id}" ${!unlocked || frontier.activeEncounter || busy ? "disabled" : ""}><span><strong>${escape(destination.name)}</strong>${!unlocked ? `<small>Bloccato · ${escape(destination.unlockHint)}</small>` : ""}</span><b aria-hidden="true">${unlocked ? "→" : "🔒"}</b></button>`;
+      return `<button data-world-enter="${id}" ${!unlocked || frontier.activeEncounter || state.travel.active || state.travel.recoveryRequired || busy ? "disabled" : ""}><span><strong>${escape(destination.name)}</strong>${!unlocked ? `<small>Bloccato · ${escape(destination.unlockHint)}</small>` : ""}</span><b aria-hidden="true">${unlocked ? "→" : "🔒"}</b></button>`;
     }).join("")}</section>`;
     // Objective markers are semantic UI hints, never quest-engine branches.
     for (const tracked of QuestUI.relevantQuests(state)) {
@@ -193,16 +193,16 @@ const WorldUI = (() => {
       syncEncounter();
     } else if (engine && !settling) { stopClock(); engine = null; ticketId = null; }
     node("world-battle-abandon").disabled = settling || busy;
-    if (busy || frontier.activeEncounter) {
+    if (busy || frontier.activeEncounter || state.travel.active || state.travel.recoveryRequired) {
       for (const b of node("world-location-detail").querySelectorAll("button")) b.disabled = true;
     }
     if (busy) for (const b of node("panel-world").querySelectorAll("[data-quest-accept], [data-quest-claim], [data-quest-track]")) b.disabled = true;
-    if (busy || frontier.activeEncounter) for (const b of node("panel-world").querySelectorAll('.quest-next-step button')) b.disabled = true;
+    if (busy || frontier.activeEncounter || state.travel.active || state.travel.recoveryRequired) for (const b of node("panel-world").querySelectorAll('.quest-next-step button')) b.disabled = true;
     if(typeof ProfessionData!=="undefined"){
       const localNodes=ProfessionData.gathering.filter(n=>n.location===location.id);
       if(localNodes.length){
         const host=node("world-location-detail"), section=document.createElement("section");
-        section.className="world-professions"; section.innerHTML=`<h4>Raccolte delle Professioni</h4>${localNodes.map(n=>`<button data-world-profession ${busy||frontier.activeEncounter?"disabled":""}><span><strong>${escape(ProfessionData.materials.find(m=>m.id===n.material)?.name||n.material)}</strong><small>${escape(ProfessionData.profession(n.profession)?.name||n.profession)} · raccogli qui</small></span><b aria-hidden="true">→</b></button>`).join("")}`;
+        section.className="world-professions"; section.innerHTML=`<h4>Raccolte delle Professioni</h4>${localNodes.map(n=>`<button data-world-profession ${busy||frontier.activeEncounter||state.travel.active||state.travel.recoveryRequired?"disabled":""}><span><strong>${escape(ProfessionData.materials.find(m=>m.id===n.material)?.name||n.material)}</strong><small>${escape(ProfessionData.profession(n.profession)?.name||n.profession)} · raccogli qui</small></span><b aria-hidden="true">→</b></button>`).join("")}`;
         host.append(section);
       }
     }

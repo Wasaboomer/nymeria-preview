@@ -76,7 +76,7 @@ const QuestEngine = (() => {
       return store.transact(state => {
         const quest = data.get(id), entry = state.frontier.quests[id];
         if (!quest || entry.status !== "available") return { ok: false, message: "Missione non disponibile." };
-        if (state.frontier.location !== quest.location) return { ok: false, message: "Incontra prima il committente nel suo luogo." };
+        if (state.travel?.active || state.travel?.recoveryRequired || state.frontier.location !== quest.location) return { ok: false, message: "Incontra prima il committente nel suo luogo." };
         entry.lootPolicy = progression.personalPreparation();
         entry.status = "active";
         state.frontier.trackedQuest = id;
@@ -119,7 +119,7 @@ const QuestEngine = (() => {
       return store.transact(state => {
         const entry = state.frontier.quests[id];
         const receipt = profession.deliveryReceipt(id);
-        if (entry.status !== 'active' || state.frontier.location !== quest.location || state.frontier.activeEncounter)
+        if (entry.status !== 'active' || state.travel?.active || state.travel?.recoveryRequired || state.frontier.location !== quest.location || state.frontier.activeEncounter)
           return {ok:false, message:'Consegna già registrata: torna da Bram per completarla.'};
         if (!receipt || receipt.material !== objective.target || receipt.amount !== objective.count)
           return {ok:false, message:'Consegna non verificabile. Il rinforzo registrato resta conservato; riprova.'};

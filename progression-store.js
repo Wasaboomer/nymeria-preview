@@ -21,6 +21,8 @@ const ProgressionStorage = (() => {
   } catch { /* Optional feedback must not prevent the gameplay ledger from starting. */ }
   const classData = typeof module !== "undefined" && module.exports
     ? require("./classes-data.js") : ClassesData;
+  const travel = typeof module !== "undefined" && module.exports
+    ? require("./travel-system.js") : TravelEngine;
   const KEY = "nymeria.progression.v1";
   const copy = (value) => JSON.parse(JSON.stringify(value));
   function initial() {
@@ -38,6 +40,8 @@ const ProgressionStorage = (() => {
       pendingExpeditionResult: null,
       lastClaim: null,
       frontier: quests.normalize(),
+      travel: travel.empty(),
+      characterIdentity: {version:1, raceId:null},
     };
   }
   const isObject = (value) =>
@@ -287,6 +291,11 @@ const ProgressionStorage = (() => {
         ]
       : [];
     state.sequence = data.amount(raw.sequence);
+    state.travel = travel.normalize(raw.travel, state.frontier.location, state.sequence);
+    // Gameplay identity is never inferred from the renderer, colours or old labels.
+    const raceId = raw.characterIdentity?.raceId;
+    if (raw.characterIdentity?.version === 1 && typeof raceId === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(raceId))
+      state.characterIdentity.raceId = raceId;
     const seenTickets = new Set();
     state.manualCombatTickets = Array.isArray(raw.manualCombatTickets)
       ? raw.manualCombatTickets
@@ -365,7 +374,7 @@ const ProgressionStorage = (() => {
         } catch {
           /* Recover only this corrupt key, never touch other systems. */
         }
-        if (raw?.version > data.schemaVersion || quests.unsupported(raw?.frontier)) {
+        if (raw?.version > data.schemaVersion || quests.unsupported(raw?.frontier) || travel.unsupported(raw?.travel) || raw?.characterIdentity?.version > 1) {
           unsupported = true;
           error = "Versione del salvataggio progressione non supportata.";
           return false;

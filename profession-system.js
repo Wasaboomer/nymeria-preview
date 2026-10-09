@@ -64,6 +64,7 @@ const ProfessionEngine = (() => {
         if (!r.ok) { storageIssue = true; emit(); return r; }
         state = r.state; recovered = r.recovered;
         const place = context();
+        if (place?.traveling) return {ok:false, message:'Concludi il viaggio prima di raccogliere o creare.'};
         if (!place || !place.accessible || place.activeEncounter) return { ok: false, message: "Reach an accessible gathering site and finish the encounter first." };
         const next = copy(state), result = change(next, place);
         if (!result.ok) return result;

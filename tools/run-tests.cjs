@@ -1,6 +1,6 @@
 const {spawnSync}=require('node:child_process'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const engines=fs.readdirSync(path.join(root,'tests')).filter(x=>x.endsWith('engine.cjs')).sort();
-const browsers=['fixed-screens-browser.cjs','fixed-battle-browser.cjs','fixed-feedback-browser.cjs','fixed-reward-prompts.cjs','fixed-screens-journey.cjs','contextual-combat-browser.cjs','contextual-panels-browser.cjs','sprint12-navigation-browser.cjs','fantasy-identity-browser.cjs','interface-refinement-browser.cjs','mobile-foundation-browser.cjs','mobile-validation-browser.cjs','offline-progression-browser.cjs'];
+const browsers=['fixed-screens-browser.cjs','fixed-battle-browser.cjs','fixed-feedback-browser.cjs','fixed-reward-prompts.cjs','fixed-screens-journey.cjs','contextual-combat-browser.cjs','contextual-panels-browser.cjs','sprint12-navigation-browser.cjs','fantasy-identity-browser.cjs','interface-refinement-browser.cjs','mobile-foundation-browser.cjs','mobile-validation-browser.cjs','offline-progression-browser.cjs','profession-browser.cjs','travel-browser.cjs'];
 let failed=0;for(const name of [...engines,...browsers]){const r=spawnSync(process.execPath,['tests/'+name],{cwd:root,stdio:'inherit',env:process.env,timeout:600000});if(r.status!==0){failed++;console.error('FAIL',name,r.error?.message||r.status);}else console.log('PASS suite',name);}
 console.log(`${engines.length+browsers.length} suites, ${failed} failed`);process.exitCode=failed?1:0;

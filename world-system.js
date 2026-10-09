@@ -21,11 +21,11 @@ const WorldEngine = (() => {
   }
   function create({ store, progression, now = () => Date.now(), random = Math.random, testMode = false, discovery = null }) {
     const unlocked = (state, id) => data.location(id)?.discoveryType ? !!discovery?.accessible(id) : state.unlockedContent.includes(`world:${id}`);
-    const available = state => !state.frontier.activeEncounter;
+    const available = state => !state.frontier.activeEncounter && !state.travel?.active && !state.travel?.recoveryRequired;
     function enter(id) {
       return store.transact(state => {
         if (!data.location(id) || !unlocked(state, id)) return { ok: false, message: "Questo luogo non è ancora accessibile." };
-        if (!available(state)) return { ok: false, message: "Termina l'incontro prima di viaggiare." };
+        if (!available(state)) return { ok: false, message: state.travel?.active ? "Concludi il viaggio prima di spostarti." : state.travel?.recoveryRequired ? "Dati di viaggio da recuperare: spostamento non applicato." : "Termina l'incontro prima di viaggiare." };
         if (data.location(id).discoveryType && !state.unlockedContent.includes(`world:${id}`)) state.unlockedContent.push(`world:${id}`);
         state.frontier.location = id;
         events.dispatch(state, { type: "visit", target: id });

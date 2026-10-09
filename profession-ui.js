@@ -1,6 +1,6 @@
 /* M7.3 mobile profession vertical slice. Presentation only; engine owns durable changes. */
 const ProfessionUI = (() => {
-  const context=()=>{const s=ProgressionStore.state, location=s.frontier.location, place=WorldData.location(location);return {location,quests:Object.fromEntries(Object.entries(s.frontier.quests).map(([id,q])=>[id,q.status])),activeEncounter:!!s.frontier.activeEncounter,accessible:!ProgressionStore.error&&!!place&&(place.discoveryType?WorldDiscovery.accessible(location):s.unlockedContent.includes('world:'+location))}};
+  const context=()=>{const s=ProgressionStore.state, location=s.frontier.location, place=WorldData.location(location);return {location,quests:Object.fromEntries(Object.entries(s.frontier.quests).map(([id,q])=>[id,q.status])),activeEncounter:!!s.frontier.activeEncounter,traveling:!!s.travel?.active||s.travel?.recoveryRequired,accessible:!ProgressionStore.error&&!!place&&(place.discoveryType?WorldDiscovery.accessible(location):s.unlockedContent.includes('world:'+location))}};
   const exclusive=run=>ProfessionTabWriter.exclusive(()=>{
     const refreshAndRun=()=>{ProgressionStore.refresh();return ProgressionStore.error?{ok:false,message:"World context unavailable. No profession changes applied."}:run()};
     return navigator.locks?navigator.locks.request("nymeria-progression",refreshAndRun):refreshAndRun();
@@ -14,7 +14,7 @@ const ProfessionUI = (() => {
   function render(){
     if(!root)return;
     const s=engine.state,current=ProgressionStore.state.frontier.location,place=context();
-    const blocked=engine.storageIssue?'Salvataggio non disponibile: riprova dopo aver riaperto la schermata.':place.activeEncounter?'Concludi l’incontro in corso prima di raccogliere o creare.':!place.accessible?'Raggiungi un luogo accessibile nel Mondo.':busy?'Operazione in corso.':'';
+    const blocked=engine.storageIssue?'Salvataggio non disponibile: riprova dopo aver riaperto la schermata.':place.traveling?'Viaggio in corso o da recuperare: attendi prima di raccogliere o creare.':place.activeEncounter?'Concludi l’incontro in corso prima di raccogliere o creare.':!place.accessible?'Raggiungi un luogo accessibile nel Mondo.':busy?'Operazione in corso.':'';
     const preparation = ProgressionStore.state.frontier.quests['sq-bram-preparation'];
     const bramReady = (s.materials['frontier-brace'] || 0) > 0 || !!s.deliveries['sq-bram-preparation'];
     const bramHint = preparation?.status === 'active' ? `<section class="profession-action-card"><strong>Preparati al Sentiero · missione facoltativa</strong><p>Raccogli 6 Ferro grezzo, forgia due Ferro forgiato e crea un Rinforzo della Frontiera. La ricetta richiede Forgiatura 2: le raccolte e le due fusioni ti portano a quel livello.</p>${bramReady ? '<p>Rinforzo pronto: torna da Bram per consegnarlo e riscuotere l’anello.</p><button data-prof-bram>Vai da Bram →</button>' : ''}</section>` : '';

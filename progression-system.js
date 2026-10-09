@@ -191,6 +191,7 @@ const ProgressionLifecycle = (() => {
     }
     function beginManualCombat(enemyId) {
       return store.transact((state) => {
+        if (state.travel?.active || state.travel?.recoveryRequired) return {ok:false,message:"Concludi il viaggio prima del combattimento."};
         const enemy = combat.enemies[enemyId];
         if (!enemy) return { ok: false, message: "Nemico non disponibile." };
         state.sequence++;

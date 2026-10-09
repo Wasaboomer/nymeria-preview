@@ -1037,3 +1037,14 @@ Android emulator / iPhone simulator smoke tests. Native process launch, browser
 functional checks and physical device approval remain separate levels of evidence.
 
 - [Sprint 2.4 — persistenza temporale e progressione offline](docs/OFFLINE_PROGRESSION.md)
+
+## Sprint 2.5 — Regional Travel Foundation
+
+Regional travel shares the existing progression ledger: explicit route selection,
+absolute deadlines, atomic once-only arrival and quest visit dispatch. Existing
+instantaneous movement and independent Expeditions remain unchanged. Only
+`?test=1` exposes two technical routes between existing places (90 s / 120 s).
+Legacy race identity remains unassigned; no appearance-derived race or racial bonus.
+Corrupt travel is quarantined without resetting progression. No new region or
+Le Rotte Interrotte content is implemented. See [contract, migration, limitations
+and local test instructions](docs/regional-travel.md).

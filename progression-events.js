@@ -25,6 +25,10 @@ const ProgressionEvents = (() => {
       const entry = world.achievements.find(x => x.id === id);
       if (entry) events.push({ type: "achievement", payload: { ...entry } });
     }
+    const arrival=after.travel?.lastArrival;
+    if (arrival && arrival.completionId !== before.travel?.lastArrival?.completionId)
+      events.push({type:"travelArrived",payload:{completionId:arrival.completionId,
+        destinationId:arrival.destinationId,name:"Arrivo · "+world.location(arrival.destinationId).name}});
     return events;
   }
   return { changes };
