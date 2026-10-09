@@ -1,0 +1,7 @@
+{
+  "appId": "com.nymeria.game",
+  "appName": "NYMERIA",
+  "webDir": "www",
+  "ios": { "contentInset": "never", "preferredContentMode": "mobile" },
+  "android": { "backgroundColor": "#0c1613" }
+}

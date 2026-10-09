@@ -1018,3 +1018,15 @@ consumo. Il modello attuale non contiene consumabili. Menu raggruppato per attiv
 conoscenze e comunità, usando soltanto funzioni esistenti.
 
 Architettura, limiti dei dati e verifiche: [Sprint 2.1](docs/interface-refinement.md).
+
+### Sprint 2.2 — Mobile App Foundation
+
+NYMERIA dispone di progetti Capacitor Android/iOS con asset locali; la preview web
+mantiene la stessa interfaccia e gli stessi salvataggi. Nessun server remoto carica
+l'UI nativa. `npm ci` → `npm run sync:mobile`; build debug e compilazione iOS senza
+firma sono predisposte in Actions sul solo DEV. Non è una release per gli store.
+
+- [Visione permanente del progetto](docs/NYMERIA_PROJECT_VISION.md)
+- [Architettura mobile, build, artifact e limiti iPhone](docs/MOBILE_APP_DEVELOPMENT.md)
+
+I salvataggi Safari non vengono trasferiti automaticamente nell'app installata.

@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {handleBack}=require('../mobile/back-controller.cjs');
+let closed=0,back=0,minimized=0,confirmed=0;
+const ctx={document:{querySelectorAll:()=>[],getElementById:()=>({disabled:false})},navigation:{depth:1,back:()=>back++},minimize:()=>minimized++};
+assert.equal(handleBack(ctx),'context');assert.equal(back,1);ctx.navigation.depth=0;assert.equal(handleBack(ctx),'background');assert.equal(minimized,1);
+ctx.document.querySelectorAll=()=>[{close:()=>closed++}];assert.equal(handleBack(ctx),'dialog');assert.equal(closed,1);assert.equal(minimized,1);
+ctx.document.querySelectorAll=()=>[];ctx.document.getElementById=id=>id==='navigation-back'?{disabled:true}:{disabled:false,click:()=>confirmed++};assert.equal(handleBack(ctx),'combat-confirmation');assert.equal(confirmed,1);assert.equal(back,1);assert.equal(minimized,1);
+ctx.document.getElementById=()=>({disabled:true});assert.equal(handleBack(ctx),'combat-confirmation');assert.equal(confirmed,1);
+const root=path.resolve(__dirname,'..'),config=JSON.parse(fs.readFileSync(path.join(root,'capacitor.config.json')));assert.equal(config.appId,'com.nymeria.game');assert.equal(config.appName,'NYMERIA');assert.equal(config.webDir,'www');assert.ok(!config.server,'No remote UI or origin migration');
+let loaded=0;const bootstrap=fs.readFileSync(path.join(root,'native-bootstrap.js'),'utf8');const document={createElement:()=>({}),head:{append:()=>loaded++}};vm.runInNewContext(bootstrap,{window:{},document});assert.equal(loaded,0);vm.runInNewContext(bootstrap,{window:{Capacitor:{isNativePlatform:()=>true}},document});assert.equal(loaded,1);
+const android=fs.readFileSync(path.join(root,'android/app/src/main/AndroidManifest.xml'),'utf8');assert.match(android,/screenOrientation="portrait"/);
+const plist=fs.readFileSync(path.join(root,'ios/App/App/Info.plist'),'utf8');assert.ok(!plist.includes('UIInterfaceOrientationLandscape'));assert.ok(plist.includes('UIInterfaceOrientationPortrait'));
+for(const f of ['index.html','visual-manifest.js','visual-renderer.js','character.js','equipment.js','progression-store.js','vendor/model-viewer-4.1.0.min.js'])assert.equal(fs.readFileSync(path.join(root,f)).compare(fs.readFileSync(path.join(root,'www',f))),0,'Exact packaged file '+f);
+assert.ok(fs.statSync(path.join(root,'www/native-bridge.js')).size>0);assert.ok(!fs.existsSync(path.join(root,'www/.git')));assert.ok(!fs.existsSync(path.join(root,'www/tests')));
+console.log('PASS mobile foundation: Back context/modal/combat/background, browser no-op, native bootstrap, portrait/config, exact offline assets and unchanged gameplay source');

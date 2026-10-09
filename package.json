@@ -1,0 +1,28 @@
+{
+  "name": "nymeria-mobile",
+  "version": "0.2.2",
+  "private": true,
+  "description": "NYMERIA web game and isolated Capacitor mobile packaging",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:web": "node tools/build-mobile-web.cjs",
+    "sync:mobile": "npm run build:web && cap sync",
+    "test": "npm run build:web && node tools/run-tests.cjs",
+    "test:mobile": "node tests/mobile-foundation-engine.cjs",
+    "android:debug": "npm run sync:mobile && cd android && ./gradlew assembleDebug",
+    "ios:check": "npm run sync:mobile && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "esbuild": "0.25.12",
+    "playwright": "1.58.2"
+  }
+}

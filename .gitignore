@@ -1,0 +1,11 @@
+node_modules/
+www/
+test-results/
+.DS_Store
+*.log
+android/.gradle/
+android/local.properties
+android/**/build/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/DerivedData/
