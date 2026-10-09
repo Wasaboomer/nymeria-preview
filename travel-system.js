@@ -4,9 +4,17 @@ const TravelEngine = (() => {
   const data=node?require('./travel-data.js'):TravelData;
   const world=node?require('./world-data.js'):WorldData;
   const events=node?require('./quest-events.js'):QuestEvents;
+  const access=node?require('./travel-access.js'):TravelAccess;
   const copy=x=>JSON.parse(JSON.stringify(x));
   const time=x=>Number.isSafeInteger(x)&&x>=0&&x<=1e15;
   const empty=()=>({version:1,active:null,lastArrival:null,recoveryRequired:false});
+  function validSnapshot(s){
+    if(s?.version===1)return true;
+    return s?.version===2&&access.environments.includes(s.environment)&&
+      (s.raceId===null||typeof s.raceId==='string')&&Array.isArray(s.satisfiedRequirements)&&
+      s.satisfiedRequirements.every(r=>typeof r?.id==='string'&&['natural','context'].includes(r.source))&&
+      Array.isArray(s.environmentalModifiers)&&s.environmentalModifiers.length===0;
+  }
   function validTicket(t) {
     return t && /^travel-\d+$/.test(t.id) && t.completionId===t.id+':arrival' &&
       typeof t.routeId==='string' && !!data.get(t.routeId) &&
@@ -14,7 +22,7 @@ const TravelEngine = (() => {
       world.location(t.originId) && world.location(t.destinationId) && t.originId!==t.destinationId &&
       time(t.startedAt)&&time(t.endsAt)&&Number.isSafeInteger(t.durationMs)&&
       t.durationMs>0&&t.durationMs<=data.maxDurationMs&&t.endsAt-t.startedAt===t.durationMs&&
-      t.requirementsSnapshot?.version===1&&t.requirementsSnapshot.satisfied===true&&
+      validSnapshot(t.requirementsSnapshot)&&t.requirementsSnapshot.satisfied===true&&
       Number.isInteger(t.requirementsSnapshot.level)&&t.requirementsSnapshot.level>=1&&
       t.requirementsSnapshot.originUnlocked===true&&t.requirementsSnapshot.destinationUnlocked===true;
   }
@@ -32,30 +40,36 @@ const TravelEngine = (() => {
     }
     return next;
   }
-  const unsupported=raw=>raw?.version>1;
+  const unsupported=raw=>raw?.version>1||raw?.active?.requirementsSnapshot?.version>2||raw?.lastArrival?.requirementsSnapshot?.version>2;
   function create({store,now=()=>Date.now(),testMode=false,accessible=null,interactiveCombat=()=>false}) {
     const unlocked=(state,id)=>world.location(id)?.discoveryType?!!accessible?.(id):state.unlockedContent.includes('world:'+id);
-    function eligibility(route,state=store.state) {
+    function contextReason(route,state=store.state) {
       if(!route || (route.testOnly&&!testMode))return 'Rotta non disponibile.';
       if(state.travel.recoveryRequired)return 'Dati di viaggio incoerenti: serve un recupero esplicito. Nessun arrivo applicato.';
       if(state.travel.active)return 'Un viaggio è già in corso.';
       if(state.frontier.activeEncounter||interactiveCombat())return 'Concludi l’incontro prima di partire.';
       if(state.frontier.location!==route.originId)return 'Raggiungi il punto di partenza.';
       if(!unlocked(state,route.originId)||!unlocked(state,route.destinationId))return 'Luogo non ancora accessibile.';
-      if(state.level<route.requirements.minimumLevel)return 'Livello insufficiente.';
       return '';
     }
+    function evaluate(route,state=store.state){
+      const reason=contextReason(route,state);
+      return access.evaluateRouteAccess(state.characterIdentity,route,{level:state.level,available:!reason,reason});
+    }
+    const eligibility=(route,state=store.state)=>evaluate(route,state).reason;
     function start(routeId) {
       return store.transact(state=>{
-        const route=data.get(routeId),reason=eligibility(route,state);
-        if(reason)return {ok:false,message:reason};
-        const startedAt=now();
-        if(!time(startedAt)||!time(startedAt+route.durationMs))return {ok:false,message:'Orologio locale non valido.'};
+        const route=data.get(routeId),evaluation=evaluate(route,state);
+        if(!evaluation.accessible)return {ok:false,message:evaluation.reason};
+        const startedAt=now(),durationMs=evaluation.baseDurationMs;
+        if(!time(startedAt)||!time(startedAt+durationMs))return {ok:false,message:'Orologio locale non valido.'};
         state.sequence++;
         const id='travel-'+state.sequence;
         state.travel.active={id,routeId:route.id,originId:route.originId,destinationId:route.destinationId,
-          startedAt,endsAt:startedAt+route.durationMs,durationMs:route.durationMs,completionId:id+':arrival',
-          requirementsSnapshot:{version:1,satisfied:true,level:state.level,originUnlocked:true,destinationUnlocked:true}};
+          startedAt,endsAt:startedAt+durationMs,durationMs,completionId:id+':arrival',
+          requirementsSnapshot:{version:2,satisfied:true,level:state.level,originUnlocked:true,destinationUnlocked:true,
+            raceId:state.characterIdentity.raceId,environment:evaluation.environment,
+            satisfiedRequirements:copy(evaluation.satisfiedRequirements),environmentalModifiers:[]}};
         return {ok:true,message:'Partenza salvata. Il viaggio prosegue anche a gioco chiuso.',ticket:copy(state.travel.active)};
       });
     }
@@ -76,7 +90,7 @@ const TravelEngine = (() => {
         return {ok:true,message:'Viaggio concluso · '+world.location(ticket.destinationId).name,receipt:copy(state.travel.lastArrival)};
       });
     }
-    return {start,refresh,eligibility,testMode,get state(){return store.state.travel;},
+    return {start,refresh,eligibility,evaluate,testMode,get state(){return store.state.travel;},
       remaining:()=>Math.max(0,(store.state.travel.active?.endsAt||0)-now()),
       routes:()=>data.routes.filter(r=>!r.testOnly||testMode)};
   }

@@ -17,16 +17,16 @@ const TravelUI=(()=>{
     root.hidden=NymeriaNavigation.route.screen!=='world'||NymeriaNavigation.route.view!=='travel';
     const routes=TravelSystem.routes().filter(r=>r.originId===s.frontier.location);
     if(!routes.some(r=>r.id===selected))selected=null;
-    const key=JSON.stringify([t,s.frontier.location,s.level,s.unlockedContent,selected,busy,message,ProgressionStore.error]);
+    const key=JSON.stringify([t,s.frontier.location,s.level,s.unlockedContent,s.characterIdentity,selected,busy,message,ProgressionStore.error]);
     if(key!==signature){
       signature=key;
-      const route=TravelData.get(selected);
+      const route=TravelData.get(selected),evaluation=route?TravelSystem.evaluate(route,s):null;
       root.innerHTML='<h3>Viaggio regionale</h3>'+(TravelSystem.testMode?'<p class="hint">TEST · rotte tecniche tra luoghi esistenti. Nessuna ricompensa.</p>':'')+
         (active?`<p><strong>In viaggio verso ${escape(WorldData.location(active.destinationId).name)}</strong></p><p>Durata: ${duration(active.durationMs)} · <span id="travel-countdown"></span></p><p class="hint">Il viaggio prosegue anche a gioco chiuso. Non puoi cambiare rotta.</p>`:
         t.recoveryRequired?'<p role="alert">Dati di viaggio incoerenti. Nessun arrivo applicato; è necessario un recupero esplicito.</p>':
         `${t.lastArrival?`<p role="status"><strong>ARRIVO COMPLETATO · ${escape(WorldData.location(t.lastArrival.destinationId).name)}</strong></p>`:''}
         <label>Seleziona una rotta<select id="travel-route"><option value="">Scegli la rotta</option>${routes.map(r=>`<option value="${r.id}" ${selected===r.id?'selected':''}>${escape(WorldData.location(r.destinationId).name)} · ${duration(r.durationMs)}</option>`).join('')}</select></label>
-        ${route?`<p>${escape(route.description)}</p><p>Destinazione: ${escape(WorldData.location(route.destinationId).name)}<br>Durata: ${duration(route.durationMs)}<br>Requisiti: livello ${route.requirements.minimumLevel}, partenza e destinazione accessibili.</p><p>${escape(TravelSystem.eligibility(route,s))}</p>`:'<p>Scegli una rotta prima di confermare.</p>'}
+        ${route?`<p>${escape(route.description)}</p><p>Destinazione: ${escape(WorldData.location(route.destinationId).name)}<br>Durata: ${duration(evaluation.baseDurationMs)}<br>Ambiente: ${escape({land:"Terrestre",coastal:"Costiero",underwater:"Subacqueo"}[evaluation.environment])}<br>Requisiti: livello ${route.requirements.minimumLevel}, partenza e destinazione accessibili.</p><p>${escape(evaluation.accessible?"Rotta disponibile · requisiti soddisfatti.":evaluation.reason)}</p>`:'<p>Scegli una rotta prima di confermare.</p>'}
         <button id="travel-confirm" class="quest-primary" ${busy||!route||TravelSystem.eligibility(route,s)?'disabled':''}>Conferma partenza</button>`)+
         `<p id="travel-feedback" role="status" aria-live="polite">${escape(ProgressionStore.error||message)}</p><button data-world-view="places">Torna al luogo</button>`;
     }

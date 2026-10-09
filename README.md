@@ -1048,3 +1048,14 @@ Legacy race identity remains unassigned; no appearance-derived race or racial bo
 Corrupt travel is quarantined without resetting progression. No new region or
 Le Rotte Interrotte content is implemented. See [contract, migration, limitations
 and local test instructions](docs/regional-travel.md).
+
+## Sprint 2.6 — Character Identity & Environmental Travel Rules
+
+Seven stable gameplay race IDs are independent of appearance/class/equipment.
+Eroe exposes an explicit optional once-only identity choice; `?test=1` alone permits
+change/reset. Legacy characters remain unassigned. The central environmental access
+policy supports land/coastal and fixture-only underwater breathing: Thalassi satisfy
+it naturally; tools/guides are not implemented and cannot grant fictional access.
+New travel snapshots use version 2; version-1 departures remain valid and arrival
+never reevaluates current racial rules. No combat bonus or new geography is added.
+See [identity, policy, migration and local test instructions](docs/character-identity-environment.md).
