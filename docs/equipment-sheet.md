@@ -47,3 +47,27 @@ Nella prima esecuzione completa era fallito il test di navigazione che tentava
 ancora di usare la seconda pagina del dettaglio: aggiornato per verificare
 scroll e apertura dall'inizio, passa sia isolatamente sia nella suite completa.
 Nessun test fisico Safari/iPhone o Android eseguito.
+
+## Sprint 2.8.4 — leggibilità
+
+Il CSS generale organizzava statistiche e confronto in due colonne con righe da
+11 px. La presentazione ora usa una lista verticale: nome, delta numerico e
+indicatore distinto (↑/↓/= con etichetta accessibile). Le righe e le statistiche
+proprie dell'oggetto usano testo da 14 px, senza duplicare una riga generica
+«Statistiche / Nessuna differenza» accanto ai singoli valori zero.
+
+La condizione esistente `ownSlot === target` seleziona soltanto la presentazione:
+statistiche proprie e messaggio già equipaggiato restano visibili, mentre il
+confronto con sé stesso diventa «Oggetto attualmente equipaggiato. Nessuna
+variazione delle statistiche». Rimangono il controllo disabilitato, Rimuovi e
+Altri oggetti. Confronti fra slot diversi, valori e requisiti non cambiano.
+
+Il test mirato verifica geometria e assenza di collisioni tra nomi, valori e
+indicatori a 320/375/390/430 px e 568/667/844 px; include riepilogo equipaggiato,
+confronto equivalente tra slot diversi, miglioramenti/peggioramenti, requisiti,
+azioni esplicite, touch, scorrimento, chiusura e integrità dei salvataggi.
+Il collaudo fisico iPhone/Android resta separato.
+
+Verifica Sprint 2.8.4: build web riuscita; tutte le 43 suite del runner del
+progetto passate, 0 fallite. Test mirato passato anche separatamente a tutte
+le quattro larghezze e tre altezze. Nessun collaudo fisico eseguito.

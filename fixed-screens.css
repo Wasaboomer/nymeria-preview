@@ -225,3 +225,23 @@ body #item-dialog[data-detail-kind="equipment"] .detail-actions button { min-hei
 body #item-dialog[data-detail-kind="equipment"] .comparison { margin-top:8px; }
 body #item-dialog[data-detail-kind="equipment"] .comparison h3 { font-size:16px;line-height:1.35; }
 body #item-dialog[data-detail-kind="equipment"] .item-secondary > summary { min-height:44px;padding:12px 0;box-sizing:border-box;cursor:pointer; }
+
+/* One statistic per row: keep names, values and direction distinct on phones. */
+body #item-dialog[data-detail-kind="equipment"] .detail-stats,
+body #item-dialog[data-detail-kind="equipment"] .comparison dl {
+  display:flex;flex-direction:column;gap:0;margin:8px 0;
+}
+body #item-dialog[data-detail-kind="equipment"] .detail-stats > div,
+body #item-dialog[data-detail-kind="equipment"] .comparison-row {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-width:0;padding:7px 0;font-size:14px;line-height:1.4;
+  border-bottom:1px solid #ffffff14;
+}
+body #item-dialog[data-detail-kind="equipment"] .comparison-row dt { min-width:0;overflow-wrap:anywhere; }
+body #item-dialog[data-detail-kind="equipment"] .comparison-row dd {
+  display:flex;align-items:center;gap:12px;flex-shrink:0;white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+body #item-dialog[data-detail-kind="equipment"] .comparison-indicator { min-width:18px;text-align:center; }
+body #item-dialog[data-detail-kind="equipment"] .equipped-summary p { margin:8px 0;font-size:14px;line-height:1.45; }
+body #item-dialog[data-detail-kind="equipment"] .item-verdict { margin:8px 0; }
