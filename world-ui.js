@@ -18,6 +18,7 @@ const WorldUI = (() => {
   }
   // Presentation-only receipt for a successful claim in this session; never grants rewards.
   let visibleQuestReceipt = null;
+  let receiptContext = null;
   let stagMessage = "";
   const marks = {
     haven: "M12 31 30 10 48 31M18 27V48H42V27M25 48V34H35V48M8 48H52",
@@ -179,7 +180,7 @@ const WorldUI = (() => {
     node("world-result").hidden = view !== "battle" || !result || !!frontier.activeEncounter;
     if (result) node("world-result").innerHTML = `<span class="world-eyebrow">${escape(result.enemyName)}</span><h3>${result.outcome === "victory" ? "VITTORIA" : "SCONFITTA"}</h3><p>+${result.rewards.xp} XP · +${result.rewards.crowns} Corone</p><p class="level-up-feedback">${escape(ProgressionData.levelUpSummary(result))}</p>${result.drops.length ? `<small>${result.drops.map(id => escape(WorldData.supplyNames[id])).join(" · ")}</small>` : ""}${result.outcome === "defeat" ? '<p class="hint">Ritorno a Veyra. Nessuna perdita di livello o equipaggiamento. Nessuna penalità permanente.</p>' : ""}<button data-world-continue class="quest-primary">Torna a ${escape(WorldData.location(result.location)?.name || "Veyra")} →</button>${result.enemyId === "twilight-stag" && result.outcome === "victory" ? `<div class="stag-victory"><strong>MINIBOSS SCONFITTO · Cervo del Crepuscolo</strong><p>La creatura del Bosco è caduta. Verifica gli obiettivi di «Luci senza fiamma» e riscuoti la missione per sbloccare le Rovine di Elar.</p><p>Missione: ${escape(ProgressionStore.state.frontier.quests.mq03.status === "completed" ? "Pronta per la riscossione" : "Obiettivi ancora da completare")}</p><button data-quest-open="mq03">Apri «Luci senza fiamma» →</button></div>` : ""}${WorldData.enemy(result.enemyId)?.kind === "boss" && result.outcome === "victory" ? `<p>${escape(WorldData.zone.epilogue)}</p><button data-world-view="journal">Apri il Diario · riscuoti la missione</button>` : ""}`;
     const reward = frontier.lastQuestClaim;
-    node("world-quest-reward").hidden = !reward || !visibleQuestReceipt || visibleQuestReceipt !== `${reward.id}:${reward.claimedAt}` || !["places", "quest", "journal"].includes(view);
+    node("world-quest-reward").hidden = !reward || !visibleQuestReceipt || visibleQuestReceipt !== `${reward.id}:${reward.claimedAt}` || !receiptContext || receiptContext.view !== view || (receiptContext.questId || null) !== (NymeriaNavigation.route.questId || null);
     if (reward) {
       const quest = QuestData.get(reward.id);
       const earned = reward.rewards || {};
@@ -404,6 +405,7 @@ const WorldUI = (() => {
       const result = await action(() => QuestSystem.claim(b.dataset.questClaim));
       if (result?.ok && result.receipt) {
         visibleQuestReceipt = `${result.receipt.id}:${result.receipt.claimedAt}`;
+        receiptContext = {view, questId: NymeriaNavigation.route.questId || null};
         render();
       }
       return;
