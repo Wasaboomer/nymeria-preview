@@ -16,3 +16,8 @@
 .locality-view #world-location-detail button { min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere; }
 #context-bar { flex-wrap:wrap; }
 #navigation-locality { min-height:44px; }
+
+/* Auto-dismiss preserves the action list's geometry through an in-flight tap. */
+#panel-world.fixed-scroll-panel #world-message.world-feedback-slot:empty {
+  display:block;visibility:hidden;height:var(--world-feedback-height);box-sizing:border-box;
+}

@@ -51,7 +51,16 @@ const WorldUI = (() => {
         });
       }
       node("world-message").textContent = [result?.message, ...feedback].filter(Boolean).join(" ");
-      clearTimeout(messageTimer); messageTimer = setTimeout(() => { node("world-message").textContent = ""; }, 3500);
+      clearTimeout(messageTimer); messageTimer = setTimeout(() => {
+        const feedback = node("world-message");
+        // Expiry must not move a live action between touchstart and click.
+        // Reserve only the measured slot; new non-empty feedback still sizes naturally.
+        if (node("panel-world").classList.contains("fixed-scroll-panel") && feedback.textContent) {
+          feedback.style.setProperty("--world-feedback-height", `${feedback.getBoundingClientRect().height}px`);
+          feedback.classList.add("world-feedback-slot");
+        }
+        feedback.textContent = "";
+      }, 3500);
       return result;
     } catch (error) {
       node("world-message").textContent = `Operazione non applicata: ${error.message}`;

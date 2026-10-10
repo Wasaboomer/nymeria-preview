@@ -1083,3 +1083,8 @@ and expose a direct return. Locality sections group real missions, encounters,
 gathering, NPCs and destinations with sticky controls and internal scrolling
 inside the fixed shell. No gameplay/save-format/asset changes.
 See [diagnosis, navigation contract and mobile verification](docs/mmorpg-mobile-navigation.md).
+
+Sprint 2.8 combat-entry hotfix: an expiring feedback banner keeps its measured
+space inside World scroll panels, preventing a touch from landing on a different
+control when the banner disappears. Navigation and combat rules are unchanged.
+See [reproduction, classification and validation](docs/combat-entry-feedback-hotfix.md).
