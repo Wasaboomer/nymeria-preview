@@ -1,0 +1,2689 @@
+{
+  "sourceCommit": "a1bc56b43a9e9818b3407a036244190417e54edd",
+  "seeds": 1000,
+  "profiles": {
+    "bulwark": {
+      "classId": "warden",
+      "className": "Custode",
+      "armorProficiency": "plate",
+      "weaponTypes": [
+        "sword"
+      ],
+      "supportTypes": [
+        "shield"
+      ],
+      "handedness": "1H",
+      "buildId": "bulwark",
+      "buildName": "Baluardo",
+      "abilities": [
+        {
+          "id": "slash",
+          "name": "Fendente",
+          "description": "Attacco base di spada, senza costo.",
+          "cooldown": 0,
+          "kind": "attack",
+          "coefficient": 0.65,
+          "flatDamage": 6,
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 0
+        },
+        {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "description": "Per 6 s: mitigazione +18%, blocco +25%. Costa 15 Risolutezza.",
+          "cooldown": 10,
+          "kind": "buff",
+          "effectId": "iron-guard",
+          "tags": [],
+          "cost": 15
+        },
+        {
+          "id": "shield-strike",
+          "name": "Colpo di Scudo",
+          "description": "Colpo con riduzione del danno nemico del 15% per 4 s. Costa 10.",
+          "cooldown": 5,
+          "kind": "attack",
+          "coefficient": 0.9,
+          "flatDamage": 10,
+          "effectId": "shaken",
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 10
+        },
+        {
+          "id": "retaliation",
+          "name": "Ritorsione",
+          "description": "Consuma 30 Risolutezza: danno base più 1,6 danni per punto speso dopo i colpi ricevuti.",
+          "cooldown": 4,
+          "kind": "attack",
+          "coefficient": 1.15,
+          "flatDamage": 8,
+          "damagePerResource": 1.6,
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 30
+        },
+        {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "description": "Per 7 s: mitigazione +35%, blocco +20%. AUTO sotto 35% HP; costa 20.",
+          "cooldown": 20,
+          "kind": "buff",
+          "effectId": "last-bastion",
+          "tags": [],
+          "cost": 20
+        }
+      ],
+      "resource": {
+        "id": "resolve",
+        "name": "Risolutezza",
+        "max": 100,
+        "initial": 0,
+        "regeneration": 0,
+        "decay": 0,
+        "events": {
+          "damageTaken": 10,
+          "block": 18
+        }
+      },
+      "modifiers": {
+        "armorMultiplier": 1.6,
+        "mitigation": 0.12,
+        "blockChance": 0.35,
+        "blockReduction": 0.5,
+        "hpMultiplier": 1.15,
+        "damageWeights": {
+          "force": 1.6,
+          "agility": 0.25,
+          "spirit": 0.2
+        },
+        "damageMultiplier": 0.95
+      },
+      "abilityModifiers": {},
+      "effectModifiers": {
+        "iron-guard": {
+          "extraDuration": 2,
+          "modifiers": {
+            "mitigation": 0.08,
+            "blockChance": 0.1
+          }
+        }
+      },
+      "resultMetrics": [
+        {
+          "key": "mitigated",
+          "label": "Danno mitigato / bloccato"
+        },
+        {
+          "key": "blocked",
+          "label": "Blocchi"
+        }
+      ],
+      "effects": {
+        "bleeding": {
+          "id": "bleeding",
+          "name": "Sanguinamento",
+          "kind": "debuff",
+          "duration": 6,
+          "tickInterval": 1,
+          "maxStacks": 1,
+          "damageCoefficient": 0.12
+        },
+        "wind": {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "agility": 8,
+            "speed": 20,
+            "dodge": 0.12
+          }
+        },
+        "iron-guard": {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.18,
+            "blockChance": 0.25
+          }
+        },
+        "shaken": {
+          "id": "shaken",
+          "name": "Sbilanciato",
+          "kind": "debuff",
+          "duration": 4,
+          "maxStacks": 1,
+          "modifiers": {
+            "outgoingReduction": 0.15
+          }
+        },
+        "last-bastion": {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "kind": "buff",
+          "duration": 7,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.35,
+            "blockChance": 0.2
+          }
+        }
+      },
+      "defaultRules": [
+        {
+          "abilityId": "last-bastion",
+          "condition": {
+            "type": "playerHpBelow",
+            "threshold": 35
+          }
+        },
+        {
+          "abilityId": "iron-guard",
+          "condition": {
+            "type": "buffAbsent",
+            "effectId": "iron-guard"
+          }
+        },
+        {
+          "abilityId": "retaliation",
+          "condition": {
+            "type": "resourceAbove",
+            "threshold": 45
+          }
+        },
+        {
+          "abilityId": "shield-strike",
+          "condition": {
+            "type": "debuffAbsent",
+            "effectId": "shaken"
+          }
+        },
+        {
+          "abilityId": "slash",
+          "condition": {
+            "type": "always"
+          }
+        }
+      ],
+      "kitValid": true
+    },
+    "retaliation": {
+      "classId": "warden",
+      "className": "Custode",
+      "armorProficiency": "plate",
+      "weaponTypes": [
+        "sword"
+      ],
+      "supportTypes": [
+        "shield"
+      ],
+      "handedness": "1H",
+      "buildId": "retaliation",
+      "buildName": "Ritorsione",
+      "abilities": [
+        {
+          "id": "slash",
+          "name": "Fendente",
+          "description": "Attacco base di spada, senza costo.",
+          "cooldown": 0,
+          "kind": "attack",
+          "coefficient": 0.65,
+          "flatDamage": 6,
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 0
+        },
+        {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "description": "Per 6 s: mitigazione +18%, blocco +25%. Costa 15 Risolutezza.",
+          "cooldown": 10,
+          "kind": "buff",
+          "effectId": "iron-guard",
+          "tags": [],
+          "cost": 15
+        },
+        {
+          "id": "shield-strike",
+          "name": "Colpo di Scudo",
+          "description": "Colpo con riduzione del danno nemico del 15% per 4 s. Costa 10.",
+          "cooldown": 5,
+          "kind": "attack",
+          "coefficient": 0.9,
+          "flatDamage": 10,
+          "effectId": "shaken",
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 10
+        },
+        {
+          "id": "retaliation",
+          "name": "Ritorsione",
+          "description": "Consuma 30 Risolutezza: danno base più 1,6 danni per punto speso dopo i colpi ricevuti.",
+          "cooldown": 4,
+          "kind": "attack",
+          "coefficient": 1.15,
+          "flatDamage": 8,
+          "damagePerResource": 1.6,
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 30
+        },
+        {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "description": "Per 7 s: mitigazione +35%, blocco +20%. AUTO sotto 35% HP; costa 20.",
+          "cooldown": 20,
+          "kind": "buff",
+          "effectId": "last-bastion",
+          "tags": [],
+          "cost": 20
+        }
+      ],
+      "resource": {
+        "id": "resolve",
+        "name": "Risolutezza",
+        "max": 100,
+        "initial": 0,
+        "regeneration": 0,
+        "decay": 0,
+        "events": {
+          "damageTaken": 10,
+          "block": 18
+        }
+      },
+      "modifiers": {
+        "armorMultiplier": 1.6,
+        "mitigation": 0.12,
+        "blockChance": 0.23,
+        "blockReduction": 0.5,
+        "hpMultiplier": 1.15,
+        "damageWeights": {
+          "force": 1.6,
+          "agility": 0.25,
+          "spirit": 0.2
+        },
+        "damageMultiplier": 0.95,
+        "resourceGainMultiplier": 1.5
+      },
+      "abilityModifiers": {
+        "retaliation": {
+          "damageMultiplier": 1.35
+        }
+      },
+      "effectModifiers": {},
+      "resultMetrics": [
+        {
+          "key": "mitigated",
+          "label": "Danno mitigato / bloccato"
+        },
+        {
+          "key": "blocked",
+          "label": "Blocchi"
+        }
+      ],
+      "effects": {
+        "bleeding": {
+          "id": "bleeding",
+          "name": "Sanguinamento",
+          "kind": "debuff",
+          "duration": 6,
+          "tickInterval": 1,
+          "maxStacks": 1,
+          "damageCoefficient": 0.12
+        },
+        "wind": {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "agility": 8,
+            "speed": 20,
+            "dodge": 0.12
+          }
+        },
+        "iron-guard": {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.18,
+            "blockChance": 0.25
+          }
+        },
+        "shaken": {
+          "id": "shaken",
+          "name": "Sbilanciato",
+          "kind": "debuff",
+          "duration": 4,
+          "maxStacks": 1,
+          "modifiers": {
+            "outgoingReduction": 0.15
+          }
+        },
+        "last-bastion": {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "kind": "buff",
+          "duration": 7,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.35,
+            "blockChance": 0.2
+          }
+        }
+      },
+      "defaultRules": [
+        {
+          "abilityId": "last-bastion",
+          "condition": {
+            "type": "playerHpBelow",
+            "threshold": 35
+          }
+        },
+        {
+          "abilityId": "retaliation",
+          "condition": {
+            "type": "resourceAbove",
+            "threshold": 29
+          }
+        },
+        {
+          "abilityId": "shield-strike",
+          "condition": {
+            "type": "debuffAbsent",
+            "effectId": "shaken"
+          }
+        },
+        {
+          "abilityId": "iron-guard",
+          "condition": {
+            "type": "buffAbsent",
+            "effectId": "iron-guard"
+          }
+        },
+        {
+          "abilityId": "slash",
+          "condition": {
+            "type": "always"
+          }
+        }
+      ],
+      "kitValid": true
+    },
+    "command": {
+      "classId": "warden",
+      "className": "Custode",
+      "armorProficiency": "plate",
+      "weaponTypes": [
+        "sword"
+      ],
+      "supportTypes": [
+        "shield"
+      ],
+      "handedness": "1H",
+      "buildId": "command",
+      "buildName": "Comando",
+      "abilities": [
+        {
+          "id": "slash",
+          "name": "Fendente",
+          "description": "Attacco base di spada, senza costo.",
+          "cooldown": 0,
+          "kind": "attack",
+          "coefficient": 0.65,
+          "flatDamage": 6,
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 0
+        },
+        {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "description": "Per 6 s: mitigazione +18%, blocco +25%. Costa 15 Risolutezza.",
+          "cooldown": 10,
+          "kind": "buff",
+          "effectId": "iron-guard",
+          "tags": [],
+          "cost": 15
+        },
+        {
+          "id": "shield-strike",
+          "name": "Colpo di Scudo",
+          "description": "Colpo con riduzione del danno nemico del 15% per 4 s. Costa 10.",
+          "cooldown": 5,
+          "kind": "attack",
+          "coefficient": 0.9,
+          "flatDamage": 10,
+          "effectId": "shaken",
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 10
+        },
+        {
+          "id": "retaliation",
+          "name": "Ritorsione",
+          "description": "Consuma 30 Risolutezza: danno base più 1,6 danni per punto speso dopo i colpi ricevuti.",
+          "cooldown": 4,
+          "kind": "attack",
+          "coefficient": 1.15,
+          "flatDamage": 8,
+          "damagePerResource": 1.6,
+          "tags": [
+            "meleeHit"
+          ],
+          "cost": 30
+        },
+        {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "description": "Per 7 s: mitigazione +35%, blocco +20%. AUTO sotto 35% HP; costa 20.",
+          "cooldown": 20,
+          "kind": "buff",
+          "effectId": "last-bastion",
+          "tags": [],
+          "cost": 20
+        }
+      ],
+      "resource": {
+        "id": "resolve",
+        "name": "Risolutezza",
+        "max": 100,
+        "initial": 0,
+        "regeneration": 0,
+        "decay": 0,
+        "events": {
+          "damageTaken": 10,
+          "block": 18
+        }
+      },
+      "modifiers": {
+        "armorMultiplier": 1.6,
+        "mitigation": 0.12,
+        "blockChance": 0.23,
+        "blockReduction": 0.5,
+        "hpMultiplier": 1.15,
+        "damageWeights": {
+          "force": 1.6,
+          "agility": 0.25,
+          "spirit": 0.2
+        },
+        "damageMultiplier": 0.95
+      },
+      "abilityModifiers": {},
+      "effectModifiers": {
+        "shaken": {
+          "extraDuration": 2,
+          "modifiers": {
+            "outgoingReduction": 0.1
+          }
+        }
+      },
+      "resultMetrics": [
+        {
+          "key": "mitigated",
+          "label": "Danno mitigato / bloccato"
+        },
+        {
+          "key": "blocked",
+          "label": "Blocchi"
+        }
+      ],
+      "effects": {
+        "bleeding": {
+          "id": "bleeding",
+          "name": "Sanguinamento",
+          "kind": "debuff",
+          "duration": 6,
+          "tickInterval": 1,
+          "maxStacks": 1,
+          "damageCoefficient": 0.12
+        },
+        "wind": {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "agility": 8,
+            "speed": 20,
+            "dodge": 0.12
+          }
+        },
+        "iron-guard": {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.18,
+            "blockChance": 0.25
+          }
+        },
+        "shaken": {
+          "id": "shaken",
+          "name": "Sbilanciato",
+          "kind": "debuff",
+          "duration": 4,
+          "maxStacks": 1,
+          "modifiers": {
+            "outgoingReduction": 0.15
+          }
+        },
+        "last-bastion": {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "kind": "buff",
+          "duration": 7,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.35,
+            "blockChance": 0.2
+          }
+        }
+      },
+      "defaultRules": [
+        {
+          "abilityId": "last-bastion",
+          "condition": {
+            "type": "playerHpBelow",
+            "threshold": 35
+          }
+        },
+        {
+          "abilityId": "shield-strike",
+          "condition": {
+            "type": "debuffAbsent",
+            "effectId": "shaken"
+          }
+        },
+        {
+          "abilityId": "iron-guard",
+          "condition": {
+            "type": "buffAbsent",
+            "effectId": "iron-guard"
+          }
+        },
+        {
+          "abilityId": "retaliation",
+          "condition": {
+            "type": "resourceAbove",
+            "threshold": 45
+          }
+        },
+        {
+          "abilityId": "slash",
+          "condition": {
+            "type": "always"
+          }
+        }
+      ],
+      "kitValid": true
+    },
+    "predator": {
+      "classId": "hunter",
+      "className": "Cacciatore",
+      "armorProficiency": "mail",
+      "weaponTypes": [
+        "bow"
+      ],
+      "supportTypes": [
+        "quiver"
+      ],
+      "handedness": "1H",
+      "buildId": "predator",
+      "buildName": "Predatore",
+      "abilities": [
+        {
+          "id": "rapid",
+          "name": "Tiro Rapido",
+          "description": "Attacco base affidabile, senza cooldown proprio.",
+          "cooldown": 0,
+          "kind": "attack",
+          "coefficient": 0.65,
+          "flatDamage": 8,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 0,
+          "resourceGain": 4
+        },
+        {
+          "id": "lacerating",
+          "name": "Freccia Lacerante",
+          "description": "Applica Sanguinamento per 6 s, con un tick ogni secondo.",
+          "cooldown": 4,
+          "kind": "attack",
+          "coefficient": 0.55,
+          "flatDamage": 4,
+          "effectId": "bleeding",
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 12,
+          "resourceGain": 0
+        },
+        {
+          "id": "power",
+          "name": "Tiro Potente",
+          "description": "Danno elevato. Cooldown di 6 s.",
+          "cooldown": 6,
+          "kind": "attack",
+          "coefficient": 1.8,
+          "flatDamage": 12,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 28,
+          "resourceGain": 0
+        },
+        {
+          "id": "final",
+          "name": "Colpo Finale",
+          "description": "Danno ×2,3 quando il nemico è sotto il 25% HP.",
+          "cooldown": 5,
+          "kind": "attack",
+          "coefficient": 0.85,
+          "flatDamage": 8,
+          "executeBelow": 0.25,
+          "executeMultiplier": 2.3,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 22,
+          "resourceGain": 0
+        },
+        {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "description": "Per 6 s: Agilità +8, Velocità +20%, Schivata +12%.",
+          "cooldown": 12,
+          "kind": "buff",
+          "effectId": "wind",
+          "tags": [],
+          "cost": 10,
+          "resourceGain": 0
+        }
+      ],
+      "resource": {
+        "id": "focus",
+        "name": "Concentrazione",
+        "max": 100,
+        "initial": 100,
+        "regeneration": 6,
+        "decay": 0,
+        "events": {}
+      },
+      "modifiers": {
+        "criticalBonus": 0.05
+      },
+      "abilityModifiers": {
+        "power": {
+          "damageMultiplier": 1.15
+        }
+      },
+      "effectModifiers": {},
+      "resultMetrics": [
+        {
+          "key": "bleedingDamage",
+          "label": "Danno da Sanguinamento"
+        }
+      ],
+      "effects": {
+        "bleeding": {
+          "id": "bleeding",
+          "name": "Sanguinamento",
+          "kind": "debuff",
+          "duration": 6,
+          "tickInterval": 1,
+          "maxStacks": 1,
+          "damageCoefficient": 0.12
+        },
+        "wind": {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "agility": 8,
+            "speed": 20,
+            "dodge": 0.12
+          }
+        },
+        "iron-guard": {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.18,
+            "blockChance": 0.25
+          }
+        },
+        "shaken": {
+          "id": "shaken",
+          "name": "Sbilanciato",
+          "kind": "debuff",
+          "duration": 4,
+          "maxStacks": 1,
+          "modifiers": {
+            "outgoingReduction": 0.15
+          }
+        },
+        "last-bastion": {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "kind": "buff",
+          "duration": 7,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.35,
+            "blockChance": 0.2
+          }
+        }
+      },
+      "defaultRules": [
+        {
+          "abilityId": "final",
+          "condition": {
+            "type": "enemyHpBelow",
+            "threshold": 25
+          }
+        },
+        {
+          "abilityId": "power",
+          "condition": {
+            "type": "always"
+          }
+        },
+        {
+          "abilityId": "lacerating",
+          "condition": {
+            "type": "debuffAbsent",
+            "effectId": "bleeding"
+          }
+        },
+        {
+          "abilityId": "wind",
+          "condition": {
+            "type": "buffAbsent",
+            "effectId": "wind"
+          }
+        },
+        {
+          "abilityId": "rapid",
+          "condition": {
+            "type": "always"
+          }
+        }
+      ],
+      "kitValid": true
+    },
+    "lacerator": {
+      "classId": "hunter",
+      "className": "Cacciatore",
+      "armorProficiency": "mail",
+      "weaponTypes": [
+        "bow"
+      ],
+      "supportTypes": [
+        "quiver"
+      ],
+      "handedness": "1H",
+      "buildId": "lacerator",
+      "buildName": "Laceratore",
+      "abilities": [
+        {
+          "id": "rapid",
+          "name": "Tiro Rapido",
+          "description": "Attacco base affidabile, senza cooldown proprio.",
+          "cooldown": 0,
+          "kind": "attack",
+          "coefficient": 0.65,
+          "flatDamage": 8,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 0,
+          "resourceGain": 4
+        },
+        {
+          "id": "lacerating",
+          "name": "Freccia Lacerante",
+          "description": "Applica Sanguinamento per 6 s, con un tick ogni secondo.",
+          "cooldown": 4,
+          "kind": "attack",
+          "coefficient": 0.55,
+          "flatDamage": 4,
+          "effectId": "bleeding",
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 12,
+          "resourceGain": 0
+        },
+        {
+          "id": "power",
+          "name": "Tiro Potente",
+          "description": "Danno elevato. Cooldown di 6 s.",
+          "cooldown": 6,
+          "kind": "attack",
+          "coefficient": 1.8,
+          "flatDamage": 12,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 28,
+          "resourceGain": 0
+        },
+        {
+          "id": "final",
+          "name": "Colpo Finale",
+          "description": "Danno ×2,3 quando il nemico è sotto il 25% HP.",
+          "cooldown": 5,
+          "kind": "attack",
+          "coefficient": 0.85,
+          "flatDamage": 8,
+          "executeBelow": 0.25,
+          "executeMultiplier": 2.3,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 22,
+          "resourceGain": 0
+        },
+        {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "description": "Per 6 s: Agilità +8, Velocità +20%, Schivata +12%.",
+          "cooldown": 12,
+          "kind": "buff",
+          "effectId": "wind",
+          "tags": [],
+          "cost": 10,
+          "resourceGain": 0
+        }
+      ],
+      "resource": {
+        "id": "focus",
+        "name": "Concentrazione",
+        "max": 100,
+        "initial": 100,
+        "regeneration": 6,
+        "decay": 0,
+        "events": {}
+      },
+      "modifiers": {},
+      "abilityModifiers": {},
+      "effectModifiers": {
+        "bleeding": {
+          "tickMultiplier": 1.45,
+          "extraDuration": 2
+        }
+      },
+      "resultMetrics": [
+        {
+          "key": "bleedingDamage",
+          "label": "Danno da Sanguinamento"
+        }
+      ],
+      "effects": {
+        "bleeding": {
+          "id": "bleeding",
+          "name": "Sanguinamento",
+          "kind": "debuff",
+          "duration": 6,
+          "tickInterval": 1,
+          "maxStacks": 1,
+          "damageCoefficient": 0.12
+        },
+        "wind": {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "agility": 8,
+            "speed": 20,
+            "dodge": 0.12
+          }
+        },
+        "iron-guard": {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.18,
+            "blockChance": 0.25
+          }
+        },
+        "shaken": {
+          "id": "shaken",
+          "name": "Sbilanciato",
+          "kind": "debuff",
+          "duration": 4,
+          "maxStacks": 1,
+          "modifiers": {
+            "outgoingReduction": 0.15
+          }
+        },
+        "last-bastion": {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "kind": "buff",
+          "duration": 7,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.35,
+            "blockChance": 0.2
+          }
+        }
+      },
+      "defaultRules": [
+        {
+          "abilityId": "lacerating",
+          "condition": {
+            "type": "debuffAbsent",
+            "effectId": "bleeding"
+          }
+        },
+        {
+          "abilityId": "final",
+          "condition": {
+            "type": "enemyHpBelow",
+            "threshold": 25
+          }
+        },
+        {
+          "abilityId": "power",
+          "condition": {
+            "type": "always"
+          }
+        },
+        {
+          "abilityId": "wind",
+          "condition": {
+            "type": "buffAbsent",
+            "effectId": "wind"
+          }
+        },
+        {
+          "abilityId": "rapid",
+          "condition": {
+            "type": "always"
+          }
+        }
+      ],
+      "kitValid": true
+    },
+    "explorer": {
+      "classId": "hunter",
+      "className": "Cacciatore",
+      "armorProficiency": "mail",
+      "weaponTypes": [
+        "bow"
+      ],
+      "supportTypes": [
+        "quiver"
+      ],
+      "handedness": "1H",
+      "buildId": "explorer",
+      "buildName": "Esploratore",
+      "abilities": [
+        {
+          "id": "rapid",
+          "name": "Tiro Rapido",
+          "description": "Attacco base affidabile, senza cooldown proprio.",
+          "cooldown": 0,
+          "kind": "attack",
+          "coefficient": 0.65,
+          "flatDamage": 8,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 0,
+          "resourceGain": 4
+        },
+        {
+          "id": "lacerating",
+          "name": "Freccia Lacerante",
+          "description": "Applica Sanguinamento per 6 s, con un tick ogni secondo.",
+          "cooldown": 4,
+          "kind": "attack",
+          "coefficient": 0.55,
+          "flatDamage": 4,
+          "effectId": "bleeding",
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 12,
+          "resourceGain": 0
+        },
+        {
+          "id": "power",
+          "name": "Tiro Potente",
+          "description": "Danno elevato. Cooldown di 6 s.",
+          "cooldown": 6,
+          "kind": "attack",
+          "coefficient": 1.8,
+          "flatDamage": 12,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 28,
+          "resourceGain": 0
+        },
+        {
+          "id": "final",
+          "name": "Colpo Finale",
+          "description": "Danno ×2,3 quando il nemico è sotto il 25% HP.",
+          "cooldown": 5,
+          "kind": "attack",
+          "coefficient": 0.85,
+          "flatDamage": 8,
+          "executeBelow": 0.25,
+          "executeMultiplier": 2.3,
+          "tags": [
+            "rangedHit"
+          ],
+          "cost": 22,
+          "resourceGain": 0
+        },
+        {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "description": "Per 6 s: Agilità +8, Velocità +20%, Schivata +12%.",
+          "cooldown": 12,
+          "kind": "buff",
+          "effectId": "wind",
+          "tags": [],
+          "cost": 10,
+          "resourceGain": 0
+        }
+      ],
+      "resource": {
+        "id": "focus",
+        "name": "Concentrazione",
+        "max": 100,
+        "initial": 100,
+        "regeneration": 6,
+        "decay": 0,
+        "events": {}
+      },
+      "modifiers": {
+        "speed": 8,
+        "resourceRegenMultiplier": 1.25
+      },
+      "abilityModifiers": {},
+      "effectModifiers": {
+        "wind": {
+          "extraDuration": 2
+        }
+      },
+      "resultMetrics": [
+        {
+          "key": "bleedingDamage",
+          "label": "Danno da Sanguinamento"
+        }
+      ],
+      "effects": {
+        "bleeding": {
+          "id": "bleeding",
+          "name": "Sanguinamento",
+          "kind": "debuff",
+          "duration": 6,
+          "tickInterval": 1,
+          "maxStacks": 1,
+          "damageCoefficient": 0.12
+        },
+        "wind": {
+          "id": "wind",
+          "name": "Passo del Vento",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "agility": 8,
+            "speed": 20,
+            "dodge": 0.12
+          }
+        },
+        "iron-guard": {
+          "id": "iron-guard",
+          "name": "Guardia Ferrea",
+          "kind": "buff",
+          "duration": 6,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.18,
+            "blockChance": 0.25
+          }
+        },
+        "shaken": {
+          "id": "shaken",
+          "name": "Sbilanciato",
+          "kind": "debuff",
+          "duration": 4,
+          "maxStacks": 1,
+          "modifiers": {
+            "outgoingReduction": 0.15
+          }
+        },
+        "last-bastion": {
+          "id": "last-bastion",
+          "name": "Ultimo Baluardo",
+          "kind": "buff",
+          "duration": 7,
+          "maxStacks": 1,
+          "modifiers": {
+            "mitigation": 0.35,
+            "blockChance": 0.2
+          }
+        }
+      },
+      "defaultRules": [
+        {
+          "abilityId": "wind",
+          "condition": {
+            "type": "buffAbsent",
+            "effectId": "wind"
+          }
+        },
+        {
+          "abilityId": "lacerating",
+          "condition": {
+            "type": "debuffAbsent",
+            "effectId": "bleeding"
+          }
+        },
+        {
+          "abilityId": "final",
+          "condition": {
+            "type": "enemyHpBelow",
+            "threshold": 25
+          }
+        },
+        {
+          "abilityId": "power",
+          "condition": {
+            "type": "always"
+          }
+        },
+        {
+          "abilityId": "rapid",
+          "condition": {
+            "type": "always"
+          }
+        }
+      ],
+      "kitValid": true
+    }
+  },
+  "cases": [
+    {
+      "enemy": "elar-sentinel",
+      "build": "bulwark",
+      "mode": "minimum",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "889394be1e3b41e60833a7f78c33cdc5d80820380a8b6f6ab94e85f9039aa39a"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "bulwark",
+      "mode": "narrative",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "889394be1e3b41e60833a7f78c33cdc5d80820380a8b6f6ab94e85f9039aa39a"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "bulwark",
+      "mode": "optimized",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "889394be1e3b41e60833a7f78c33cdc5d80820380a8b6f6ab94e85f9039aa39a"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "retaliation",
+      "mode": "minimum",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "21548cdf557c7cbf590cbb40932924cec2bebb6d762f1ee47726ae09fe8af695"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "retaliation",
+      "mode": "narrative",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "21548cdf557c7cbf590cbb40932924cec2bebb6d762f1ee47726ae09fe8af695"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "retaliation",
+      "mode": "optimized",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "21548cdf557c7cbf590cbb40932924cec2bebb6d762f1ee47726ae09fe8af695"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "command",
+      "mode": "minimum",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "57b0455d1868bc0cda9a838add7a94b36d9e2bf6a3cb4d421c6851ac68791636"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "command",
+      "mode": "narrative",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "57b0455d1868bc0cda9a838add7a94b36d9e2bf6a3cb4d421c6851ac68791636"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "command",
+      "mode": "optimized",
+      "stats": {
+        "force": 26,
+        "agility": 19,
+        "vigor": 35,
+        "spirit": 13,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "57b0455d1868bc0cda9a838add7a94b36d9e2bf6a3cb4d421c6851ac68791636"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "predator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "a287c88f66cc10e364e905d892a82e91bfa279f74a491fb2a5e0b5e5cb6b7a2e"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "predator",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "a287c88f66cc10e364e905d892a82e91bfa279f74a491fb2a5e0b5e5cb6b7a2e"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "predator",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "a287c88f66cc10e364e905d892a82e91bfa279f74a491fb2a5e0b5e5cb6b7a2e"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "lacerator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "50a40cd781908592629a94f1150f7ca14d193a340fa7d02d24e551362fade6c4"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "lacerator",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "50a40cd781908592629a94f1150f7ca14d193a340fa7d02d24e551362fade6c4"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "lacerator",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "50a40cd781908592629a94f1150f7ca14d193a340fa7d02d24e551362fade6c4"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "explorer",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "ffa2a3ffcf0907651fcda43325818644e77d4b6926711a8b54564b0132f70037"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "explorer",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "ffa2a3ffcf0907651fcda43325818644e77d4b6926711a8b54564b0132f70037"
+    },
+    {
+      "enemy": "elar-sentinel",
+      "build": "explorer",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 37,
+        "vigor": 23,
+        "spirit": 11,
+        "critical": 1,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "ffa2a3ffcf0907651fcda43325818644e77d4b6926711a8b54564b0132f70037"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "bulwark",
+      "mode": "minimum",
+      "stats": {
+        "force": 28,
+        "agility": 19,
+        "vigor": 38,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "934bf36456659cb497709010fb538b93e45da9928763350f378a9efa2953b5b4"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "bulwark",
+      "mode": "narrative",
+      "stats": {
+        "force": 34,
+        "agility": 17,
+        "vigor": 41,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "e1dbf5447ca65959c7fd5feb6ec0a4578092b766debe1059aacd307fa351316a"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "bulwark",
+      "mode": "optimized",
+      "stats": {
+        "force": 34,
+        "agility": 17,
+        "vigor": 41,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "e1dbf5447ca65959c7fd5feb6ec0a4578092b766debe1059aacd307fa351316a"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "retaliation",
+      "mode": "minimum",
+      "stats": {
+        "force": 28,
+        "agility": 19,
+        "vigor": 38,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "1a4cfde5e0eb8b828bcc7c1cfe73952151c00a302dd609f46aa0f91b8ee436b3"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "retaliation",
+      "mode": "narrative",
+      "stats": {
+        "force": 34,
+        "agility": 17,
+        "vigor": 41,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "56a287e7c086018b2f05475d20cbaa8692d36cae9c89bcde8744af34c8ebb18d"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "retaliation",
+      "mode": "optimized",
+      "stats": {
+        "force": 34,
+        "agility": 17,
+        "vigor": 41,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "56a287e7c086018b2f05475d20cbaa8692d36cae9c89bcde8744af34c8ebb18d"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "command",
+      "mode": "minimum",
+      "stats": {
+        "force": 28,
+        "agility": 19,
+        "vigor": 38,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "0b6b0ee6c45206a7a7f475326894015dd8fc2843ff5bf9d9918aebea264798a8"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "command",
+      "mode": "narrative",
+      "stats": {
+        "force": 34,
+        "agility": 17,
+        "vigor": 41,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "b3e7326c46f3568647ba187d12f8632dadcc6f2a59d71fa3666c3d0f7370d028"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "command",
+      "mode": "optimized",
+      "stats": {
+        "force": 34,
+        "agility": 17,
+        "vigor": 41,
+        "spirit": 14,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "b3e7326c46f3568647ba187d12f8632dadcc6f2a59d71fa3666c3d0f7370d028"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "predator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 40,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "75962b6635327f96bb1e964d98181168b3ff001aeed0e3c79056a15d88f75212"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "predator",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 44,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "38721c9ce511baf9a5293aaa0b3451dea56068918dde6e386e25d2fc98b53f78"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "predator",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 44,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "38721c9ce511baf9a5293aaa0b3451dea56068918dde6e386e25d2fc98b53f78"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "lacerator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 40,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "9d8464e18fe04b4d97c0cba72cbc1c91ba40764ee9798b1c591efe6f9a920a51"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "lacerator",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 44,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "96581105eb40a1207677b8b231dcc8c3550df25dc7bc9afd51981cea67787985"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "lacerator",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 44,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "96581105eb40a1207677b8b231dcc8c3550df25dc7bc9afd51981cea67787985"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "explorer",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 40,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "17a43fb33747d324d487fe112d8d386700b221f0ab94751a4eb1409fbddef0e1"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "explorer",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 44,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "0a35b9405dcdc834aa2c1a40b8beecc478960ecfd634cb7fe5a0f0bb6e1856f3"
+    },
+    {
+      "enemy": "ford-reaver",
+      "build": "explorer",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 44,
+        "vigor": 24,
+        "spirit": 11,
+        "critical": 1.5,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "0a35b9405dcdc834aa2c1a40b8beecc478960ecfd634cb7fe5a0f0bb6e1856f3"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "bulwark",
+      "mode": "minimum",
+      "stats": {
+        "force": 30,
+        "agility": 19,
+        "vigor": 41,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "f2c444c02d2360e3bcc34745f7611ee2f619ef73187e6d942490a2c609671769"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "bulwark",
+      "mode": "narrative",
+      "stats": {
+        "force": 36,
+        "agility": 17,
+        "vigor": 44,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "9370bb070fbac43193022bd4e974dd42b7909dc9da53fe4e89eb12bd1f004a86"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "bulwark",
+      "mode": "optimized",
+      "stats": {
+        "force": 36,
+        "agility": 17,
+        "vigor": 44,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "9370bb070fbac43193022bd4e974dd42b7909dc9da53fe4e89eb12bd1f004a86"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "retaliation",
+      "mode": "minimum",
+      "stats": {
+        "force": 30,
+        "agility": 19,
+        "vigor": 41,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "6183e9b8667529d731e2967a14b94b442e74001cce9b2edbee5b37537d8b1fee"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "retaliation",
+      "mode": "narrative",
+      "stats": {
+        "force": 36,
+        "agility": 17,
+        "vigor": 44,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "a1844a70c5e28ab779efbdd419d52e8d069867037745e922a31fe17e976db456"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "retaliation",
+      "mode": "optimized",
+      "stats": {
+        "force": 36,
+        "agility": 17,
+        "vigor": 44,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "a1844a70c5e28ab779efbdd419d52e8d069867037745e922a31fe17e976db456"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "command",
+      "mode": "minimum",
+      "stats": {
+        "force": 30,
+        "agility": 19,
+        "vigor": 41,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "3229a04d0bd3ca5b92a5fc504ad8a18397edea8b7b3ac6f5dd7cfb6bffeb5345"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "command",
+      "mode": "narrative",
+      "stats": {
+        "force": 36,
+        "agility": 17,
+        "vigor": 44,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "07c34eb7eff57da71e79aea0b079e2ec5f567d82449c62f5dc4b6662b1e311aa"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "command",
+      "mode": "optimized",
+      "stats": {
+        "force": 36,
+        "agility": 17,
+        "vigor": 44,
+        "spirit": 15,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "07c34eb7eff57da71e79aea0b079e2ec5f567d82449c62f5dc4b6662b1e311aa"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "predator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 43,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "d4acdf7a8477ce5f4cd3d10d1b4c0e6977cb61e95fe684adf18363b5f40f66e4"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "predator",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 47,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "f4fe4e3a81f7785460575e9e474fb11cde74c9abd50f6df3db9dcc5b0fea43d0"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "predator",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 47,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "f4fe4e3a81f7785460575e9e474fb11cde74c9abd50f6df3db9dcc5b0fea43d0"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "lacerator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 43,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "a39c0810af40c4536e61150e8c4555d10a7cec406ab56466fb3b3fb15e70cdc3"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "lacerator",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 47,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "624cc31ec689d613f7d694cc4be44d26cf24d10cf861587647ad27a9c0188ae2"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "lacerator",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 47,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "624cc31ec689d613f7d694cc4be44d26cf24d10cf861587647ad27a9c0188ae2"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "explorer",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 43,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "538d0c9895c7f5e9d0f59d5b13ff0f2637361dadb03006c6401daa4d8d4325f7"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "explorer",
+      "mode": "narrative",
+      "stats": {
+        "force": 16,
+        "agility": 47,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "3fc6f7b5e47bb09c9e7eb5b166a05b004176cec125491d526d73b6062ef6f27f"
+    },
+    {
+      "enemy": "ford-commander",
+      "build": "explorer",
+      "mode": "optimized",
+      "stats": {
+        "force": 16,
+        "agility": 47,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2,
+        "speed": 3,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "3fc6f7b5e47bb09c9e7eb5b166a05b004176cec125491d526d73b6062ef6f27f"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "bulwark",
+      "mode": "minimum",
+      "stats": {
+        "force": 32,
+        "agility": 19,
+        "vigor": 44,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "74ce50699924d00b734d62345f7dc093bb6586867b48884511a3b1c834f549dc"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "bulwark",
+      "mode": "narrative",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "a13a38031f65f5dc464dfb276054d7ebcd39eb241a62df082afab44f9e999dc7"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "bulwark",
+      "mode": "optimized",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "a13a38031f65f5dc464dfb276054d7ebcd39eb241a62df082afab44f9e999dc7"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "retaliation",
+      "mode": "minimum",
+      "stats": {
+        "force": 32,
+        "agility": 19,
+        "vigor": 44,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "f9b3e2d896125e0164a98db98b588d0238e0e63745720149b3db6c32c34a6914"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "retaliation",
+      "mode": "narrative",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "b30d94ae7ad5d592c91d6c3b5319291c6a3c3e159dabcdd108460a299913eda0"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "retaliation",
+      "mode": "optimized",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "b30d94ae7ad5d592c91d6c3b5319291c6a3c3e159dabcdd108460a299913eda0"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "command",
+      "mode": "minimum",
+      "stats": {
+        "force": 32,
+        "agility": 19,
+        "vigor": 44,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "6e52d245e36a3e16faad8756e7cbfed8454ebaa835515949c9c28b28925cc229"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "command",
+      "mode": "narrative",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "2435a49375ec02250b0fa9e23368320a2cdcb1161fd2964c894e530e1a1b9e5b"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "command",
+      "mode": "optimized",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "2435a49375ec02250b0fa9e23368320a2cdcb1161fd2964c894e530e1a1b9e5b"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "predator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 46,
+        "vigor": 26,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "94e8a605da52f24508d8314dca401839256e2836649a0701bda4fb2718bdbd5e"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "predator",
+      "mode": "narrative",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "2999febda36d992988595fcabcb6ad318998a11e2a7a4582c6b4cd2321363f1f"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "predator",
+      "mode": "optimized",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "2999febda36d992988595fcabcb6ad318998a11e2a7a4582c6b4cd2321363f1f"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "lacerator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 46,
+        "vigor": 26,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "dbe56d8169dce0e9548fe1770d21232c445e530877cb6f0c3bd6936e0db1cf91"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "lacerator",
+      "mode": "narrative",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "62d81be3956c757246e5c8cab3a9df376a8338305ae1699af3a110e9a156b7cc"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "lacerator",
+      "mode": "optimized",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "62d81be3956c757246e5c8cab3a9df376a8338305ae1699af3a110e9a156b7cc"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "explorer",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 46,
+        "vigor": 26,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "369b052b89832f3018523d92ae97d06cc421a03e9e0935ae9cddef9a80a2d9fa"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "explorer",
+      "mode": "narrative",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "7e4721be6f28c2867e6f565c44b4b774d0c1fbf37f664597f8f283eec606c9db"
+    },
+    {
+      "enemy": "silent-shade",
+      "build": "explorer",
+      "mode": "optimized",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "7e4721be6f28c2867e6f565c44b4b774d0c1fbf37f664597f8f283eec606c9db"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "bulwark",
+      "mode": "minimum",
+      "stats": {
+        "force": 32,
+        "agility": 19,
+        "vigor": 44,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "691d9f285c4a67b1d10840d280de66c87da93011a8cec2f7374313911422a10a"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "bulwark",
+      "mode": "narrative",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "e4d5c6f5af4034cc4aedad606ce4870adad2491dae4eed5c8f73db941e4637fd"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "bulwark",
+      "mode": "optimized",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "e4d5c6f5af4034cc4aedad606ce4870adad2491dae4eed5c8f73db941e4637fd"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "retaliation",
+      "mode": "minimum",
+      "stats": {
+        "force": 32,
+        "agility": 19,
+        "vigor": 44,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "97658853219695221481254a21f5807605e7b3741a7ef8c4f176caee28867bdc"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "retaliation",
+      "mode": "narrative",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "d1e0a59d28cc6d6f6d3c5c8875f8e594c3dd365a64ef846b6a1e70ff37128f39"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "retaliation",
+      "mode": "optimized",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "d1e0a59d28cc6d6f6d3c5c8875f8e594c3dd365a64ef846b6a1e70ff37128f39"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "command",
+      "mode": "minimum",
+      "stats": {
+        "force": 32,
+        "agility": 19,
+        "vigor": 44,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 29
+      },
+      "effects": [],
+      "digest": "aed0f36e364dacfe503e3094af695958ec27c264fe4958db9087b467f380a447"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "command",
+      "mode": "narrative",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "13d4b80aaca9cd447ba82f43ce35c7847fb32ee187649854296c6f8ad5becb20"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "command",
+      "mode": "optimized",
+      "stats": {
+        "force": 38,
+        "agility": 17,
+        "vigor": 50,
+        "spirit": 16,
+        "critical": 0,
+        "speed": 0,
+        "armor": 37
+      },
+      "effects": [],
+      "digest": "13d4b80aaca9cd447ba82f43ce35c7847fb32ee187649854296c6f8ad5becb20"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "predator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 46,
+        "vigor": 26,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "b4189693d2416b46f368606ec691cf29729b396d03a8218e02dcceb89191a6ad"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "predator",
+      "mode": "narrative",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "a07ed1cca7438b4fff376a15b77fd600cfdb52fc75e278c51e98c6bdc0ff43df"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "predator",
+      "mode": "optimized",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "a07ed1cca7438b4fff376a15b77fd600cfdb52fc75e278c51e98c6bdc0ff43df"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "lacerator",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 46,
+        "vigor": 26,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "3ed3f9106b7266eaeb35b8ff6fb4189ad0fc63398734a4231fce345416136ce0"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "lacerator",
+      "mode": "narrative",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "6069bc3a1be9e68e58f634696bcf478f19eef86190fce4c1db1e90f20deda208"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "lacerator",
+      "mode": "optimized",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "6069bc3a1be9e68e58f634696bcf478f19eef86190fce4c1db1e90f20deda208"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "explorer",
+      "mode": "minimum",
+      "stats": {
+        "force": 16,
+        "agility": 46,
+        "vigor": 26,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 2,
+        "armor": 16
+      },
+      "effects": [],
+      "digest": "e149b45114367e1635f60b4b7364886e474469821825da34317a42345540a053"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "explorer",
+      "mode": "narrative",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "0c25c91236d381efc8a04ba830eab40c028cbfa10e91269ccaafb21b941a142c"
+    },
+    {
+      "enemy": "silence-keeper",
+      "build": "explorer",
+      "mode": "optimized",
+      "stats": {
+        "force": 12,
+        "agility": 58,
+        "vigor": 25,
+        "spirit": 11,
+        "critical": 2.5,
+        "speed": 3,
+        "armor": 18
+      },
+      "effects": [],
+      "digest": "0c25c91236d381efc8a04ba830eab40c028cbfa10e91269ccaafb21b941a142c"
+    }
+  ]
+}

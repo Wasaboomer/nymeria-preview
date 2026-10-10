@@ -10,24 +10,20 @@ const BuildSystem = (() => {
       : ArmorRules;
   function getBuild(classId, buildId) {
     const cls = data.classes[classId] || data.classes.hunter;
-    return data.builds[
-      cls.buildIds.includes(buildId) ? buildId : cls.defaultBuild
-    ];
+    const selection = data.specializations[buildId]?.classId === cls.id ? buildId : cls.defaultBuild;
+    return data.builds[selection] || data.resolve(cls.id, selection).specialization;
   }
-  function compatible(item, classId) {
+  function compatible(item, classId, selectionId) {
     const cls = data.classes[classId];
     if (!item || !cls || !armor.compatible(item, cls)) return false;
-    if (item.slot === "weapon")
-      return (
-        cls.weaponTypes.includes(item.weaponType) &&
-        item.handedness === cls.handedness
-      );
-    if (item.slot === "support") return cls.supportTypes.includes(item.type);
+    const requirements = data.resolve(classId, selectionId).specialization.requirements;
+    if (item.slot === "weapon") return data.weaponCompatible(item, requirements);
+    if (item.slot === "support") return data.supportCompatible(item, requirements);
     return true;
   }
   const scoreHooks = [];
   function scoreBreakdown(item, classId, buildId) {
-    if (!compatible(item, classId)) return null;
+    if (!compatible(item, classId, buildId)) return null;
     const build = getBuild(classId, buildId);
     const stats = Object.entries(item.stats).reduce(
       (sum, [key, value]) => sum + value * (build.weights[key] || 0),
@@ -61,7 +57,7 @@ const BuildSystem = (() => {
       (candidate) =>
         equipment.compatibleSlots(candidate).includes(slot) &&
         candidate.requiredLevel <= equipment.state.character.level &&
-        compatible(candidate, classId),
+        compatible(candidate, classId, buildId),
     );
     if (
       includeCandidate &&

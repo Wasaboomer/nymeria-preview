@@ -327,7 +327,53 @@ const ClassesData = (() => {
       modifiers: { mitigation: 0.35, blockChance: 0.2 },
     },
   };
-  return { classes, builds, effects };
+  // v1 specialization contract. Existing builds retain their exact legacy tuning.
+  const specializations = Object.fromEntries(Object.values(builds).map(build => {
+    const cls = classes[build.classId];
+    const modifiers = { ...cls.modifiers };
+    for (const [key, value] of Object.entries(build.modifiers || {}))
+      modifiers[key] = (modifiers[key] || 0) + value;
+    const defaultRules = (build.priority || cls.defaultRules.map(row => row.abilityId)).map(id => {
+      const row = combat.copy(cls.defaultRules.find(rule => rule.abilityId === id));
+      if (build.conditions?.[id]) row.condition = combat.copy(build.conditions[id]);
+      return row;
+    });
+    return [build.id, {
+      version: 1, id: build.id, classId: cls.id, legacyBuildId: build.id,
+      name: build.name, description: build.description, role: cls.role,
+      requirements: { weaponTypes: cls.weaponTypes, handedness: cls.handedness,
+        supportTypes: cls.supportTypes, supportPolicy: "required", label: cls.requirement },
+      passive: cls.passive, abilities: cls.abilities, resource: cls.resource,
+      defaultRules, modifiers, abilityModifiers: build.abilityModifiers || {},
+      effectModifiers: build.effectModifiers || {}, resultMetrics: cls.resultMetrics,
+      effects: { ...combat.effects, ...effects }, weights: build.weights,
+      effectWeights: build.effectWeights || {},
+    }];
+  }));
+  function resolve(classId, selectionId) {
+    const cls = classes[classId] || classes.hunter;
+    const spec = specializations[selectionId];
+    const selected = spec?.classId === cls.id ? spec : specializations[cls.defaultBuild];
+    return combat.copy({
+      version: 1,
+      identity: { id: cls.id, name: cls.name, armorProficiency: cls.armorProficiency,
+        statGrowthPerLevel: cls.statGrowthPerLevel },
+      specialization: selected,
+    });
+  }
+  function weaponCompatible(item, requirements) {
+    return !!item && requirements.weaponTypes.includes(item.weaponType) && item.handedness === requirements.handedness;
+  }
+  function supportCompatible(item, requirements) {
+    return requirements.supportPolicy !== "forbidden" && !!item && requirements.supportTypes.includes(item.type);
+  }
+  function validKit(main, support, requirements) {
+    if (!requirements || !["required", "optional", "forbidden"].includes(requirements.supportPolicy) || !weaponCompatible(main, requirements)) return false;
+    if (requirements.supportPolicy === "forbidden") return !support;
+    if (support && (main.handedness === "2H" || (Array.isArray(main.allowedSupports) && !main.allowedSupports.includes(support.type)))) return false;
+    return support ? supportCompatible(support, requirements) : requirements.supportPolicy === "optional";
+  }
+  return { classes, builds, effects, specializations, resolve, weaponCompatible, supportCompatible, validKit };
 })();
 if (typeof module !== "undefined" && module.exports)
   module.exports = ClassesData;

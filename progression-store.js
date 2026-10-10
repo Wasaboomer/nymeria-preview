@@ -347,6 +347,14 @@ const ProgressionStorage = (() => {
     return state;
   }
   function create({ storage, exclusive = (run) => run(), classDefinition = () => {
+    // Prefer the additive selection store; retain legacy fallback for older saves.
+    try {
+      const saved = JSON.parse(storage.getItem("nymeria.classes.v2"));
+      if (saved?.version === 2 && classData.classes[saved.classId] &&
+          Object.values(classData.classes).every(cls =>
+            classData.specializations[saved.builds?.[cls.id]]?.classId === cls.id))
+        return classData.classes[saved.classId];
+    } catch { /* A corrupt/denied new store must not invalidate legacy data. */ }
     try {
       const saved = JSON.parse(storage.getItem("nymeria.classes.v1"));
       return classData.classes[saved?.classId] || classData.classes.hunter;

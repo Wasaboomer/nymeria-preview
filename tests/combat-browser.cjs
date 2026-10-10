@@ -152,8 +152,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
       assert.deepEqual(
         await page.evaluate(
           () =>
-            JSON.parse(localStorage.getItem(CombatUI.STORAGE_KEY)).classes
-              .hunter,
+            JSON.parse(localStorage.getItem(CombatUI.STORAGE_KEY)).entries["legacy:hunter"],
         ),
         savedSettings,
       );

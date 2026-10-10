@@ -215,10 +215,49 @@ const CombatData = (() => {
       rules: normalizeRules(raw?.rules, kit),
     };
   }
+  // v3 preferences keep the class-wide legacy strategy; future specs get independent entries.
+  function preferenceStore(storage) {
+    const KEY = "nymeria.combat.v3";
+    let value = { version: 3, entries: {}, legacyClasses: {} }, blocked = false, error = false;
+    const object = v => v && typeof v === "object" && !Array.isArray(v);
+    try {
+      const text = storage.getItem(KEY);
+      if (text !== null) {
+        const raw = JSON.parse(text);
+        if (raw?.version !== 3 || !object(raw.entries) || !object(raw.legacyClasses)) { blocked = true; error = true; }
+        else value = raw;
+      } else {
+        const old = JSON.parse(storage.getItem("nymeria.combat.v2"));
+        if (object(old?.classes)) value.legacyClasses = copy(old.classes);
+        if (!value.legacyClasses.hunter) {
+          const first = JSON.parse(storage.getItem("nymeria.combat.v1"));
+          if (first) value.legacyClasses.hunter = copy(first);
+        }
+      }
+    } catch { error = true; blocked = true; }
+    function key(classId, spec) { return spec.legacyBuildId ? `legacy:${classId}` : `specialization:${classId}:${spec.id}`; }
+    return {
+      STORAGE_KEY: KEY,
+      key,
+      read(classId, spec, profile) {
+        const saved = value.entries[key(classId, spec)] || (spec.legacyBuildId ? value.legacyClasses[classId] : null);
+        return normalizeSettings(saved, profile);
+      },
+      write(classId, spec, settings) {
+        if (blocked) { error = true; return false; }
+        const next = copy(value); next.entries[key(classId, spec)] = copy(settings);
+        try { storage.setItem(KEY, JSON.stringify(next)); value = next; error = false; return true; }
+        catch { error = true; return false; }
+      },
+      get storageError() { return error; },
+      get readOnly() { return blocked; },
+    };
+  }
   function kitRequirement(main, support) {
     return main?.weaponType === "bow" && support?.type === "quiver";
   }
   return {
+    preferenceStore,
     formulas,
     effects,
     abilities,

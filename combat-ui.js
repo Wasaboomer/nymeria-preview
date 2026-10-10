@@ -1,24 +1,16 @@
 /* UI adapter: one animation-frame clock, immutable equipment snapshot per fight. */
 const CombatUI = (() => {
-  const STORAGE_KEY = "nymeria.combat.v2";
   const profile = () => ClassSystem.combatProfile();
-  let stored = {},
-    storageError = false,
-    activeClass = ClassSystem.state.classId;
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    stored =
-      raw?.classes &&
-      typeof raw.classes === "object" &&
-      !Array.isArray(raw.classes)
-        ? raw.classes
-        : {};
-    if (!stored.hunter)
-      stored.hunter = JSON.parse(localStorage.getItem("nymeria.combat.v1"));
-  } catch {
-    storageError = true;
-  }
-  let settings = CombatData.normalizeSettings(stored[activeClass], profile());
+  // Resolve browser storage inside the store's guarded operations: some contexts
+  // deny even access to the localStorage property.
+  const preferences = CombatData.preferenceStore({
+    getItem: key => localStorage.getItem(key),
+    setItem: (key, value) => localStorage.setItem(key, value),
+  });
+  let storageError = preferences.storageError,
+    activeClass = ClassSystem.state.classId,
+    activeSpec = ClassSystem.resolved().specialization;
+  let settings = preferences.read(activeClass, activeSpec, profile());
   let engine = null,
     frameId = null,
     lastWallTime = null,
@@ -54,13 +46,8 @@ const CombatUI = (() => {
       Equipment.equipped("support"),
     );
   function saveSettings() {
-    try {
-      stored[activeClass] = CombatData.copy(settings);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ classes: stored }));
-      storageError = false;
-    } catch {
-      storageError = true;
-    }
+    preferences.write(activeClass, activeSpec, settings);
+    storageError = preferences.storageError;
     renderStrategyHint();
   }
   function renderStrategyHint() {
@@ -559,11 +546,12 @@ const CombatUI = (() => {
     }
   });
   ClassSystem.subscribe(() => {
-    if (activeClass !== ClassSystem.state.classId) {
-      stored[activeClass] = CombatData.copy(settings);
-      activeClass = ClassSystem.state.classId;
-      settings = CombatData.normalizeSettings(stored[activeClass], profile());
-    }
+    const nextClass = ClassSystem.state.classId, nextSpec = ClassSystem.resolved().specialization;
+    if (preferences.key(activeClass, activeSpec) !== preferences.key(nextClass, nextSpec)) {
+      preferences.write(activeClass, activeSpec, settings);
+      activeClass = nextClass; activeSpec = nextSpec;
+      settings = preferences.read(activeClass, activeSpec, profile());
+    } else { activeClass = nextClass; activeSpec = nextSpec; }
     equipmentChanged();
     renderSettings();
     saveSettings();
@@ -582,6 +570,6 @@ const CombatUI = (() => {
     get settings() {
       return CombatData.copy(settings);
     },
-    STORAGE_KEY,
+    STORAGE_KEY: preferences.STORAGE_KEY,
   };
 })();

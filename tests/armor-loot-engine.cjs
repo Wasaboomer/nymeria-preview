@@ -225,6 +225,9 @@ async function check(name, test) {
           builds: { hunter: "lacerator", warden: "bulwark" },
         }),
       );
+      // This fixture represents a pre-v2 save, not a stale legacy record beside
+      // a newer authoritative selection created by the setup above.
+      f.memory.delete("nymeria.classes.v2");
       const restored = fixture({ memory: f.memory });
       assert.equal(restored.equipment.state.character.hair, "crest");
       assert.equal(restored.classes.build().id, "lacerator");

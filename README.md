@@ -1092,3 +1092,5 @@ See [reproduction, classification and validation](docs/combat-entry-feedback-hot
 Sprint 2.8.2: [consolidamento UX e audit mobile](docs/mobile-ux-consolidation.md).
 
 Sprint 2.8.3: [dettaglio equipaggiamento unificato](docs/equipment-sheet.md).
+
+Sprint 2.9C: [Specialization Foundation, legacy compatibility and persistence contracts](docs/specialization-foundation.md).
