@@ -186,3 +186,24 @@ body #panel-world .journal-entry .journal-objective,
 body #panel-world .journal-entry .journal-destination { font-size:14px; line-height:1.4; color:#e2d8bf; }
 body #panel-world .quest-state-label { font-size:13px; }
 body #panel-world .journal-entry.quest-locked { opacity:1; }
+
+/* Sprint 2.8.2: feedback takes measured shell space, never overlays navigation. */
+body .app > #global-notifications, body dialog > #global-notifications {
+  position:static;transform:none;left:auto;top:auto;width:100%;flex:none;
+  max-height:min(160px,28dvh);max-height:min(160px,calc(var(--fixed-vh,100dvh)*.28));
+  overflow-y:auto;overflow-x:hidden;touch-action:pan-y pinch-zoom;overscroll-behavior:contain;
+  margin:0 0 4px;box-sizing:border-box;
+}
+body #global-notifications .notification-card { padding:8px;gap:8px;box-shadow:none; }
+body #global-notifications .notification-sigil { width:22px; }
+body #global-notifications .notification-copy h2 { font-size:18px;margin:0 0 3px; }
+body #global-notifications .notification-label { margin:0 0 3px;font-size:11px; }
+body #global-notifications .notification-copy ul { font-size:13px;line-height:1.4;display:flex;flex-wrap:wrap;gap:2px 10px; }
+body #global-notifications .notification-card button { min-width:44px;min-height:44px;padding:4px;position:sticky;top:0;flex:none; }
+body .notification-major .notification-card { border-width:2px; }
+body .world-result > button { margin:6px 0; }
+body .world-result h3 { margin:4px 0 8px; }
+body .victory-quest-progress h4 { margin:6px 0; }
+body .victory-quest-progress ul { margin:0;padding-left:18px;font-size:14px;line-height:1.4; }
+body .world-result .level-up-feedback:empty { display:none; }
+body .fixed-pager[hidden] { display:none; }

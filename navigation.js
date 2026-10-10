@@ -22,6 +22,8 @@
     return { route: Object.assign({}, route), scroll: window.scrollY, panelScroll: document.getElementById("panel-" + route.screen)?.scrollTop || 0, focus: document.activeElement && document.activeElement.id, focusData: document.activeElement ? Object.assign({}, document.activeElement.dataset) : {} };
   }
   function apply(next, restore) {
+    // Drop same-screen history entries: Back must have a distinct destination.
+    while (stack.length && ["screen", "view", "questId", "activity", "slot"].every(function(key) { return stack[stack.length-1].route[key] === next[key]; })) stack.pop();
     route = Object.assign({}, next);
     document.body.setAttribute("data-screen", route.screen);
     document.body.setAttribute("data-world-view", route.view || "places");

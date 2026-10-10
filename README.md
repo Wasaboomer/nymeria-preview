@@ -1088,3 +1088,5 @@ Sprint 2.8 combat-entry hotfix: an expiring feedback banner keeps its measured
 space inside World scroll panels, preventing a touch from landing on a different
 control when the banner disappears. Navigation and combat rules are unchanged.
 See [reproduction, classification and validation](docs/combat-entry-feedback-hotfix.md).
+
+Sprint 2.8.2: [consolidamento UX e audit mobile](docs/mobile-ux-consolidation.md).

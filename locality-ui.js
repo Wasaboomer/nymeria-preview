@@ -34,9 +34,12 @@
     var description=current.querySelector('p');if(description)sections.overview.prepend(description);
     var available=Object.keys(names).filter(function(id){return id==='overview'||id==='missions'||sections[id].querySelector('button,article');});
     if(!available.includes(selected[place]))selected[place]='overview';
-    nav.innerHTML=available.map(function(id){return '<button data-locality-tab="'+id+'" aria-controls="locality-'+id+'" aria-pressed="'+(selected[place]===id)+'">'+names[id]+'</button>';}).join('');
+    var main=QuestData.quests.find(function(q){return q.type==='main' && ProgressionStore.state.frontier.quests[q.id]?.status==='active';});
+    var next=main && QuestUI.nextStep(main,ProgressionStore.state);
+    var encounterNeeded=next && next.destination===place && ['kill','defeatBoss'].includes(next.objective?.type);
+    nav.innerHTML=available.map(function(id){return '<button data-locality-tab="'+id+'" aria-controls="locality-'+id+'" aria-pressed="'+(selected[place]===id)+'">'+names[id]+(id==='encounters' && encounterNeeded?' · Missione':'')+'</button>';}).join('');
     detail.replaceChildren();
-    available.forEach(function(id){var section=sections[id];var heading=document.createElement('h3');heading.textContent=names[id];section.prepend(heading);section.hidden=!visible||selected[place]!==id;detail.append(section);});
+    available.forEach(function(id){var section=sections[id];var heading=document.createElement('h3');heading.textContent=names[id];if(id==='overview')heading.hidden=true;section.prepend(heading);section.hidden=!visible||selected[place]!==id;detail.append(section);});
     document.getElementById('world-tracked').hidden=!visible||selected[place]!=='missions';
     document.querySelector('.world-shortcuts').hidden=!visible||selected[place]!=='overview';
     if(lastLocation!==place){lastLocation=place;document.getElementById('panel-world').scrollTop=0;}

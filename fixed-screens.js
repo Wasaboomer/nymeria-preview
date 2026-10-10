@@ -95,7 +95,7 @@
       var chrome=Array.from(app.children).filter(function(n){return n!==root && !/^panel-/.test(n.id) && n.tagName!=='FOOTER' && !hidden(n) && !['absolute','fixed'].includes(getComputedStyle(n).position);}).reduce(function(sum,n){var css=getComputedStyle(n);return sum+n.getBoundingClientRect().height+parseFloat(css.marginTop||0)+parseFloat(css.marginBottom||0);},0);
       var appCSS=getComputedStyle(app);
       var budget=Math.floor(vh-chrome-parseFloat(appCSS.paddingTop)-parseFloat(appCSS.paddingBottom)-8);
-      if(open)budget=Math.floor(dialog.clientHeight-document.querySelector('#item-dialog .detail-header').getBoundingClientRect().height-modalPager.getBoundingClientRect().height-32);
+      if(open)budget=Math.floor(dialog.clientHeight-document.querySelector('#item-dialog .detail-header').getBoundingClientRect().height-modalPager.getBoundingClientRect().height-(dialog.querySelector("#global-notifications")?.getBoundingClientRect().height || 0)-32);
       budget=Math.max(100,budget);
       document.documentElement.style.setProperty(open?'--fixed-dialog-height':'--fixed-content-height',budget+'px');
       if(combat || contextual){
@@ -144,6 +144,9 @@
       paint(pages[index]);
       root.style.height=(budget+4)+'px';
       var activePager=open?modalPager:pager;
+      var pagerHeight=activePager.getBoundingClientRect().height;
+      activePager.hidden=pages.length===1;
+      if(pages.length===1)root.style.height=(budget+4+pagerHeight)+"px";
       var pageLabel='Pagina '+(index+1)+' / '+pages.length;
       if(activePager.querySelector('output').textContent!==pageLabel)activePager.querySelector('output').textContent=pageLabel;
       activePager.querySelector('[data-fixed-prev]').disabled=index===0;

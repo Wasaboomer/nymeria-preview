@@ -41,8 +41,11 @@ const NotificationUI = (() => {
   }
   function place() {
     // Keep feedback usable even while an equipment/details dialog occupies the top layer.
-    const parent = document.querySelector("dialog[open]") || document.body;
-    if (host.parentNode !== parent) parent.appendChild(host);
+    const parent = document.querySelector("dialog[open]") || document.querySelector(".app");
+    if (host.parentNode !== parent) {
+      const panel = parent.querySelector(':scope > [id^="panel-"]');
+      if (panel) parent.insertBefore(host, panel); else parent.appendChild(host);
+    }
   }
   const dialogs = new MutationObserver(place);
   dialogs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"] });
