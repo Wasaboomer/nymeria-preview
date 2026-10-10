@@ -207,3 +207,21 @@ body .victory-quest-progress h4 { margin:6px 0; }
 body .victory-quest-progress ul { margin:0;padding-left:18px;font-size:14px;line-height:1.4; }
 body .world-result .level-up-feedback:empty { display:none; }
 body .fixed-pager[hidden] { display:none; }
+
+/* Equipment uses the shared sheet as one scroll surface, not paginated atoms. */
+body #item-dialog[data-detail-kind="equipment"] {
+  height:calc(var(--fixed-vh,100dvh) - max(12px,env(safe-area-inset-top)) - max(12px,env(safe-area-inset-bottom)));
+  margin-top:max(12px,env(safe-area-inset-top));
+  padding-bottom:max(12px,env(safe-area-inset-bottom));
+}
+body #item-dialog[data-detail-kind="equipment"] #detail-body {
+  flex:1;min-height:0;height:auto!important;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;touch-action:pan-y pinch-zoom;-webkit-overflow-scrolling:touch;
+}
+body #item-dialog[data-detail-kind="equipment"] .detail-meta { margin-top:8px;gap:10px; }
+body #item-dialog[data-detail-kind="equipment"] .detail-meta p { margin:4px 0; }
+body #item-dialog[data-detail-kind="equipment"] .detail-actions { margin:8px 0;display:grid;gap:8px; }
+body #item-dialog[data-detail-kind="equipment"] .detail-actions button { min-height:48px; }
+body #item-dialog[data-detail-kind="equipment"] .comparison { margin-top:8px; }
+body #item-dialog[data-detail-kind="equipment"] .comparison h3 { font-size:16px;line-height:1.35; }
+body #item-dialog[data-detail-kind="equipment"] .item-secondary > summary { min-height:44px;padding:12px 0;box-sizing:border-box;cursor:pointer; }

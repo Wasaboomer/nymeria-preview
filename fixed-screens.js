@@ -85,12 +85,13 @@
       root=nextRoot;
       var route=window.NymeriaNavigation?NymeriaNavigation.route:{};
       var combat= !open && root.id==='panel-world' && route.view==='battle' && battle && !battle.hidden;
-      var contextual=!open && (['panel-character','panel-inventory','panel-equipment','panel-professions','panel-menu','panel-class','panel-expeditions','panel-guild'].includes(root.id) || (root.id==='panel-world' && (['overview','journal','quest'].includes(route.view) || (route.view==='places' && phase==='normal'))));
+      var equipmentDetail=open && dialog.dataset.detailKind === "equipment";
+      var contextual=equipmentDetail || !open && (['panel-character','panel-inventory','panel-equipment','panel-professions','panel-menu','panel-class','panel-expeditions','panel-guild'].includes(root.id) || (root.id==='panel-world' && (['overview','journal','quest'].includes(route.view) || (route.view==='places' && phase==='normal'))));
       document.body.classList.toggle('fixed-combat',!!combat);
       app.querySelectorAll('.fixed-scroll-panel').forEach(function(n){n.classList.remove('fixed-scroll-panel');});
       root.classList.toggle('fixed-scroll-panel',contextual);
       root.dataset.fixedMode=combat?'combat':contextual?'scroll':'pages';
-      pager.hidden=open||contextual||combat;modalPager.hidden=!open;
+      pager.hidden=open||contextual||combat;modalPager.hidden=!open||equipmentDetail;
       var vh=Math.floor(window.visualViewport?visualViewport.height:innerHeight);
       var chrome=Array.from(app.children).filter(function(n){return n!==root && !/^panel-/.test(n.id) && n.tagName!=='FOOTER' && !hidden(n) && !['absolute','fixed'].includes(getComputedStyle(n).position);}).reduce(function(sum,n){var css=getComputedStyle(n);return sum+n.getBoundingClientRect().height+parseFloat(css.marginTop||0)+parseFloat(css.marginBottom||0);},0);
       var appCSS=getComputedStyle(app);

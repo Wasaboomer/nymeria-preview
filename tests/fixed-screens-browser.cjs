@@ -5,8 +5,10 @@ const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
 async function settle(p){await p.waitForTimeout(70);}
 async function visitAll(p){
  const modal=await p.locator('#item-dialog').evaluate(d=>d.open);
- const active=p.locator('.app > [id^="panel-"]:not([hidden])');
- if(!modal && await active.getAttribute('data-fixed-mode')==='scroll'){
+ const equipmentDetail=modal && await p.locator('#item-dialog').getAttribute('data-detail-kind')==='equipment';
+ const active=p.locator(equipmentDetail?'#detail-body':'.app > [id^="panel-"]:not([hidden])');
+ if((!modal || equipmentDetail) && await active.getAttribute('data-fixed-mode')==='scroll'){
+  if(equipmentDetail)assert.ok(await p.locator('#item-dialog > .fixed-pager').isHidden());
   const max=await active.evaluate(n=>n.scrollHeight-n.clientHeight);let visited=0;
   for(let y=0;y<=max+1;y+=Math.max(1,await active.evaluate(n=>n.clientHeight/2))){await active.evaluate((n,y)=>n.scrollTop=y,y);await settle(p);await audit(p);visited++;}
   await active.evaluate(n=>n.scrollTop=0);return visited;

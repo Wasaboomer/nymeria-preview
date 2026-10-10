@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
-const {audit}=require('./contextual-scroll-fixture.cjs');
+const {audit,swipe}=require('./contextual-scroll-fixture.cjs');
 const {press}=require('./fixed-navigation-fixture.cjs');
 const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
 (async()=>{const b=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{
@@ -35,7 +35,7 @@ const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
    for(const id of ['world','missions','character','inventory','menu']){await p.locator('#tab-'+id).tap();await p.waitForTimeout(80);await audit(p);const rect=await p.locator('.bottom-nav').boundingBox();assert.ok(rect.y+rect.height<=height);}
   }
   await p.setViewportSize({width,height:375});
-  await p.evaluate(()=>InventoryUI.openItem('sword'));await p.waitForTimeout(100);await p.locator('#item-dialog [data-fixed-next]').tap();assert.ok(await p.evaluate(()=>FixedScreens.page)>0);await p.locator('#close-detail').tap();await p.evaluate(()=>InventoryUI.openItem('shield'));await p.waitForTimeout(100);assert.equal(await p.evaluate(()=>FixedScreens.page),0,'Each new comparison opens at its first page');await p.locator('#close-detail').tap();await p.setViewportSize({width,height:844});
+  await p.evaluate(()=>InventoryUI.openItem('sword'));await p.waitForTimeout(100);assert.ok(await p.locator('#item-dialog > .fixed-pager').isHidden());await swipe(p,p.locator('#detail-body'));assert.ok(await p.locator('#detail-body').evaluate(n=>n.scrollTop)>0);await p.locator('#close-detail').tap();await p.evaluate(()=>InventoryUI.openItem('shield'));await p.waitForTimeout(100);assert.equal(await p.locator('#detail-body').evaluate(n=>n.scrollTop),0,'Each new comparison opens at the top of the same scroll sheet');await p.locator('#close-detail').tap();await p.setViewportSize({width,height:844});
   assert.equal(await p.evaluate(()=>JSON.stringify({...localStorage})),saved);
   await p.reload();assert.equal(await p.evaluate(()=>JSON.stringify({...localStorage})),saved);assert.ok(await p.locator('#menu-debug-link').isHidden());
   await p.evaluate(async()=>{ClassSystem.selectClass('warden');Equipment.equip('sword','mainHand');Equipment.equip('shield','support');await WorldSystem.enter('broken-path');await WorldSystem.startEncounter('vesper-raider');NymeriaNavigation.open('world',{view:'battle'});});

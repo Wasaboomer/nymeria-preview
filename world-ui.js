@@ -366,7 +366,6 @@ const WorldUI = (() => {
     if (b.hasAttribute('data-quest-professions')) { NymeriaNavigation.open('professions'); return; }
     if (b.dataset.questCompare) {
       if (!Equipment.state.inventory.some(item => item.id === b.dataset.questCompare)) return;
-      NymeriaNavigation.open('inventory');
       InventoryUI.openItem(b.dataset.questCompare);
       return;
     }

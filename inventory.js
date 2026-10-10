@@ -11,6 +11,7 @@ const InventoryUI = (() => {
     `${["I", "II", "III", "IV", "V"][GearData.rarities.indexOf(item.rarity)]} · ${item.rarity}`;
   const rarityClass = (item) =>
     `rarity-${GearData.rarities.indexOf(item.rarity)}`;
+  const armorText = value => typeof value === "string" ? value.replace(/\bPlate\b/g,"Piastre").replace(/\bMail\b/g,"Maglia").replace(/\bLeather\b/g,"Cuoio").replace(/\bCloth\b/g,"Tessuto") : value;
   const slotLabel = (id) => Equipment.slotById[id].label;
   const equippedSlot = (id) =>
     GearData.slots.find(
@@ -54,7 +55,7 @@ const InventoryUI = (() => {
   function advisorMarkup(item, slot) {
     const cls = ClassSystem.selected(),
       build = ClassSystem.build();
-    const unavailable = ArmorRules.unavailableLabel(item, cls);
+    const unavailable = armorText(ArmorRules.unavailableLabel(item, cls));
     if (unavailable)
       return `<span class="hint armor-incompatible">${unavailable}</span>`;
     const advice = BuildSystem.advise(item, slot, cls.id, build.id, Equipment);
@@ -73,6 +74,7 @@ const InventoryUI = (() => {
   }
   const sourceLabel = source => ({progression:'Risorse del personaggio',profession:'Materiali delle Professioni',quest:'Raccolte delle missioni'}[source] || 'Altro');
   function stackDetail() {
+    dialog.dataset.detailKind = "resource";
     const row = catalog().find(r=>r.key===selectedStack);
     document.querySelector('#detail-heading').textContent = row?.name || 'Oggetto non più posseduto';
     document.querySelector('#detail-body').innerHTML = row ? `<p>${escape(sourceLabel(row.source))}</p><p>Quantità: <strong>${row.quantity}</strong></p><p class="hint">${row.source==='quest'?'Raccolta registrata dal sistema missioni. Consulta il Diario per gli obiettivi.':row.source==='profession'?'Materiale conservato nelle Professioni. Consulta le ricette disponibili per utilizzarlo.':'Risorsa conservata dal sistema di progressione.'}</p><p>Non equipaggiabile.</p>` : '<p>La quantità è cambiata: consulta la lista aggiornata.</p>';
@@ -108,6 +110,7 @@ const InventoryUI = (() => {
     if (selectedStack) { stackDetail(); return; }
     const item = Equipment.state.inventory.find((i) => i.id === selectedId);
     if (!item) return;
+    dialog.dataset.detailKind = "equipment";
     const slots = Equipment.compatibleSlots(item);
     if (!slots.includes(target)) target = slots[0];
     const advice = BuildSystem.advise(
@@ -118,15 +121,19 @@ const InventoryUI = (() => {
       Equipment,
     );
     const comparison = Equipment.comparison(item.id, target),
-      error = Equipment.canEquip(item.id, target),
+      error = armorText(Equipment.canEquip(item.id, target)),
       ownSlot = equippedSlot(item.id);
     const verdict = error ? "Requisiti non soddisfatti: consulta il motivo sotto."
       : ownSlot === target ? "Questo oggetto è già equipaggiato."
       : advice ? `${advice.delta > 0 ? "↑ Migliore" : advice.delta < 0 ? "↓ Meno adatto" : "= Equivalente"} per ${ClassSystem.selected().name} / ${ClassSystem.build().name}. Verifica anche le singole statistiche.`
       : "Confronta le statistiche prima di equipaggiare.";
+    const armorLabel = {cloth:"Tessuto", leather:"Cuoio", mail:"Maglia", plate:"Piastre"}[item.armorType];
+    const typeLabel = ({orb:"Sfera"})[item.type] || GearData.typeLabels[item.type] || item.type;
+    const extraArmor = armorLabel && !typeLabel.toLowerCase().includes(armorLabel.toLowerCase()) ? ` · ${armorLabel}` : "";
+    const description = item.description.replace(/\s*Asset provvisorio condiviso\.?/gi, "").trim();
     document.querySelector("#detail-heading").textContent = item.name;
     document.querySelector("#detail-body").innerHTML =
-      `<div class="detail-meta ${rarityClass(item)}">${GearData.icon(item)}<div><strong>${rarityLabel(item)}</strong><p>Item Level ${item.itemLevel} · Richiede Lv ${item.requiredLevel}</p><p>${GearData.typeLabels[item.type] || item.type}${item.handedness ? ` · ${item.handedness}` : ""}${item.armorType ? ` · ${ArmorRules.labels[item.armorType]}` : ""}</p></div></div><p class="description">${item.description}</p>${item.allowedSupports ? `<p class="hint">${item.handedness === "2H" ? "Occupa arma principale e supporto." : `Supporti: ${item.allowedSupports.map((x) => ({ shield: "scudo", dagger: "pugnale", offhandBlade: "seconda lama", quiver: "faretra", bolts: "dardi", book: "libro", orb: "orb", focus: "reliquia / focus" })[x]).join(", ")}.`}</p>` : ""}<dl class="detail-stats">${Object.entries(
+      `<div class="detail-meta ${rarityClass(item)}">${GearData.icon(item)}<div><strong>${rarityLabel(item)}</strong><p>Livello oggetto ${item.itemLevel} · Richiede livello ${item.requiredLevel}</p><p>${escape(typeLabel)}${item.handedness ? ` · ${item.handedness === "2H" ? "Due mani" : "Una mano"}` : ""}${extraArmor}</p></div></div><p class="description">${escape(description)}</p>${item.allowedSupports ? `<p class="hint">${item.handedness === "2H" ? "Occupa arma principale e supporto." : `Supporti: ${item.allowedSupports.map((x) => ({ shield: "scudo", dagger: "pugnale", offhandBlade: "seconda lama", quiver: "faretra", bolts: "dardi", book: "libro", orb: "sfera", focus: "reliquia / focus" })[x]).join(", ")}.`}</p>` : ""}<dl class="detail-stats">${Object.entries(
         item.stats,
       )
         .map(
@@ -135,16 +142,26 @@ const InventoryUI = (() => {
         )
         .join(
           "",
-        )}</dl>${item.effects.length ? `<div class="effect"><span>${typeof CombatData !== "undefined" && item.effects.some((effect) => CombatData.itemHooks[effect.id]) ? "EFFETTO SPECIALE · ATTIVO NEL KIT CACCIATORE" : "EFFETTO SPECIALE · NON ATTIVO IN COMBATTIMENTO"}</span>${item.effects.map((e) => `<p>${e.description}</p>`).join("")}</div>` : ""}${slots.length > 1 ? `<fieldset class="target-picker"><legend>Destinazione e confronto</legend>${slots.map((s) => `<button data-target="${s}" aria-pressed="${s === target}">${slotLabel(s)}<small>${Equipment.equipped(s)?.name || "Vuoto"}</small></button>`).join("")}</fieldset>` : `<p class="option-label">${slotLabel(target)}</p>`}${advisorMarkup(item, target)}<p class="item-verdict" role="status">${verdict}</p><details class="advisor-explanation"><summary>Dettagli del consiglio</summary><p class="hint advisor-score">${advice ? `Score provvisorio ${ClassSystem.selected().name} / ${ClassSystem.build().name}: ${advice.score.toFixed(1)} · equipaggiato ${advice.currentScore.toFixed(1)} · Δ ${advice.delta > 0 ? "+" : ""}${advice.delta.toFixed(1)}. Pesi statistici ed effetti supportati; non è una graduatoria globale.` : "Nessun consiglio per il kit della classe selezionata."}</p></details><div class="comparison"><h3>Rispetto a: ${comparison.current?.name || "slot vuoto"}</h3><p class="hint">Variazione totale dopo equipaggiamento${comparison.supportRemoved ? " · include la rimozione del supporto incompatibile" : ""}.</p><dl>${
+        )}</dl>${item.effects.length ? `<div class="effect"><span>${typeof CombatData !== "undefined" && item.effects.some((effect) => CombatData.itemHooks[effect.id]) ? "EFFETTO SPECIALE · ATTIVO NEL KIT CACCIATORE" : "EFFETTO SPECIALE · NON ATTIVO IN COMBATTIMENTO"}</span>${item.effects.map((e) => `<p>${e.description}</p>`).join("")}</div>` : ""}${slots.length > 1 ? `<fieldset class="target-picker"><legend>Destinazione e confronto</legend>${slots.map((s) => `<button data-target="${s}" aria-pressed="${s === target}">${slotLabel(s)}<small>${Equipment.equipped(s)?.name || "Vuoto"}</small></button>`).join("")}</fieldset>` : `<p class="option-label">${slotLabel(target)}</p>`}${advisorMarkup(item, target)}<p class="item-verdict" role="status">${verdict}</p><details class="advisor-explanation"><summary>Dettagli del consiglio</summary><p class="hint advisor-score">${advice ? `Punteggio ${ClassSystem.selected().name} / ${ClassSystem.build().name}: ${advice.score.toFixed(1)} · equipaggiato ${advice.currentScore.toFixed(1)} · Δ ${advice.delta > 0 ? "+" : ""}${advice.delta.toFixed(1)}. Pesi statistici ed effetti supportati; non è una graduatoria globale.` : "Nessun consiglio per il kit della classe selezionata."}</p></details><div class="comparison"><h3>Rispetto a: ${comparison.current?.name || "slot vuoto"}</h3><p class="hint">Variazione totale dopo equipaggiamento${comparison.supportRemoved ? " · include la rimozione del supporto incompatibile" : ""}.</p><dl>${
+        Object.values(comparison.delta).every(value => value === 0) ? "<div><dt>Statistiche</dt><dd>Nessuna differenza</dd></div>" : ""
+      }${
         Object.entries(comparison.delta)
-          .filter(([, v]) => v !== 0)
           .map(
             ([k, v]) =>
-              `<div><dt>${GearData.statLabels[k]}</dt><dd>${v > 0 ? "+" : ""}${v}${["critical", "speed"].includes(k) ? "%" : ""} <span>${v > 0 ? "↑" : "↓"}</span></dd></div>`,
+              `<div><dt>${GearData.statLabels[k]}</dt><dd>${v > 0 ? "+" : ""}${v}${["critical", "speed"].includes(k) ? "%" : ""} <span>${v > 0 ? "↑" : v < 0 ? "↓" : "="}</span></dd></div>`,
           )
           .join("") ||
         "<div><dt>Statistiche</dt><dd>Nessuna differenza</dd></div>"
       }<div class="power-delta"><dt>Potere</dt><dd>${comparison.power > 0 ? "+" : ""}${comparison.power}</dd></div></dl></div>${error ? `<p class="compatibility" role="status">${error}</p>` : ""}<div class="detail-actions"><button id="equip-item" ${ownSlot === target || error ? "disabled" : ""}>${ownSlot === target ? "Già equipaggiato" : error ? "Non utilizzabile" : "Equipaggia"}</button>${ownSlot ? `<button data-remove="${ownSlot}">Rimuovi da ${slotLabel(ownSlot)}</button>` : ""}<button id="browse-slot">Altri oggetti per questo slot</button></div>`;
+    const body = document.querySelector("#detail-body");
+    const secondary = document.createElement("details");
+    secondary.className = "item-secondary";
+    secondary.innerHTML = "<summary>Descrizione e dettagli</summary>";
+    Array.from(body.children).filter(element => element.matches(".description, .hint, .effect, .advisor-explanation")).forEach(element => secondary.append(element));
+    const comparisonPanel = body.querySelector(".comparison");
+    const verdictPanel = body.querySelector(".item-verdict");
+    comparisonPanel.before(verdictPanel);
+    body.append(secondary);
   }
   function openItem(id, preferred) {
     selectedStack = null;
@@ -160,6 +177,7 @@ const InventoryUI = (() => {
     renderDetail();
     dialog.showModal();
     dialog.scrollTop = 0;
+    document.querySelector("#detail-body").scrollTop = 0;
   }
   function openSlot(slot) {
     filterForSlot(slot);
@@ -210,10 +228,7 @@ const InventoryUI = (() => {
     }
     if (b.id === "browse-slot") {
       dialog.close();
-      filterForSlot(target);
-      document.dispatchEvent(
-        new CustomEvent("nymeria:screen", { detail: "inventory" }),
-      );
+      openSlot(target);
     }
     if (b.id === "equip-item") {
       const result = Equipment.equip(selectedId, target);

@@ -1090,3 +1090,5 @@ control when the banner disappears. Navigation and combat rules are unchanged.
 See [reproduction, classification and validation](docs/combat-entry-feedback-hotfix.md).
 
 Sprint 2.8.2: [consolidamento UX e audit mobile](docs/mobile-ux-consolidation.md).
+
+Sprint 2.8.3: [dettaglio equipaggiamento unificato](docs/equipment-sheet.md).
