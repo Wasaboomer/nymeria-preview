@@ -12,6 +12,12 @@ async function press(page,selector){
 async function reach(page,target){
  // Navigation and durable actions schedule layout on RAF; await its frame before paging.
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ const section=target.locator('xpath=ancestor::*[@data-locality-section][1]');
+ if(await section.count()) {
+  const id=await section.getAttribute('data-locality-section');
+  const tab=page.locator('[data-locality-tab="'+id+'"]');
+  if(await tab.isVisible() && await tab.getAttribute('aria-pressed')!=='true'){await tab.tap();await page.waitForTimeout(70);}
+ }
  if(await target.isVisible())return;
  const modal=await page.locator('#item-dialog').evaluate(d=>d.open);
  const pager=page.locator(modal?'#item-dialog > .fixed-pager':'.app > .fixed-pager');
@@ -27,6 +33,8 @@ async function reach(page,target){
 module.exports={press,reach};
 module.exports.textThroughPages=async function(page,selector){
  const target=page.locator(selector),pager=page.locator('.app > .fixed-pager');let text=[];
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ if(!await pager.isVisible()){await reach(page,target);return target.innerText();}
  while(!await pager.locator('[data-fixed-prev]').isDisabled()){await pager.locator('[data-fixed-prev]').tap();await page.waitForTimeout(50);}
  for(let i=0;i<150;i++){
   if(await target.isVisible())text.push(await target.innerText());

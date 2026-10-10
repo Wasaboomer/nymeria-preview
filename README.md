@@ -1074,3 +1074,12 @@ The quest-detail action now opens the existing stag preparation in the locality
 view, through the existing navigation/pagination APIs. Rejected starts show the
 engine's actual reason inside that preparation. Encounter/reward/save rules are
 unchanged. See [diagnosis and regression coverage](docs/stag-quest-action-hotfix.md).
+
+## Sprint 2.8 — Navigazione MMORPG mobile
+
+Completed encounter reports are excluded from Back history and saved tab contexts.
+Stag preparation has its own UI route; consultations retain the durable locality
+and expose a direct return. Locality sections group real missions, encounters,
+gathering, NPCs and destinations with sticky controls and internal scrolling
+inside the fixed shell. No gameplay/save-format/asset changes.
+See [diagnosis, navigation contract and mobile verification](docs/mmorpg-mobile-navigation.md).

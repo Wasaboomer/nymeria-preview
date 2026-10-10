@@ -23,7 +23,7 @@ const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8026';
   assert.equal(await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),save,'Opening preparation never starts/finishes/rewards combat');
   await p.locator('#navigation-back').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'quest');
   await p.evaluate(()=>NymeriaNavigation.root('world'));
-  await press(p,'[data-world-stag-cancel]');
+  assert.equal(await p.locator('#world-stag-preparation').isVisible(),false,'Returning to a place does not restore stale preparation');
   await press(p,'#world-tracked [data-world-fight="twilight-stag"]');
   assert.ok(await p.locator('#world-stag-preparation').isVisible(),'Tracker in locality also reveals preparation');
   for(const height of [568,667,844]){await p.setViewportSize({width,height});await p.waitForTimeout(100);await reach(p,p.locator('[data-world-stag-start]'));assert.ok((await p.locator('[data-world-stag-start]').boundingBox()).height>=44);await audit(p);}

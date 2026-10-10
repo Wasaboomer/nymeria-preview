@@ -1,0 +1,18 @@
+/* Locality content scrolls inside the fixed shell; location and section controls stay visible. */
+.locality-view #world-current { position:sticky;top:0;z-index:3;background:#111b1c;margin:0;padding:0; }
+.locality-view #world-current .ny-place-banner { min-height:64px;height:72px;margin:0; }
+.locality-view #world-current h1 { font-size:clamp(1.2rem,5vw,1.55rem); }
+.locality-view #locality-tabs { position:sticky;top:72px;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#111b1c;padding:6px 0; }
+#locality-tabs[hidden] { display:none; }
+#locality-tabs button { min-height:44px;padding:6px 4px;font-size:.8rem;line-height:1.2;white-space:normal; }
+#locality-tabs button[aria-pressed="true"] { border-color:#d4b977;background:#384134;color:#f3e8bf; }
+.locality-view .world-shortcuts { display:flex;flex-wrap:wrap; }
+.locality-view .world-shortcuts[hidden] { display:none; }
+.locality-view #world-location-detail { padding-bottom:12px; }
+.locality-view [data-locality-section] > h3 { margin:12px 0 8px;color:#dbc898;font-size:1rem; }
+.locality-view .world-enemies { display:grid;grid-template-columns:minmax(0,1fr); }
+.locality-view .world-npc,.locality-view .world-enemy { min-width:0; }
+.locality-view .npc-heading { flex-wrap:wrap; }
+.locality-view #world-location-detail button { min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere; }
+#context-bar { flex-wrap:wrap; }
+#navigation-locality { min-height:44px; }

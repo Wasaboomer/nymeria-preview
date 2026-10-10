@@ -10,7 +10,7 @@
     <title>Nymeria Frontiera del Vespro &amp; Quest System 0.1</title>
     <!-- Version changed UI assets together; retain frozen game asset versions. -->
     <link rel="stylesheet" href="styles.css?v=sprint1-mobile-1" />
-    <script src="navigation.js?v=sprint27-1" defer></script>
+    <script src="navigation.js?v=sprint28-1" defer></script>
     <script src="guild-data.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-system.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-project-data.js?v=sprint1-mobile-1" defer></script>
@@ -55,7 +55,9 @@
     <script src="world-discovery.js?v=sprint1-mobile-1" defer></script>
     <script src="world-system.js?v=sprint25-1" defer></script>
     <script src="quest-ui.js?v=sprint27-1" defer></script>
-    <script src="world-ui.js?v=sprint271-1" defer></script>
+    <script src="world-ui.js?v=sprint28-1" defer></script>
+    <script src="locality-ui.js?v=sprint28-1" defer></script>
+    <link rel="stylesheet" href="locality-ui.css?v=sprint28-1" />
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
     <script src="notification-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
@@ -71,7 +73,7 @@
     <script src="kaelith-dev.js?v=1" defer></script>
     <script src="modular-proof.js?v=1" defer></script>
     <link rel="stylesheet" href="fixed-screens.css?v=sprint2-1" />
-    <script src="fixed-screens.js?v=sprint21-1" defer></script>
+    <script src="fixed-screens.js?v=sprint28-1" defer></script>
     <link rel="stylesheet" href="fantasy-theme.css?v=sprint2-1" />
     <script src="fantasy-ui.js?v=sprint2-1" defer></script>
     <link rel="stylesheet" href="interface-refinement.css?v=sprint21-1" />
@@ -92,7 +94,7 @@
         <button id="tab-inventory" role="tab" aria-selected="false" aria-controls="panel-inventory" data-screen="inventory"><span aria-hidden="true">▣</span>Inventario</button>
         <button id="tab-menu" role="tab" aria-selected="false" aria-controls="panel-menu" data-screen="menu"><span aria-hidden="true">≡</span>Menu</button>
       </nav>
-      <div id="context-bar" class="context-bar" hidden><button id="navigation-back">← Indietro</button><strong id="context-title"></strong></div>
+      <div id="context-bar" class="context-bar" hidden><button id="navigation-locality" hidden>Località attuale →</button><button id="navigation-back">← Indietro</button><strong id="context-title"></strong></div>
       <section id="panel-menu" hidden aria-label="Menu"><h1>Le vie del Vespro</h1><p class="hint">Attività e conoscenze oltre il sentiero.</p>
         <section class="menu-group"><h2>Attività</h2><div class="hub-links">
           <button data-nav="professions"><span aria-hidden="true">⚒</span><span><strong>Professioni e creazione</strong><small>Raccolta, forgia e cartografia nei luoghi della Frontiera.</small></span></button>
@@ -508,6 +510,7 @@
       <section id="panel-world" role="tabpanel" aria-labelledby="tab-world" hidden>
         <header class="world-intro"><span class="world-eyebrow" id="world-zone-name"></span><p id="world-zone-story" hidden></p><div id="world-summary" hidden></div></header>
         <section id="world-current" tabindex="-1"></section>
+        <nav id="locality-tabs" aria-label="Attività della località" hidden></nav>
         <div class="world-shortcuts"><button id="world-active-link" data-world-view="battle" hidden>Riprendi incontro</button><button data-world-view="journal">Diario <span id="journal-badge"></span></button><button data-world-view="overview">Mappa dei luoghi</button></div>
         <p id="world-message" class="world-message" role="status" aria-live="polite"></p>
         <p id="world-storage" class="compatibility" role="status"></p>

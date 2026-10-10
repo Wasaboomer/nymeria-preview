@@ -18,7 +18,7 @@ const WorldUI = (() => {
   }
   // Presentation-only receipt for a successful claim in this session; never grants rewards.
   let visibleQuestReceipt = null;
-  let stagPreparation = false, stagMessage = "";
+  let stagMessage = "";
   const marks = {
     haven: "M12 31 30 10 48 31M18 27V48H42V27M25 48V34H35V48M8 48H52",
     path: "M12 49 23 33 19 25 32 11M28 49 36 35 31 28 42 11M7 18H17M43 41H53",
@@ -156,7 +156,7 @@ const WorldUI = (() => {
     node("world-debug").hidden = !WorldSystem.testMode;
     for (const button of node("world-debug").querySelectorAll("button")) button.disabled = busy;
     const stag = WorldData.enemy("twilight-stag");
-    const showStagPrep = stagPreparation && view === "places" && !frontier.activeEncounter && frontier.location === "lantern-wood";
+    const showStagPrep = NymeriaNavigation.route.activity === "preparation" && view === "places" && !frontier.activeEncounter && frontier.location === "lantern-wood";
     node("world-stag-preparation").hidden = !showStagPrep;
     if (showStagPrep) {
       node("world-stag-feedback").textContent = stagMessage;
@@ -370,7 +370,7 @@ const WorldUI = (() => {
         const entered = await action(() => WorldSystem.enter(receipt.location));
         if (!entered?.ok) return;
       }
-      if (NymeriaNavigation.depth) NymeriaNavigation.back(); else NymeriaNavigation.root("world");
+      NymeriaNavigation.locality();
       return;
     }
     if (b.dataset.worldView) { selectView(b.dataset.worldView); return; }
@@ -404,19 +404,19 @@ const WorldUI = (() => {
       const result = await action(() => WorldSystem.enter(QuestData.get(b.dataset.questGiver).location));
       if (result?.ok) NymeriaNavigation.open("world", {view:"places"}); return;
     }
-    if (b.hasAttribute("data-world-stag-cancel")) { stagPreparation = false; render(); return; }
+    if (b.hasAttribute("data-world-stag-cancel")) { NymeriaNavigation.back(); return; }
     if (b.hasAttribute("data-world-stag-equipment")) { NymeriaNavigation.showScreen("equipment"); return; }
     if (b.hasAttribute("data-world-stag-start")) {
-      if (!stagPreparation || ProgressionStore.state.frontier.activeEncounter || ProgressionStore.state.frontier.location !== "lantern-wood") return;
+      if (NymeriaNavigation.route.activity !== "preparation" || ProgressionStore.state.frontier.activeEncounter || ProgressionStore.state.frontier.location !== "lantern-wood") return;
       const result = await action(() => WorldSystem.startEncounter("twilight-stag"));
-      if (result?.ok) { stagPreparation = false; selectView("battle"); resume(); }
+      if (result?.ok) { selectView("battle"); resume(); }
       else { stagMessage = result?.message || "Incontro non avviato. Riprova."; render(); document.dispatchEvent(new CustomEvent("nymeria:content-focus", {detail:{selector:"#world-stag-feedback"}})); }
       return;
     }
     if (b.dataset.worldFight) {
       if (b.dataset.worldFight === "twilight-stag") {
-        stagPreparation = true; stagMessage = "";
-        if (view !== "places") selectView("places"); else render();
+        stagMessage = "";
+        NymeriaNavigation.open("world", {view:"places",activity:"preparation"});
         document.dispatchEvent(new CustomEvent("nymeria:content-focus", {detail:{selector:"#world-stag-preparation"}}));
         return;
       }

@@ -7,6 +7,17 @@
   var screens = roots.concat(["equipment", "inventory", "class", "combat", "debug", "guild", "professions"]);
   var route = { screen: "world", root: "world", view: "places" }, stack = [];
   var labels = { character: "Eroe", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professioni", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Missioni", quest: "Missione", discoveries: "Scoperte", places: "Località", overview: "Mappa dei luoghi", travel: "Itinerario", battle: "Incontro" };
+  function transient(value) { return value.screen === "world" && (value.view === "battle" || value.activity === "preparation"); }
+  // Encounter reports are terminal views, not exploration history. Prune cached tabs too.
+  function discardFinishedEncounter() {
+    if (typeof ProgressionStore === "undefined" || ProgressionStore.state.frontier.activeEncounter) return;
+    stack = stack.filter(function(entry) { return !(entry.route.screen === "world" && entry.route.view === "battle"); });
+    Object.keys(contexts).forEach(function(id) {
+      var saved = contexts[id];
+      saved.stack = saved.stack.filter(function(entry) { return !(entry.route.screen === "world" && entry.route.view === "battle"); });
+      if (saved.current.route.screen === "world" && saved.current.route.view === "battle") delete contexts[id];
+    });
+  }
   function snapshot() {
     return { route: Object.assign({}, route), scroll: window.scrollY, panelScroll: document.getElementById("panel-" + route.screen)?.scrollTop || 0, focus: document.activeElement && document.activeElement.id, focusData: document.activeElement ? Object.assign({}, document.activeElement.dataset) : {} };
   }
@@ -14,6 +25,7 @@
     route = Object.assign({}, next);
     document.body.setAttribute("data-screen", route.screen);
     document.body.setAttribute("data-world-view", route.view || "places");
+    document.body.setAttribute("data-world-activity", route.activity || "");
     var panels = document.querySelectorAll('.app > [id^="panel-"]');
     for (var i = 0; i < panels.length; i++) panels[i].hidden = panels[i].id !== "panel-" + route.screen;
     var tabs = document.querySelectorAll(".bottom-nav [data-screen]");
@@ -25,15 +37,22 @@
       tabs[j].setAttribute("aria-controls", "panel-" + (active ? route.screen : destinations[tabs[j].getAttribute("data-screen")].screen));
     }
     var bar = document.getElementById("context-bar");
-    if (bar) bar.hidden = stack.length === 0;
+    if (bar) bar.hidden = stack.length === 0 && route.screen === "world" && route.view === "places" && !route.activity;
     var previousRoute = stack.length ? stack[stack.length - 1].route : null;
     var backButton = document.getElementById("navigation-back");
+    if (backButton) backButton.hidden = stack.length === 0;
     if (backButton) backButton.textContent = previousRoute ? "← Torna a " + (labels[previousRoute.view] || labels[previousRoute.screen] || "Mondo") : "← Indietro";
     var title = document.getElementById("context-title");
     if (title) title.textContent = labels[route.view] || labels[route.screen] || "Mondo";
     var shortcut = document.getElementById("current-quest-link");
     if (shortcut) shortcut.disabled = combatLocked();
     if (backButton) backButton.disabled = combatLocked();
+    var placeLink = document.getElementById("navigation-locality");
+    if (placeLink) {
+      placeLink.hidden = route.screen === "world" && (route.view === "battle" || route.view === "places");
+      placeLink.disabled = combatLocked();
+      placeLink.textContent = "Località attuale →";
+    }
     var context = document.getElementById("topbar-context");
     if (context) context.textContent = route.screen === "world" && route.view === "places" ? "Località" : labels[route.view] || labels[route.screen] || "Mondo";
     document.dispatchEvent(new CustomEvent("nymeria:navigation", { detail: Object.assign({}, route) }));
@@ -61,8 +80,16 @@
     options = options || {};
     if (screens.indexOf(screen) < 0 || (combatLocked() && !(screen === "world" && options.view === "battle"))) return;
     if ((screen === "debug" || screen === "combat") && new URLSearchParams(location.search).get("test") !== "1") return;
-    if (screen === route.screen && (options.view || "places") === (route.view || "places") && options.questId === route.questId && options.slot === route.slot) return;
-    stack.push(snapshot());
+    if (screen === route.screen && (options.view || "places") === (route.view || "places") && options.questId === route.questId && options.slot === route.slot && options.activity === route.activity) return;
+    discardFinishedEncounter();
+    if (screen === "world" && options.view === "battle") {
+      stack = stack.filter(function(entry) { return !transient(entry.route); });
+      Object.keys(contexts).forEach(function(id) {
+        contexts[id].stack = contexts[id].stack.filter(function(entry) { return !transient(entry.route); });
+        if (transient(contexts[id].current.route)) delete contexts[id];
+      });
+    }
+    if (!(route.screen === "world" && (route.view === "battle" || route.activity === "preparation") && options.view === "battle") && !(route.view === "battle" && !combatLocked())) stack.push(snapshot());
     apply(Object.assign({ screen: screen, root: route.root }, options));
   }
   function root(screen) {
@@ -74,10 +101,11 @@
   }
   function destination(id) {
     if (!destinations[id] || combatLocked()) return;
+    discardFinishedEncounter();
     var current = snapshot();
     // A primary tab click owns focus; do not restore the tab clicked when leaving.
     current.focus = null; current.focusData = {};
-    contexts[route.root] = { current: current, stack: stack.slice() };
+    if (!transient(route)) contexts[route.root] = { current: current, stack: stack.slice() };
     var dialog = document.getElementById("item-dialog");
     if (dialog && dialog.open) dialog.close();
     var saved = id === "world" ? null : contexts[id];
@@ -88,12 +116,22 @@
     if (combatLocked()) return;
     var dialog = document.getElementById("item-dialog");
     if (dialog && dialog.open) { dialog.close(); return; }
+    discardFinishedEncounter();
     var previous = stack.pop();
     if (previous) apply(previous.route, previous);
   }
+  function locality() {
+    if (combatLocked()) return;
+    discardFinishedEncounter();
+    // Consultation can always return to the durable current place, never the report.
+    if (route.screen === "world" && route.view === "places" && !route.activity) return;
+    if (route.view !== "battle" && route.activity !== "preparation") stack.push(snapshot());
+    apply({screen:"world",root:"world",view:"places"});
+  }
   function updateGuard() {
+    discardFinishedEncounter();
     var locked = combatLocked();
-    document.querySelectorAll(".bottom-nav button, #navigation-back, #current-quest-link").forEach(function(button) { button.disabled = locked; });
+    document.querySelectorAll(".bottom-nav button, #navigation-back, #current-quest-link, #navigation-locality").forEach(function(button) { button.disabled = locked; });
   }
   document.addEventListener("nymeria:world-render", updateGuard);
   function initialize() {
@@ -109,6 +147,7 @@
       destination(tabs[index].dataset.screen); tabs[index].focus();
     });
     document.getElementById("navigation-back").addEventListener("click", back);
+    document.getElementById("navigation-locality").addEventListener("click", locality);
     document.addEventListener("nymeria:screen", function (e) { open(e.detail); });
     document.addEventListener("click", function (e) {
       var b = e.target.closest("[data-nav]");
@@ -119,7 +158,7 @@
     document.addEventListener("keydown", function(e) { if(e.key === "Escape" && !document.querySelector("dialog[open]")) back(); });
     root("world");
   }
-  window.NymeriaNavigation = { showScreen: open, open: open, root: root, destination: destination, back: back,
+  window.NymeriaNavigation = { showScreen: open, open: open, root: root, destination: destination, back: back, locality: locality,
     get route() { return Object.assign({}, route); }, get depth() { return stack.length; } };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
   else initialize();
