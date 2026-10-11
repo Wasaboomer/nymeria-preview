@@ -9,13 +9,15 @@ const BuildSystem = (() => {
       ? require("./armor-rules.js")
       : ArmorRules;
   function getBuild(classId, buildId) {
-    const cls = data.classes[classId] || data.classes.hunter;
+    const cls = data.classes[classId];
+    if (!Object.prototype.hasOwnProperty.call(data.classes, classId))
+      throw new Error("Unknown class: " + classId);
     const selection = data.specializations[buildId]?.classId === cls.id ? buildId : cls.defaultBuild;
     return data.builds[selection] || data.resolve(cls.id, selection).specialization;
   }
   function compatible(item, classId, selectionId) {
     const cls = data.classes[classId];
-    if (!item || !cls || !armor.compatible(item, cls)) return false;
+    if (!item || !cls || !data.isPlayable(classId) || !armor.compatible(item, cls)) return false;
     const requirements = data.resolve(classId, selectionId).specialization.requirements;
     if (item.slot === "weapon") return data.weaponCompatible(item, requirements);
     if (item.slot === "support") return data.supportCompatible(item, requirements);

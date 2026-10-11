@@ -58,7 +58,9 @@ const classFixture=require('./two-hand-fixture.cjs');
  // Production registers Vendicatore, but never the test-only kit.
  const context=await browser.newContext(),page=await context.newPage();
  await page.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8026');
- assert.equal(await page.evaluate(()=>Object.keys(ClassesData.specializations).length),7);
+ assert.equal(await page.evaluate(()=>Object.keys(ClassesData.specializations).length),8);
+ assert.equal(await page.evaluate(()=>Object.values(ClassesData.specializations).filter(spec=>spec.playable!==false).length),7);
+ assert.equal(await page.locator('[data-class-id="mage"]').count(),0);
  assert.equal(await page.evaluate(()=>Equipment.state.inventory.some(i=>['greataxe','warhammer'].includes(i.id))),false);
  await context.close();console.log('PASS normal game: six legacy selections plus Vendicatore, no test kit or catalog-only items automatically granted');
  } finally {await browser.close();}

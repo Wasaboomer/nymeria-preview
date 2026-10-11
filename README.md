@@ -1161,3 +1161,8 @@ ripetere il costo nelle descrizioni. Le condizioni sono tradotte in italiano nat
 «meno del» conserva `<`, «più di» conserva `>`, e le negazioni includono l'uguaglianza.
 D indica il danno base derivato dalle statistiche prima dei modificatori del colpo.
 Le formule, le regole e il formato delle preferenze restano invariati.
+# Sprint 2.9E-B — Mago / Risonanza Foundation
+
+Mago ed Elementalista sono registrati ma **non giocabili**. Nessuna nuova abilità,
+ricompensa o modifica al bilanciamento. Migrazione v2 additiva delle selezioni e
+contratto puro delle quattro tracce: [specifica e test](docs/elemental-foundation.md).

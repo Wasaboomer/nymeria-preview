@@ -6,6 +6,7 @@ const ClassUI = (() => {
       build = ClassSystem.build(),
       spec = ClassSystem.resolved().specialization;
     node("class-choices").innerHTML = Object.values(ClassesData.classes)
+      .filter(c => ClassesData.isPlayable(c.id))
       .map(
         (c) =>
           `<button data-class-id="${c.id}" aria-pressed="${c.id === cls.id}">${c.name}<small>${c.role}</small></button>`,

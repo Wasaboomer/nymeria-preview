@@ -1,0 +1,236 @@
+{
+  "sourceCommit": "372e1f6bc769ed1556ea848073d747c717f518fc",
+  "description": "Produced by the actual pre-foundation ClassSystem; synthetic local storage, not user data.",
+  "saves": [
+    {
+      "version": 2,
+      "classId": "hunter",
+      "builds": {
+        "hunter": "explorer",
+        "warden": "bulwark"
+      },
+      "legacy": null
+    },
+    {
+      "version": 2,
+      "classId": "warden",
+      "builds": {
+        "hunter": "predator",
+        "warden": "command"
+      },
+      "legacy": null
+    },
+    {
+      "version": 2,
+      "classId": "warden",
+      "builds": {
+        "hunter": "predator",
+        "warden": "avenger"
+      },
+      "legacy": null
+    }
+  ],
+  "avengerProfile": {
+    "classId": "warden",
+    "className": "Custode",
+    "armorProficiency": "plate",
+    "weaponTypes": [
+      "greatsword",
+      "spear",
+      "greataxe",
+      "warhammer"
+    ],
+    "supportTypes": [],
+    "handedness": "2H",
+    "buildId": "avenger",
+    "buildName": "Vendicatore",
+    "specializationId": "avenger",
+    "requirements": {
+      "weaponTypes": [
+        "greatsword",
+        "spear",
+        "greataxe",
+        "warhammer"
+      ],
+      "handedness": "2H",
+      "supportTypes": [],
+      "supportPolicy": "forbidden",
+      "label": "Spadone, lancia, ascia o martello a due mani · supporto vuoto"
+    },
+    "role": "DPS da mischia",
+    "strategyControls": {
+      "allowDisable": true,
+      "allowCompound": true
+    },
+    "abilities": [
+      {
+        "id": "avenger-slash",
+        "name": "Fendente",
+        "description": "0,75 × D + 6 danni. Genera 10 Risolutezza se infligge danno.",
+        "kind": "attack",
+        "coefficient": 0.75,
+        "flatDamage": 6,
+        "cost": 0,
+        "cooldown": 0,
+        "resourceGainOnHit": 10,
+        "tags": [
+          "meleeHit"
+        ]
+      },
+      {
+        "id": "avenger-assault",
+        "name": "Assalto",
+        "description": "1,50 × D + 10 danni. Costa 15 Risolutezza.",
+        "kind": "attack",
+        "coefficient": 1.5,
+        "flatDamage": 10,
+        "cost": 15,
+        "cooldown": 5,
+        "tags": [
+          "meleeHit"
+        ]
+      },
+      {
+        "id": "avenger-shatter",
+        "name": "Spezzaarmatura",
+        "description": "1,00 × D + 8 danni; armatura nemica −15% per 6 s. Costa 20 Risolutezza.",
+        "kind": "attack",
+        "coefficient": 1,
+        "flatDamage": 8,
+        "cost": 20,
+        "cooldown": 8,
+        "effectId": "avenger-shattered",
+        "tags": [
+          "meleeHit"
+        ]
+      },
+      {
+        "id": "avenger-wrath",
+        "name": "Ira del Vendicatore",
+        "description": "Danni diretti +15% per 6 s. Costa 25 Risolutezza; nessun danno all’attivazione.",
+        "kind": "buff",
+        "cost": 25,
+        "cooldown": 18,
+        "effectId": "avenger-wrath",
+        "tags": []
+      },
+      {
+        "id": "avenger-execution",
+        "name": "Colpo di Grazia",
+        "description": "1,30 × D + 12 danni, ×1,75 sotto il 25% HP nemici. Costa 35 Risolutezza.",
+        "kind": "attack",
+        "coefficient": 1.3,
+        "flatDamage": 12,
+        "cost": 35,
+        "cooldown": 7,
+        "executeBelow": 0.25,
+        "executeMultiplier": 1.75,
+        "tags": [
+          "meleeHit"
+        ]
+      }
+    ],
+    "resource": {
+      "id": "resolve",
+      "name": "Risolutezza",
+      "max": 100,
+      "initial": 0,
+      "regeneration": 0,
+      "decay": 0,
+      "events": {}
+    },
+    "modifiers": {
+      "damageWeights": {
+        "force": 1.6,
+        "agility": 0.25,
+        "spirit": 0.2
+      }
+    },
+    "abilityModifiers": {},
+    "effectModifiers": {},
+    "resultMetrics": [],
+    "effects": {
+      "avenger-shattered": {
+        "id": "avenger-shattered",
+        "name": "Armatura spezzata",
+        "kind": "debuff",
+        "duration": 6,
+        "maxStacks": 1,
+        "modifiers": {
+          "armorReduction": 0.15
+        }
+      },
+      "avenger-wrath": {
+        "id": "avenger-wrath",
+        "name": "Ira del Vendicatore",
+        "kind": "buff",
+        "duration": 6,
+        "maxStacks": 1,
+        "modifiers": {
+          "outgoingDamageBonus": 0.15
+        }
+      }
+    },
+    "defaultRules": [
+      {
+        "abilityId": "avenger-execution",
+        "condition": {
+          "type": "enemyHpBelow",
+          "threshold": 25
+        }
+      },
+      {
+        "abilityId": "avenger-wrath",
+        "condition": {
+          "type": "all",
+          "conditions": [
+            {
+              "type": "buffAbsent",
+              "effectId": "avenger-wrath"
+            },
+            {
+              "type": "not",
+              "condition": {
+                "type": "enemyHpBelow",
+                "threshold": 40
+              }
+            }
+          ]
+        }
+      },
+      {
+        "abilityId": "avenger-shatter",
+        "condition": {
+          "type": "all",
+          "conditions": [
+            {
+              "type": "debuffAbsent",
+              "effectId": "avenger-shattered"
+            },
+            {
+              "type": "not",
+              "condition": {
+                "type": "enemyHpBelow",
+                "threshold": 25
+              }
+            }
+          ]
+        }
+      },
+      {
+        "abilityId": "avenger-assault",
+        "condition": {
+          "type": "resourceAbove",
+          "threshold": 44
+        }
+      },
+      {
+        "abilityId": "avenger-slash",
+        "condition": {
+          "type": "always"
+        }
+      }
+    ],
+    "kitValid": true
+  }
+}

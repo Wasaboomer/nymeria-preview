@@ -401,8 +401,35 @@ const ClassesData = (() => {
     weights: { force: 3.5, critical: 2.5, speed: 2, vigor: 1.5, armor: 1, agility: 0.6, spirit: 0.4 },
     effectWeights: {},
   };
+  // Registered foundation only: no kit, stat growth, mana tuning or combat abilities.
+  classes.mage = {
+    id: "mage", name: "Mago", playable: false, status: "foundation",
+    role: "DPS magico a distanza", armorProficiency: "cloth",
+    statGrowthPerLevel: null, buildIds: [], specializationIds: ["elementalist"],
+    defaultBuild: "elementalist",
+  };
+  specializations.elementalist = {
+    version: 1, id: "elementalist", classId: "mage", name: "Elementalista",
+    playable: false, status: "foundation", role: "DPS magico a distanza",
+    requirements: null, resource: null, abilities: [],
+  };
+  const registered = id => typeof id === "string" && Object.prototype.hasOwnProperty.call(classes, id);
+  const isPlayable = id => registered(id) && classes[id].playable !== false;
+  // Only the newly registered Mage default may be added to an existing v2 save.
+  // Missing legacy selections / unknown identifiers are not guessed or overwritten.
+  function normalizeSelection(raw) {
+    if (!raw || !isPlayable(raw.classId) || !raw.builds ||
+        typeof raw.builds !== "object" || Array.isArray(raw.builds)) return null;
+    const selections = combat.copy(raw.builds);
+    if (selections.mage === undefined) selections.mage = classes.mage.defaultBuild;
+    if (Object.keys(selections).some(id => !registered(id)) ||
+        Object.values(classes).some(cls => specializations[selections[cls.id]]?.classId !== cls.id))
+      return null;
+    return { classId: raw.classId, builds: selections };
+  }
   function resolve(classId, selectionId) {
-    const cls = classes[classId] || classes.hunter;
+    const cls = classes[classId];
+    if (!registered(classId)) throw new Error("Unknown class: " + classId);
     const spec = specializations[selectionId];
     const selected = spec?.classId === cls.id ? spec : specializations[cls.defaultBuild];
     return combat.copy({
@@ -444,7 +471,7 @@ const ClassesData = (() => {
     if (support && supportReason(main, support)) return false;
     return support ? supportCompatible(support, requirements) : requirements.supportPolicy === "optional";
   }
-  return { classes, builds, effects, specializations, resolve, weaponCompatible, supportCompatible, supportReason, wearableReason, supportPolicies, validKit };
+  return { classes, builds, effects, specializations, resolve, isPlayable, normalizeSelection, weaponCompatible, supportCompatible, supportReason, wearableReason, supportPolicies, validKit };
 })();
 if (typeof module !== "undefined" && module.exports)
   module.exports = ClassesData;

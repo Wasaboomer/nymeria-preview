@@ -137,6 +137,6 @@ const profile = {classId:'warden', armorProficiency:'plate', ...req, requirement
     const active={activity:X.activities[1],snapshot:{profile:p},lootPolicy:P.create(X.activities[1],p)};
     assert.deepEqual(P.forActive(active),active.lootPolicy);
   }
-  assert.deepEqual(Object.keys(C.specializations).sort(),['avenger','bulwark','command','explorer','lacerator','predator','retaliation']);
+  assert.deepEqual(Object.values(C.specializations).filter(spec => spec.playable !== false).map(spec => spec.id).sort(),['avenger','bulwark','command','explorer','lacerator','predator','retaliation']);
   console.log('PASS old preparation shape and counterpart order unchanged, saved policies retained, six legacy production selections plus Vendicatore');
 })().catch(e=>{console.error(e);process.exitCode=1;});
