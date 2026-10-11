@@ -1096,3 +1096,17 @@ Sprint 2.8.3: [dettaglio equipaggiamento unificato](docs/equipment-sheet.md).
 Sprint 2.9C: [Specialization Foundation, legacy compatibility and persistence contracts](docs/specialization-foundation.md).
 
 Sprint 2.9D-A: [contratto equipaggiamento e Smart Loot 2H](docs/two-hand-kit-foundation.md). Foundation soltanto: nessuna nuova specializzazione giocabile.
+
+### Sprint 2.9D-B — Reusable offensive mechanics
+
+These opt-in CombatEngine contracts are not assigned to any playable ability or legacy profile:
+
+- `ability.resourceGainOnHit`: finite positive resource amount awarded **after** resolved direct-attack damage, including a killing hit. Existing `resourceGain` still executes before the attack, unchanged. Gain is capped by the existing resource maximum. No resource is awarded for zero actual damage or buff actions. The current engine has no enemy miss/dodge/block resolution and retains its minimum 1 damage for resolved attacks (zero raw damage is therefore not a miss). A future avoidance implementation must return zero actual damage for a fully avoided/blocked hit; partial blocks with positive actual damage qualify. Resource gain does not introduce avoidance mechanics.
+- `effect.modifiers.armorReduction`: non-negative fractional reduction of enemy armor. Active contributions add (including declared stacks), capped at 100%; effective armor never falls below zero. Base `enemy.armor` is untouched. Applies to direct hits and periodic enemy damage.
+- `effect.modifiers.outgoingDamageBonus`: non-negative fractional bonus to **direct player attack damage**, after static profile/ability and critical multipliers and before armor mitigation/rounding. Active contributions add, capped at +100%. Does not retroactively modify hits or periodic damage snapshots. Damage-over-time amplification is outside this contract.
+
+Invalid/non-finite modifier values are ignored. Only effects with `expiresAt > simulationTime + epsilon` contribute. Existing effect identity (id + source actor), maxStacks, refresh extending expiry and preserved periodic tick schedule remain unchanged. Different effects/sources share aggregate caps, preventing unlimited amplification. No legacy modifiers, ability definitions, RNG calls or serialized snapshot fields are changed.
+
+Frozen activity profiles include opt-in fields through the existing deep-copy/JSON contract. Resuming deterministic simulation uses the original preparation, rules and seed, not a newly selected profile. This is not a new persistence schema or a hydration API; existing activities and saves remain unchanged.
+
+Validation: `node tests/offensive-mechanics-engine.cjs` covers ordering, actual zero damage, killing hits, caps, invalid values, armor/buff expiry and refresh/overlap, critical/mitigation composition, periodic armor mitigation, pause and JSON/replay equivalence. `tests/specialization-engine.cjs` retains the original 90,000 deterministic legacy snapshots; the complete existing browser suite covers mobile initialization, combat and persistence. Physical Safari/iOS validation remains separate.

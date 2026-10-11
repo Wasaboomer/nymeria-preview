@@ -137,6 +137,24 @@ const CombatEngine = (() => {
         }
       return { stats, modifiers };
     }
+    // Opt-in percentages use active effects only; aggregate caps prevent runaway stacking.
+    effectPercentage(actor, key, maximum) {
+      const total = actor.effects.reduce((sum, effect) => {
+        const value = effect.modifiers?.[key];
+        if (effect.expiresAt <= this.time + epsilon ||
+            !Number.isFinite(value) || value <= 0) return sum;
+        const stacks = Number.isFinite(effect.stacks) ? Math.max(0, effect.stacks) : 0;
+        return sum + value * stacks;
+      }, 0);
+      return Math.min(maximum, total);
+    }
+    effectiveEnemyArmor() {
+      return Math.max(0, this.enemy.armor) *
+        (1 - this.effectPercentage(this.enemy, "armorReduction", 1));
+    }
+    outgoingDamageMultiplier() {
+      return 1 + this.effectPercentage(this.player, "outgoingDamageBonus", 1);
+    }
     hasEffect(actor, id) {
       return actor.effects.some(
         (e) => e.id === id && e.expiresAt > this.time + epsilon,
@@ -246,6 +264,7 @@ const CombatEngine = (() => {
           this.metrics.bleedingDamage += dealt;
       } else this.metrics.damageTaken += dealt;
       this.emit({ ...event, damage: dealt, targetId: target.id });
+      return dealt;
     }
     tickEffects(actor) {
       for (const effect of actor.effects) {
@@ -260,7 +279,7 @@ const CombatEngine = (() => {
             data.formulas.mitigated(
               effect.tickDamage * effect.stacks,
               actor === this.enemy
-                ? actor.armor
+                ? this.effectiveEnemyArmor()
                 : this.effectiveStats(actor).stats.armor,
             ),
             {
@@ -357,9 +376,10 @@ const CombatEngine = (() => {
           raw *= data.formulas.criticalMultiplier;
           this.metrics.criticals++;
         }
-        this.damage(
+        raw *= this.outgoingDamageMultiplier();
+        const dealt = this.damage(
           this.enemy,
-          data.formulas.mitigated(raw, this.enemy.armor),
+          data.formulas.mitigated(raw, this.effectiveEnemyArmor()),
           {
             type: "playerAction",
             actorId: "player",
@@ -367,6 +387,11 @@ const CombatEngine = (() => {
             critical,
           },
         );
+        // Legacy resourceGain remains before the attack. This separate opt-in
+        // runs only after damage resolution, including a killing hit.
+        if (dealt > 0 && Number.isFinite(ability.resourceGainOnHit) &&
+            ability.resourceGainOnHit > 0)
+          this.gainResource(ability.resourceGainOnHit);
         if (this.enemy.hp > 0) {
           if (ability.effectId)
             this.applyEffect(this.enemy, ability.effectId, {
