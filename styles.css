@@ -2236,3 +2236,9 @@ body { min-height: 100dvh; }
 .combat-strategy .priority-row input { min-height:44px; font-size:14px; }
 .combat-strategy .priority-row input[type="checkbox"] { min-height:20px; }
 .combat-strategy .condition-explanation { color:#dac28a; }
+
+/* Keep the strategy title inside its own surface when aligned in the class scroller. */
+.combat-strategy { display:flow-root; }
+.combat-strategy > .section-title { margin:12px 0 10px; }
+.combat-strategy > .section-title h2 { line-height:1.35; }
+.combat-strategy .damage-definition { font-size:12px; line-height:1.4; color:var(--muted); margin:8px 0; }

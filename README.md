@@ -1154,3 +1154,10 @@ solo UI: non modifica il formato delle preferenze né i profili di combattimento
 AUTO mantiene le regole del profilo; PERSONALIZZATA conserva configurazioni e soglie.
 Il riepilogo di Risolutezza legge i valori dal profilo. Regressione mobile e confronto
 tra risultati equivalenti: `tests/strategy-compact-browser.cjs`.
+
+Rifinitura strategia: l'apertura nel pannello Classe allinea localmente il titolo nello
+scorrimento interno. Costo/generazione e recupero sono separati dall'effetto, senza
+ripetere il costo nelle descrizioni. Le condizioni sono tradotte in italiano naturale:
+«meno del» conserva `<`, «più di» conserva `>`, e le negazioni includono l'uguaglianza.
+D indica il danno base derivato dalle statistiche prima dei modificatori del colpo.
+Le formule, le regole e il formato delle preferenze restano invariati.

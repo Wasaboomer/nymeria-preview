@@ -23,6 +23,14 @@ const MobileUI = (() => {
   strategy.innerHTML = '<summary>Strategia di combattimento · AUTO / PERSONALIZZATA</summary>';
   strategy.append(document.querySelector(".combat-strategy"));
   node("panel-class").append(strategy);
+  strategy.addEventListener("toggle", () => {
+    if (!strategy.open) return;
+    requestAnimationFrame(() => {
+      if (!strategy.open) return;
+      const title = strategy.querySelector(".combat-strategy .section-title"), panel = strategy.closest(".fixed-scroll-panel");
+      if (title && panel) panel.scrollTop += title.getBoundingClientRect().top - panel.getBoundingClientRect().top - 12;
+    });
+  });
   // Preserve equipment appearance/dye controls, separately from the locked Character Creator.
   const customizer = document.createElement("section");
   customizer.className = "equipment-dye";

@@ -79,16 +79,46 @@ const CombatUI = (() => {
     wind: "Favorisce agilità, velocità e schivata.",
   };
 
-  function conditionLabel(condition) {
-    if (condition.type === "all") return condition.conditions.map(conditionLabel).join(" e ");
-    if (condition.type === "not") return "Non: " + conditionLabel(condition.condition);
-    if (condition.type === "enemyHpBelow") return `HP nemico < ${condition.threshold}%`;
-    if (condition.type === "playerHpBelow") return `HP personaggio < ${condition.threshold}%`;
-    if (condition.type === "resourceAbove") return `${profile().resource.name} > ${condition.threshold}`;
-    if (condition.type === "resourceBelow") return `${profile().resource.name} < ${condition.threshold}`;
-    if (condition.type === "buffAbsent" || condition.type === "debuffAbsent")
-      return `${profile().effects[condition.effectId]?.name || "Effetto"} assente`;
-    return CombatData.conditions.find(c => c.id === condition.type)?.label || "Sempre";
+  // Translate operators, not combat rules: strict comparisons remain strict.
+  function conditionLabel(condition, negate = false) {
+    if (condition.type === "not") return conditionLabel(condition.condition, !negate);
+    if (condition.type === "all") {
+      const parts = condition.conditions.map(row => conditionLabel(row, negate));
+      return parts.map((part, index) => condition.conditions[index].type === "all" ? `(${part})` : part).join(negate ? " oppure " : " e ");
+    }
+    if (["enemyHpBelow", "playerHpBelow"].includes(condition.type)) {
+      const subject = condition.type === "enemyHpBelow" ? "il nemico" : "il personaggio";
+      return `${subject} ha ${negate ? "almeno il" : "meno del"} ${condition.threshold}% della salute`;
+    }
+    if (["resourceAbove", "resourceBelow"].includes(condition.type)) {
+      const above = condition.type === "resourceAbove";
+      const operator = above ? (negate ? "al massimo" : "più di") : (negate ? "almeno" : "meno di");
+      return `hai ${operator} ${condition.threshold} punti di ${profile().resource.name}`;
+    }
+    if (["buffAbsent", "debuffAbsent"].includes(condition.type)) {
+      const subject = condition.type === "buffAbsent" ? "il personaggio" : "il nemico";
+      const effect = profile().effects[condition.effectId]?.name || "Effetto";
+      if (condition.effectId === "avenger-shattered")
+        return `il nemico ${negate ? "ha" : "non ha"} già l’armatura ridotta`;
+      return `${subject} ${negate ? "ha" : "non ha"} già l’effetto «${effect}»`;
+    }
+    if (condition.type === "ready") return `l’abilità ${negate ? "non è" : "è"} pronta`;
+    return negate ? "la condizione non è mai soddisfatta" : "la condizione è sempre soddisfatta";
+  }
+  function technicalDescription(skill) {
+    // Remove only standalone resource/CD clauses; retain every damage/effect formula.
+    return skill.description
+      .replace(/^Consuma \d+ Risolutezza:\s*/i, "")
+      .replace(/\s*Costa \d+(?: Risolutezza)?\.?/gi, "")
+      .replace(/\s*Genera \d+ Risolutezza se infligge danno\.?/g, "")
+      .replace(/\s*Cooldown di \d+ s\.?/g, "")
+      .replace(/\.\s*;\s*/g, ". ").trim();
+  }
+  function resourceDescription(skill) {
+    if (skill.resourceGainOnHit > 0)
+      return `Genera ${skill.resourceGainOnHit} ${profile().resource.name} quando infligge danno`;
+    // Ritorsione uses resource spent in its damage formula: that is not a duplicate cost.
+    return `Costo ${skill.cost || 0} ${profile().resource.name}`;
   }
   function renderSettings() {
     document
@@ -115,7 +145,7 @@ const CombatUI = (() => {
       .map((rule, index) => {
         const condition = rule.condition,
           skill = ability(rule.abilityId);
-        return `<details class="priority-row" data-priority-id="${rule.abilityId}" ${expandedAbility === rule.abilityId ? "open" : ""}><summary class="priority-heading"><span class="priority-number">${index + 1}</span><span class="priority-copy"><strong>${skill.name}${rule.enabled === false ? ' <em>Disattivata</em>' : ""}</strong><small>${strategyDescriptions[skill.id] || skill.description}</small></span><span class="priority-chevron" aria-hidden="true">⌄</span></summary><div class="priority-controls"><p class="priority-technical">${skill.description}</p><p class="priority-cost">Costo ${skill.cost || 0} ${profile().resource.name} · Recupero ${skill.cooldown}s</p><div class="priority-order"><button data-move="-1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in alto" ${!custom || index === 0 ? "disabled" : ""}>↑</button><button data-move="1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in basso" ${!custom || index === list.length - 1 ? "disabled" : ""}>↓</button></div>${profile().strategyControls?.allowDisable ? `<label class="ability-toggle"><input type="checkbox" data-enabled="${rule.abilityId}" ${rule.enabled !== false ? "checked" : ""} ${!custom ? "disabled" : ""}> Abilità attiva</label>` : ""}<label>Condizione<select data-condition="${rule.abilityId}" ${!custom ? "disabled" : ""}>${["all", "not"].includes(condition.type) ? `<option value="${condition.type}" selected>Condizioni predefinite</option>` : ""}${CombatData.conditions.map((c) => `<option value="${c.id}" ${c.id === condition.type ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>${
+        return `<details class="priority-row" data-priority-id="${rule.abilityId}" ${expandedAbility === rule.abilityId ? "open" : ""}><summary class="priority-heading"><span class="priority-number">${index + 1}</span><span class="priority-copy"><strong>${skill.name}${rule.enabled === false ? ' <em>Disattivata</em>' : ""}</strong><small>${strategyDescriptions[skill.id] || skill.description}</small></span><span class="priority-chevron" aria-hidden="true">⌄</span></summary><div class="priority-controls"><p class="priority-technical">${technicalDescription(skill)}</p><p class="priority-cost">${resourceDescription(skill)} · Recupero ${skill.cooldown}s</p><div class="priority-order"><button data-move="-1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in alto" ${!custom || index === 0 ? "disabled" : ""}>↑</button><button data-move="1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in basso" ${!custom || index === list.length - 1 ? "disabled" : ""}>↓</button></div>${profile().strategyControls?.allowDisable ? `<label class="ability-toggle"><input type="checkbox" data-enabled="${rule.abilityId}" ${rule.enabled !== false ? "checked" : ""} ${!custom ? "disabled" : ""}> Abilità attiva</label>` : ""}<label>Condizione<select data-condition="${rule.abilityId}" ${!custom ? "disabled" : ""}>${["all", "not"].includes(condition.type) ? `<option value="${condition.type}" selected>Condizioni predefinite</option>` : ""}${CombatData.conditions.map((c) => `<option value="${c.id}" ${c.id === condition.type ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>${
           [
             "enemyHpBelow",
             "playerHpBelow",
@@ -139,7 +169,7 @@ const CombatUI = (() => {
                   )
                   .join("")}</select></label>`
               : ""
-        }${["all", "not"].includes(condition.type) ? `<p class="condition-explanation">Usa solo quando tutte le condizioni predefinite sono rispettate.</p>` : ""}<p class="condition-exact">Condizione effettiva: ${conditionLabel(condition)}</p></div></details>`;
+        }${skill.description.includes("D") && /\bD\b/.test(skill.description) ? `<p class="damage-definition">D è il danno base calcolato dalle statistiche del personaggio, prima dei modificatori del colpo.</p>` : ""}<p class="condition-exact">${condition.type === "always" ? "Usa ogni volta che l’abilità è disponibile." : `Usa quando ${conditionLabel(condition)}.`}</p></div></details>`;
       })
       .join("");
     if (engine) engine.setRules(rules());
