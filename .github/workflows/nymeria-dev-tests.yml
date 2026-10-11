@@ -175,5 +175,5 @@ jobs:
             exit 0
           fi
           short="${TESTED_SHA:0:12}"
-          body=$(printf '✅ **NYMERIA DEV verde** — commit `%s`\n\nTutti i test DEV sono superati. Possiamo procedere alla fase successiva.\n\n[Apri esecuzione GitHub Actions](https://github.com/Wasaboomer/nymeria-preview/actions/runs/%s)\n\n%s\n\n*Questo avviso non pubblica il gioco e non modifica main.*' "$short" "$RUN_ID" "$marker")
+          body=$(printf '✅ **NYMERIA DEV verde** — commit `%s`\n\n@Wasaboomer, tutti i test DEV sono superati. Possiamo procedere alla fase successiva.\n\n[Apri esecuzione GitHub Actions](https://github.com/Wasaboomer/nymeria-preview/actions/runs/%s)\n\n%s\n\n*Questo avviso non pubblica il gioco e non modifica main.*' "$short" "$RUN_ID" "$marker")
           gh api --method POST "repos/$repo/issues/1/comments" -f body="$body" --silent
