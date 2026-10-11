@@ -277,3 +277,6 @@
     url("assets/torre-silente-v1/guado-del-vespro.webp") center 50%/cover no-repeat;
   border-bottom:1px solid rgba(191,157,101,.45);
 }
+
+/* Torre Silente V1: guard against stale Safari JS injecting a second hero. */
+.locality-view #world-current[data-location-art="torre-silente"] > .ny-place-banner { display:none!important; }
