@@ -12,7 +12,8 @@
     "test": "npm run build:web && node tools/run-tests.cjs",
     "test:mobile": "node tests/mobile-foundation-engine.cjs",
     "android:debug": "npm run sync:mobile && cd android && ./gradlew assembleDebug",
-    "ios:check": "npm run sync:mobile && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build"
+    "ios:check": "npm run sync:mobile && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build",
+    "test:torre:fast": "node tools/check-torre-visual.cjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",
