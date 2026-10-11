@@ -2,6 +2,15 @@ name: NYMERIA DEV Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      test_scope:
+        description: "Full regression or fast Torre Silente visual checks (manual runs never deploy)"
+        required: true
+        type: choice
+        default: full
+        options:
+          - full
+          - torre-fast
   push:
     branches:
       - dev/kaelith-modular-character
@@ -59,8 +68,11 @@ jobs:
         run: |
           mkdir -p test-results
           failed=0
-          # Keep all domain-engine checks and use the current fixed/contextual UI contract.
-          tests=(
+          # Fast mode is manual-only. Pushes always run the complete regression gate.
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.test_scope }}" == "torre-fast" ]]; then
+            tests=(tests/torre-silente-v1-browser.cjs)
+          else
+            tests=(
             tests/*engine.cjs
             tests/fixed-screens-browser.cjs
             tests/fixed-battle-browser.cjs
@@ -75,7 +87,8 @@ jobs:
             tests/mobile-foundation-browser.cjs
             tests/mobile-validation-browser.cjs
             tests/torre-silente-v1-browser.cjs
-          )
+            )
+          fi
           printf '## NYMERIA DEV test results\n\n' >> "$GITHUB_STEP_SUMMARY"
           printf '| Test | Result |\n|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
           for test in "${tests[@]}"; do
