@@ -55,10 +55,10 @@
     <script src="expedition-ui.js?v=sprint29dc-1" defer></script>
     <script src="world-discovery.js?v=sprint1-mobile-1" defer></script>
     <script src="world-system.js?v=sprint25-1" defer></script>
-    <script src="quest-ui.js?v=ux-phase1" defer></script>
-    <script src="world-ui.js?v=ux-phase1" defer></script>
-    <script src="locality-ui.js?v=ux-phase1" defer></script>
-    <link rel="stylesheet" href="locality-ui.css?v=ux-phase1" />
+    <script src="quest-ui.js?v=locality-ux2" defer></script>
+    <script src="world-ui.js?v=locality-ux2" defer></script>
+    <script src="locality-ui.js?v=locality-ux2" defer></script>
+    <link rel="stylesheet" href="locality-ui.css?v=locality-ux2" />
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
     <script src="notification-ui.js?v=sprint282-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
@@ -68,7 +68,7 @@
     <script src="guild-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-project-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="character-identity-ui.js?v=sprint27-1" defer></script>
-    <script src="travel-ui.js?v=sprint27-1" defer></script>
+    <script src="travel-ui.js?v=locality-ux2" defer></script>
     <script src="profession-ui.js?v=sprint25-1" defer></script>
       <link rel="stylesheet" href="kaelith-dev.css?v=1" />
     <script src="kaelith-dev.js?v=1" defer></script>
@@ -512,12 +512,11 @@
       <section id="panel-world" role="tabpanel" aria-labelledby="tab-world" hidden>
         <header class="world-intro"><span class="world-eyebrow" id="world-zone-name"></span><p id="world-zone-story" hidden></p><div id="world-summary" hidden></div></header>
         <section id="world-current" tabindex="-1"></section>
-        <div class="world-shortcuts"><button id="world-active-link" data-world-view="battle" hidden>Riprendi incontro</button><button data-world-view="journal">Diario <span id="journal-badge"></span></button><button data-world-view="overview">Atlante</button></div>
+        <div class="world-shortcuts"><button id="world-active-link" data-world-view="battle" hidden>Riprendi incontro</button><span id="journal-badge" hidden></span></div>
         <p id="world-message" class="world-message" role="status" aria-live="polite"></p>
         <p id="world-storage" class="compatibility" role="status"></p>
         <section id="world-quest-reward" class="world-result" hidden></section>
         <aside id="world-tracked" class="quest-tracker" hidden></aside>
-        <nav id="locality-tabs" aria-label="Attività della località" hidden></nav>
         <section id="world-places">
           <button id="world-return-place" data-world-view="places" hidden>Esplora il luogo attuale</button>
           <div id="world-locations" class="world-locations" hidden></div>

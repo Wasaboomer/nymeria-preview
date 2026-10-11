@@ -2,14 +2,9 @@
 .locality-view #world-current { position:relative;background:#111b1c;margin:0;padding:0; }
 .locality-view #world-current .ny-place-banner { min-height:100px;height:clamp(100px,20dvh,160px);margin:0; }
 .locality-view #world-current h1 { font-size:clamp(1.2rem,5vw,1.55rem); }
-.locality-view #locality-tabs { position:sticky;top:0;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#111b1c;padding:6px 0; }
-#locality-tabs[hidden] { display:none; }
-#locality-tabs button { min-height:44px;padding:6px 4px;font-size:.8rem;line-height:1.2;white-space:normal; }
-#locality-tabs button[aria-pressed="true"] { border-color:#d4b977;background:#384134;color:#f3e8bf; }
 .locality-view .world-shortcuts { display:flex;flex-wrap:wrap; }
 .locality-view .world-shortcuts[hidden] { display:none; }
 .locality-view #world-location-detail { padding-bottom:12px; }
-.locality-view [data-locality-section] > h3 { margin:12px 0 8px;color:#dbc898;font-size:1rem; }
 .locality-view .world-enemies { display:grid;grid-template-columns:minmax(0,1fr); }
 .locality-view .world-npc,.locality-view .world-enemy { min-width:0; }
 .locality-view .npc-heading { flex-wrap:wrap; }
@@ -38,3 +33,9 @@
 .locality-view #panel-world #world-tracked .main-quest-panel { gap:6px; }
 .locality-view #panel-world #world-tracked .main-quest-destination { margin:0; }
 .locality-view #panel-world .world-place-heading h1 { overflow-wrap:anywhere; }
+
+/* Feedback overlays the shell instead of displacing live touch targets. */
+.locality-view #world-message { position:fixed; z-index:8; left:max(12px,env(safe-area-inset-left)); right:max(12px,env(safe-area-inset-right)); bottom:calc(76px + env(safe-area-inset-bottom)); pointer-events:none; }
+.locality-view #panel-world.fixed-scroll-panel #world-message.world-feedback-slot:empty { display:none; }
+.locality-view .world-shortcuts:empty { display:none; }
+.locality-view #world-location-detail > h3 { margin:14px 0 8px; font-size:1rem; color:#dbc898; }

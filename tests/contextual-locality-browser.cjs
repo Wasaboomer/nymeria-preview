@@ -13,13 +13,10 @@ for(const width of [320,375,390,430]){
  const initial=await p.evaluate(()=>JSON.stringify({...localStorage}));
  for(const height of [568,667,844,932]){
   await p.setViewportSize({width,height});
-  for(const id of ['overview','missions','encounters','gathering','services']){
-   const tab=p.locator('[data-locality-tab="'+id+'"]');if(!await tab.count())continue;
-   await tab.tap();await p.waitForTimeout(100);assert.equal(await tab.getAttribute('aria-pressed'),'true');
-   const box=await tab.boundingBox();assert.ok(box.height>=44);await swipe(p,p.locator('#panel-world'));await audit(p);
-   const panel=await p.locator('#panel-world').boundingBox(),nav=await p.locator('.bottom-nav').boundingBox();assert.ok(panel.y+panel.height<=nav.y+1,'Locality content cannot cover bottom navigation');
-   await tab.scrollIntoViewIfNeeded();assert.ok(await tab.isVisible(),'Activity categories remain reachable through the locality scroll panel');
-  }
+  assert.equal(await p.locator('[data-locality-tab]').count(),0);
+  await swipe(p,p.locator('#panel-world'));await audit(p);
+  const panel=await p.locator('#panel-world').boundingBox(),nav=await p.locator('.bottom-nav').boundingBox();assert.ok(panel.y+panel.height<=nav.y+1);
+
  }
  assert.equal(await p.evaluate(()=>JSON.stringify({...localStorage})),initial,'Section selection/scroll never writes game saves');await p.setViewportSize({width,height:844});
  await press(p,'#world-tracked [data-world-fight="twilight-stag"]');assert.equal(await p.evaluate(()=>NymeriaNavigation.route.activity),'preparation');
@@ -42,6 +39,6 @@ for(const width of [320,375,390,430]){
  const saved=await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY));assert.equal((await p.evaluate(id=>WorldSystem.finishEncounter(id),ticket)).ok,false,'An older receipt cannot be rewarded again after a new encounter');
  assert.equal((await p.evaluate(()=>QuestSystem.claim('mq03'))).ok,false);assert.equal(await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),saved);
  await p.reload();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'places');assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.location),'elar-ruins');assert.equal(await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),saved);assert.ok(await p.locator('#world-result').isHidden());await audit(p);
- assert.deepEqual(errors,[]);assert.deepEqual(await p.evaluate(()=>rejects),[]);await context.close();console.log('PASS locality '+width+': five live sections/four heights/touch/fixed shell, Cervo→claim→Elar→Back, prep/equipment, tab context, new encounter, refresh/no duplicate/no errors');
+ assert.deepEqual(errors,[]);assert.deepEqual(await p.evaluate(()=>rejects),[]);await context.close();console.log('PASS locality '+width+': flat activity list/four heights/touch/fixed shell, Cervo→claim→Elar→Back, prep/equipment, tab context, new encounter, refresh/no duplicate/no errors');
 }
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

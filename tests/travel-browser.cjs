@@ -23,6 +23,9 @@ async function tap(page,selector){for(let i=0;i<25;i++){if(await page.locator(se
   await p.evaluate(()=>{NymeriaNavigation.open('world',{view:'travel'});travelNow+=30000;});
   await p.evaluate(()=>TravelUI.recover());assert.ok(await p.evaluate(()=>TravelSystem.state.active));
   assert.equal((await p.evaluate(()=>WorldSystem.enter('broken-path'))).ok,false);
+  await p.evaluate(()=>NymeriaNavigation.open('world',{view:'places'}));
+  assert.equal(await p.locator('#world-location-detail [data-world-view="overview"]').isDisabled(),false,'Atlas consultation remains available during travel');
+  assert.equal(await p.locator('#travel-open').isDisabled(),false,'Active travel remains consultable');
   assert.equal((await p.evaluate(()=>ProfessionUI.engine.gather('vesper-iron-vein'))).ok,false);
   await p.evaluate(()=>NymeriaNavigation.destination('inventory'));assert.equal(await p.evaluate(()=>NymeriaNavigation.route.screen),'inventory');
   await p.close();p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(url+'/?test=1');
@@ -31,6 +34,9 @@ async function tap(page,selector){for(let i=0;i<25;i++){if(await page.locator(se
   assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.location),'broken-path');
   const receipt=await p.evaluate(()=>TravelSystem.state.lastArrival);await p.reload();await p.evaluate(()=>TravelUI.recover());
   assert.deepEqual(await p.evaluate(()=>TravelSystem.state.lastArrival),receipt);
+  await p.evaluate(async()=>{await WorldSystem.debug('unlock','silent-tower');await WorldSystem.enter('silent-tower');NymeriaNavigation.destination('world');});
+  assert.equal(await p.locator('#travel-open').count(),0,'Old receipt must not advertise travel from a place without routes');
+  assert.deepEqual(await p.evaluate(()=>TravelSystem.state.lastArrival),receipt,'Receipt remains persisted');
   assert.equal(await p.evaluate(()=>ProgressionStore.state.totalXP),0);assert.equal(await p.evaluate(()=>ProgressionStore.state.crowns),0);
   assert.deepEqual(errors,[]);assert.deepEqual(await p.evaluate(()=>rejects),[]);
   await context.close();console.log('PASS travel mobile '+width+'px / heights 667,780,844,932: touch, pagination, explicit route, reload/close-reopen, guarded actions, inventory, offline arrival once');

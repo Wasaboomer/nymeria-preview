@@ -13,13 +13,13 @@ for(const width of [320,375,390,430]){
  assert.equal(await p.locator('.bottom-nav button').count(),4);assert.match(await p.locator('#tab-world').innerText(),/Località/);
  assert.ok(await p.locator('#world-tracked').isVisible());assert.match(await p.locator('#world-tracked').innerText(),/Nessuno è tornato/);
  assert.equal(await p.locator('#panel-world [data-world-fight="vesper-raider"]').count(),1,'Primary encounter action is not duplicated among activities');
- for(const height of [568,667,844]){await p.setViewportSize({width,height});await audit(p);await press(p,'[data-locality-tab="services"]');assert.ok(await p.locator('#world-tracked').isVisible());await press(p,'[data-locality-tab="overview"]');}
+ for(const height of [568,667,844]){await p.setViewportSize({width,height});await audit(p);assert.ok(await p.locator('#world-tracked').isVisible());}
  await p.setViewportSize({width,height:568});
  await p.locator('#panel-world').evaluate(n=>n.scrollTop=80);await p.waitForTimeout(100);
  const localityScroll=await p.locator('#panel-world').evaluate(n=>n.scrollTop);
  await p.locator('#tab-inventory').tap();await p.locator('#tab-world').tap();await p.waitForTimeout(100);
  assert.equal(await p.locator('#panel-world').evaluate(n=>n.scrollTop),localityScroll,'Primary tabs restore locality scroll');
- await p.setViewportSize({width,height:844});await press(p,'.world-shortcuts [data-world-view="overview"]');
+ await p.setViewportSize({width,height:844});await press(p,'#world-location-detail [data-world-view="overview"]');
  assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'overview');assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.location),'broken-path','Atlas consultation never travels');
  const locked=p.locator('#world-locations [data-world-enter="lantern-wood"]');assert.ok(await locked.isDisabled());assert.match(await locked.innerText(),/Nessuno è tornato/);
  await p.locator('#navigation-back').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'places');
@@ -43,6 +43,30 @@ for(const width of [320,375,390,430]){
  assert.equal((await q.evaluate(()=>QuestSystem.claim('mq01'))).ok,false);
  assert.equal(await q.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),claimed,'Completed quest cannot pay twice');
  assert.deepEqual(journeyErrors,[]);await c.close();
+ const tower=Storage.initial();tower.frontier.location='silent-tower';
+ for(const id of ['mq01','mq02','mq03','mq04','mq05','mq06'])tower.frontier.quests[id].status='claimed';
+ tower.unlockedContent.push('world:broken-path','world:lantern-wood','world:elar-ruins','world:vesper-ford','world:silent-tower');
+ const tc=await browser.newContext({viewport:{width,height:667},hasTouch:true,isMobile:true});
+ await tc.addInitScript(({key,state})=>localStorage.setItem(key,JSON.stringify(state)),{key:Storage.KEY,state:tower});
+ const tp=await tc.newPage(),te=[];tp.on('pageerror',e=>te.push(e.message));await tp.goto(url);
+ assert.equal(await tp.locator('[data-locality-tab]').count(),0);
+ assert.match(await tp.locator('#world-tracked').innerText(),/Storia della Frontiera completata/);
+ for(const enemy of ['silent-shade','silence-keeper'])assert.ok(await tp.locator('[data-world-fight="'+enemy+'"]').isVisible());
+ assert.equal(await tp.locator('#world-location-detail .world-npc, #world-location-detail .world-point, #world-location-detail .world-professions').count(),0);
+ assert.match(await tp.locator('#world-location-detail [data-world-enter="vesper-ford"]').innerText(),/Luogo collegato/);
+ assert.equal(await tp.locator('#panel-world [data-world-view="overview"]').count(),1);
+ await tp.evaluate(()=>{Equipment.unequip('mainHand');Equipment.unequip('support');});
+ assert.match(await tp.locator('#world-location-detail .compatibility').innerText(),/Prepara il kit/);
+ const before=await tp.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY));
+ await press(tp,'[data-world-fight="silent-shade"]');
+ assert.equal(await tp.evaluate(()=>ProgressionStore.state.frontier.activeEncounter),null);
+ await tp.locator('[data-world-fight="silent-shade"]').scrollIntoViewIfNeeded();
+ const box=await tp.locator('[data-world-fight="silent-shade"]').boundingBox();
+ await tp.waitForTimeout(3700);
+ const after=await tp.locator('[data-world-fight="silent-shade"]').boundingBox();assert.equal(after.y,box.y,'Feedback expiry never moves action');
+ assert.equal(await tp.locator('#world-message').evaluate(n=>n.getBoundingClientRect().height),0,'No permanent reserved whitespace');
+ assert.equal(await tp.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),before);
+ await audit(tp);assert.deepEqual(te,[]);await tc.close();
  console.log('PASS locality foundation '+width+': four destinations/tracker/deduplication/Atlas locks/Back focus/Menu hero/three heights/persistence');
 }
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

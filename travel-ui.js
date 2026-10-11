@@ -6,8 +6,6 @@ const TravelSystem=TravelEngine.create({store:ProgressionStore,
 const TravelUI=(()=>{
   const root=document.getElementById('regional-travel'),escape=QuestUI.escape;
   let selected=null,busy=false,recovering=false,signature='',message='',planning=false,arrivalId=null,mapSignature='';
-  const link=document.createElement('button');link.id='travel-open';link.dataset.worldView='travel';
-  document.querySelector('.world-shortcuts').append(link);
   const mapContext=document.createElement('section');mapContext.id='map-current-context';mapContext.className='quest-card';
   document.getElementById('world-locations').before(mapContext);
   const duration=ms=>Number.isFinite(ms)?Math.ceil(ms/1000)+' s':'Tempo non disponibile';
@@ -16,8 +14,8 @@ const TravelUI=(()=>{
     const s=ProgressionStore.state,t=s.travel,active=t.active;
     const routes=TravelSystem.routes().filter(r=>r.originId===s.frontier.location);
     const visible=routes.length>0||!!active||!!t.lastArrival||t.recoveryRequired;
-    link.hidden=!visible;
-    link.textContent=active?'Viaggio in corso':'Viaggio regionale'+(TravelSystem.testMode?' · TEST':'');
+    const link=document.getElementById('travel-open');
+    if(link){link.hidden=!(routes.length>0||!!active||t.recoveryRequired);link.textContent=active?'Viaggio in corso':'Viaggio regionale'+(TravelSystem.testMode?' · TEST':'');}
     root.hidden=NymeriaNavigation.route.screen!=='world'||NymeriaNavigation.route.view!=='travel';
     mapContext.hidden=NymeriaNavigation.route.screen!=='world'||NymeriaNavigation.route.view!=='overview';
     const mapMarkup=`<p>Ti trovi a <strong>${place(s.frontier.location)}</strong></p><button data-world-enter="${escape(s.frontier.location)}" ${active||t.recoveryRequired||s.frontier.activeEncounter?'disabled':''}>Apri località · attività disponibili →</button>${visible?`<button id="map-travel-open" data-world-view="travel">${active?'Segui il viaggio in corso':'Viaggio regionale'+(TravelSystem.testMode?' · TEST':'')} →</button>`:''}`;
@@ -71,3 +69,6 @@ const TravelUI=(()=>{
   render();recover();
   return {render,recover};
 })();
+
+// The locality renderer can now resolve the registered travel UI/system.
+WorldUI.render();

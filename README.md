@@ -1170,3 +1170,6 @@ contratto puro delle quattro tracce: [specifica e test](docs/elemental-foundatio
 ## Località UI/UX — Fase 1
 
 Navigazione a quattro destinazioni e Atlante secondario: [specifica e responsabilità dei componenti](docs/locality-ux-foundation.md). Illustrazioni ambientali esistenti; gameplay e salvataggi invariati. Collaudo fisico iOS/Android ancora necessario.
+
+### Località — gerarchia contestuale
+La Località presenta direttamente le attività reali, le destinazioni collegate e un solo accesso all’Atlante, senza schede locali o collegamenti duplicati al Diario. La barra inferiore resta Località / Missioni / Inventario / Menu. Il viaggio regionale compare soltanto quando pertinente; una ricevuta precedente non crea una rotta. Nessuna modifica alle regole o al formato dei salvataggi. Verifica fisica Safari/iPhone ancora necessaria.
