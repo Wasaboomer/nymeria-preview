@@ -9,3 +9,5 @@
 - Never expose secrets, PATs or credentials. DEV_PREVIEW_DISPATCH_TOKEN is an Actions repository secret in the source repository.
 - A successful push is not evidence of a successful Pages deployment. Verify Actions results and dev-preview-version.txt when accessible; otherwise report the limitation.
 - Do not change gameplay, save format, progression, combat, Avatar Lab, or Mage/Elementalist unless explicitly requested.
+
+- Changes to CI workflows must be reviewed for test gating, branch restrictions and stale-commit protection.
