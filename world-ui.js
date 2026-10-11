@@ -111,7 +111,7 @@ const WorldUI = (() => {
     node("world-current").hidden = view !== "places";
     node("world-current").dataset.locationArt = location.id === "silent-tower" ? "torre-silente" : "";
     node("world-location-detail").dataset.locationArt = location.id === "silent-tower" ? "torre-silente" : "";
-    node("world-current").innerHTML = `${location.id === "silent-tower" ? '<div class="ny-place-banner" aria-hidden="true"></div>' : ""}<div class="world-place-heading">${mark(location.mark)}<h1>${escape(location.name)}</h1></div><p>${escape(location.description)}</p>`;
+    node("world-current").innerHTML = `<div class="world-place-heading">${mark(location.mark)}<h1>${escape(location.name)}</h1></div><p>${escape(location.description)}</p>`;
     if (talkedLocation !== location.id) { talked = null; talkedLocation = location.id; }
     const key = JSON.stringify([location.id, Equipment.state.resultingStats, ClassSystem.state, Object.values(Equipment.state.equipment).map(e => e.equippedItem)]);
     if (key !== estimateKey) {
