@@ -11,6 +11,7 @@ function fixture({
   clock = { value: 100000 },
   testMode = false,
   denyWrite = false,
+  classFixture = null,
 } = {}) {
   const storage = {
     getItem: (key) => memory.get(key) || null,
@@ -36,11 +37,13 @@ function fixture({
     "items",
     "equipment-data",
     "equipment",
-  ])
+  ]) {
     vm.runInContext(
       fs.readFileSync(path.join(__dirname, "..", file + ".js"), "utf8"),
       context,
     );
+    if (file === "classes-data" && classFixture) vm.runInContext(classFixture, context);
+  }
   const equipment = vm.runInContext("Equipment", context),
     classes = vm.runInContext("ClassSystem", context),
     catalogue = JSON.parse(

@@ -361,19 +361,39 @@ const ClassesData = (() => {
       specialization: selected,
     });
   }
+  const supportPolicies = ["required", "optional", "forbidden"];
   function weaponCompatible(item, requirements) {
-    return !!item && requirements.weaponTypes.includes(item.weaponType) && item.handedness === requirements.handedness;
+    return !!item && (!item.slot || item.slot === "weapon") && requirements.weaponTypes.includes(item.weaponType) && item.handedness === requirements.handedness;
   }
   function supportCompatible(item, requirements) {
-    return requirements.supportPolicy !== "forbidden" && !!item && requirements.supportTypes.includes(item.type);
+    return requirements.supportPolicy !== "forbidden" && requirements.handedness !== "2H" && !!item && (!item.slot || item.slot === "support") && requirements.supportTypes.includes(item.type);
+  }
+  // Physical wearability is distinct from the complete specialization kit.
+  // Legacy builds intentionally retain their existing inspect/equip behavior.
+  function supportReason(main, support) {
+    if (main?.handedness === "2H") return "Arma a due mani: il supporto è bloccato.";
+    if (!main) return "Equipaggia prima un’arma principale.";
+    if (Array.isArray(main.allowedSupports) && !main.allowedSupports.includes(support.type))
+      return `${main.name} non può usare ${support.name}.`;
+    return null;
+  }
+  function wearableReason(item, slotType, main, requirements, legacy = false) {
+    if (!item || item.slot !== slotType) return "Questo oggetto non appartiene allo slot.";
+    if (slotType === "weapon")
+      return legacy || weaponCompatible(item, requirements) ? null : "Arma non utilizzabile con questo kit.";
+    if (slotType === "support") {
+      if (!legacy && !supportCompatible(item, requirements)) return "Supporto non utilizzabile con questo kit.";
+      return supportReason(main, item);
+    }
+    return null;
   }
   function validKit(main, support, requirements) {
-    if (!requirements || !["required", "optional", "forbidden"].includes(requirements.supportPolicy) || !weaponCompatible(main, requirements)) return false;
+    if (!requirements || !supportPolicies.includes(requirements.supportPolicy) || !weaponCompatible(main, requirements)) return false;
     if (requirements.supportPolicy === "forbidden") return !support;
-    if (support && (main.handedness === "2H" || (Array.isArray(main.allowedSupports) && !main.allowedSupports.includes(support.type)))) return false;
+    if (support && supportReason(main, support)) return false;
     return support ? supportCompatible(support, requirements) : requirements.supportPolicy === "optional";
   }
-  return { classes, builds, effects, specializations, resolve, weaponCompatible, supportCompatible, validKit };
+  return { classes, builds, effects, specializations, resolve, weaponCompatible, supportCompatible, supportReason, wearableReason, supportPolicies, validKit };
 })();
 if (typeof module !== "undefined" && module.exports)
   module.exports = ClassesData;

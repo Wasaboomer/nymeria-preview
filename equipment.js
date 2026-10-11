@@ -128,7 +128,7 @@ const Equipment = (() => {
       version: 1,
       characterCreated: false,
       equipmentAppearance: { dye: "sea" },
-      inventory: clone(GearData.items.filter((item) => !item.expeditionOnly)),
+      inventory: clone(GearData.items.filter((item) => !item.expeditionOnly && !item.futureKitOnly)),
       equipment,
       character: { ...defaultCharacter },
     });
@@ -137,12 +137,7 @@ const Equipment = (() => {
     return GearData.slots.filter((s) => s.type === item.slot).map((s) => s.id);
   }
   function supportRule(main, support) {
-    if (main?.handedness === "2H")
-      return "Arma a due mani: il supporto è bloccato.";
-    if (!main) return "Equipaggia prima un’arma principale.";
-    if (!main.allowedSupports.includes(support.type))
-      return `${main.name} non può usare ${support.name}.`;
-    return null;
+    return ClassesData.supportReason(main, support);
   }
   function normalize(raw) {
     const fresh = initial();
@@ -297,8 +292,9 @@ const Equipment = (() => {
     if (proficiencyError) return proficiencyError;
     if (item.requiredLevel > state.character.level)
       return `Richiede livello ${item.requiredLevel}.`;
-    if (slot === "support") return supportRule(equipped("mainHand"), item);
-    return null;
+    const spec = typeof ClassSystem !== "undefined" ? ClassSystem.resolved().specialization : null;
+    return ClassesData.wearableReason(item, slotById[slot].type,
+      equipped("mainHand"), spec?.requirements, !spec || !!spec.legacyBuildId);
   }
   function equip(id, slot) {
     const error = canEquip(id, slot);

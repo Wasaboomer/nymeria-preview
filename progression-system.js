@@ -85,7 +85,7 @@ const ProgressionLifecycle = (() => {
         if (!character.profile.kitValid)
           return {
             ok: false,
-            message: `Equipaggia ${classes.selected().requirement} prima di partire.`,
+            message: `Equipaggia ${classes.kitRequirements().label} prima di partire.`,
           };
         const startedAt = now(),
           seed =

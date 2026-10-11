@@ -78,6 +78,7 @@ const ClassSystem = (() => {
       return storageError;
     },
     resolved,
+    kitRequirements: (classId, selectionId) => resolved(classId, selectionId).specialization.requirements,
     selected,
     build,
     selectClass,

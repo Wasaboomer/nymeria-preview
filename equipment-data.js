@@ -819,6 +819,41 @@ const GearData = (() => {
     });
     personalLootVariants[source] = [source, id];
   }
+  // Catalog foundation only: no playable specialization or free legacy inventory additions.
+  typeLabels.greataxe = "Ascia";
+  typeLabels.warhammer = "Martello";
+  for (const [id, name, stats] of [
+    ["greataxe", "Ascia del giuramento", { force: 15, vigor: 1 }],
+    ["warhammer", "Martello del giuramento", { force: 13, vigor: 5 }],
+  ]) item(id, name, "weapon", id, "Epico", 11, stats,
+    "Famiglia a due mani. Aspetto non ancora disponibile.",
+    { requiredLevel: 1, futureKitOnly: true, handedness: "2H", weaponType: id,
+      allowedSupports: [], appearance: { layer: "weapon", unavailable: true } });
+
+  // Ordered additions preserve the first compatible legacy counterpart exactly.
+  // The support reward becomes a 2H weapon at its own tier for forbidden-support kits.
+  for (const [sourceId, prefix, force, vigor] of [
+    ["vesper-blade", "frontier", 15, 3],
+    ["lunar-bow", "vigil", 17, 4],
+    ["ether-quiver", "stellar", 20, 5],
+  ]) {
+    const source = items.find(i => i.id === sourceId);
+    for (const family of ["greatsword", "spear", "greataxe", "warhammer"]) {
+      const id = `${prefix}-${family}`;
+      const stats = family === "greataxe" ? { force: force + 1, vigor: Math.max(0, vigor - 2) }
+        : family === "warhammer" ? { force: force - 1, vigor: vigor + 2 }
+        : family === "spear" ? { force: force - 1, vigor, agility: 2 } : { force, vigor };
+      const unavailable = ["greataxe", "warhammer"].includes(family);
+      item(id, `${typeLabels[family]} · ${prefix === "frontier" ? "Frontiera" : prefix === "vigil" ? "Veglia" : "Vespro stellato"}`,
+        "weapon", family, source.rarity, source.itemLevel, stats,
+        unavailable ? "Arma a due mani. Aspetto non ancora disponibile."
+          : family === "spear" ? "Arma a due mani. Rappresentazione condivisa con il bastone." : "Arma a due mani della Frontiera.",
+        { expeditionOnly: true, requiredLevel: source.requiredLevel, weaponType: family,
+          handedness: "2H", allowedSupports: [],
+          appearance: unavailable ? { layer: "weapon", unavailable: true } : { layer: "weapon", asset: family } });
+      personalLootVariants[sourceId].push(id);
+    }
+  }
   return {
     slots,
     rarities,

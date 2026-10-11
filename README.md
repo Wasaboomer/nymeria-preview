@@ -1094,3 +1094,5 @@ Sprint 2.8.2: [consolidamento UX e audit mobile](docs/mobile-ux-consolidation.md
 Sprint 2.8.3: [dettaglio equipaggiamento unificato](docs/equipment-sheet.md).
 
 Sprint 2.9C: [Specialization Foundation, legacy compatibility and persistence contracts](docs/specialization-foundation.md).
+
+Sprint 2.9D-A: [contratto equipaggiamento e Smart Loot 2H](docs/two-hand-kit-foundation.md). Foundation soltanto: nessuna nuova specializzazione giocabile.

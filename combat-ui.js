@@ -229,7 +229,7 @@ const CombatUI = (() => {
     if (!kitReady()) {
       text(
         "combat-status",
-        `Equipaggia ${ClassSystem.selected().requirement} per iniziare`,
+        `Equipaggia ${ClassSystem.kitRequirements().label} per iniziare`,
       );
       return false;
     }
@@ -440,7 +440,7 @@ const CombatUI = (() => {
     );
     text(
       "combat-kit-hint",
-      `Per ${ClassSystem.selected().name} serve ${ClassSystem.selected().requirement}. Arma: ${Equipment.equipped("mainHand")?.name || "mancante"}; supporto: ${Equipment.equipped("support")?.name || "mancante"}.`,
+      `Per ${ClassSystem.selected().name} serve ${ClassSystem.kitRequirements().label}. Arma: ${Equipment.equipped("mainHand")?.name || "mancante"}; supporto: ${Equipment.equipped("support")?.name || "mancante"}.`,
     );
     const fingerprint = JSON.stringify({
       selection: ClassSystem.state,

@@ -10,6 +10,9 @@ const PersonalLoot = (() => {
       classes.classes[profile?.classId] ||
       Object.values(classes.classes).find((c) => c.name === profile?.className);
     if (!cls) throw new Error("Unknown saved personal-loot class");
+    if (profile.requirements?.supportPolicy !== undefined &&
+        !classes.supportPolicies.includes(profile.requirements.supportPolicy))
+      throw new Error("Unknown personal-loot support policy");
     return {
       version: 1,
       kind: "personalLoot",
@@ -20,16 +23,15 @@ const PersonalLoot = (() => {
       weaponTypes: copy(profile.weaponTypes || cls.weaponTypes),
       supportTypes: copy(profile.supportTypes || cls.supportTypes),
       handedness: profile.handedness || cls.handedness,
+      // Additive field only for a new resolved kit; old preparation is untouched.
+      ...(profile.requirements?.supportPolicy ? { supportPolicy: profile.requirements.supportPolicy } : {}),
     };
   }
   function compatible(item, policy) {
     if (!item || !armor.compatible(item, policy)) return false;
-    if (item.slot === "weapon")
-      return (
-        policy.weaponTypes.includes(item.weaponType) &&
-        item.handedness === policy.handedness
-      );
-    if (item.slot === "support") return policy.supportTypes.includes(item.type);
+    const requirements = { ...policy, supportPolicy: policy.supportPolicy || "required" };
+    if (item.slot === "weapon") return classes.weaponCompatible(item, requirements);
+    if (item.slot === "support") return classes.supportCompatible(item, requirements);
     return true;
   }
   function counterpart(id, policy) {
@@ -60,6 +62,7 @@ const PersonalLoot = (() => {
     if (
       policy.kind !== "personalLoot" ||
       policy.version !== 1 ||
+      (policy.supportPolicy !== undefined && !classes.supportPolicies.includes(policy.supportPolicy)) ||
       !Array.isArray(policy.lootIds) ||
       !policy.lootIds.length ||
       !policy.lootIds.every((id) =>

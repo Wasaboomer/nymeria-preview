@@ -197,7 +197,7 @@ const VisualManifest = (() => {
     shoulders: "mail-a-shoulders",
   };
   function forItem(item, slot) {
-    if (!item) return [];
+    if (!item || item.appearance?.unavailable) return [];
     if (itemVisuals[item.id]) return itemVisuals[item.id];
     const layer = slotLayers[slot] || slot;
     // Material fallback is deliberately labelled prototype art, never changes stats.

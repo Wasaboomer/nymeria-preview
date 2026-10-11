@@ -15,7 +15,7 @@ function equipmentBuild(thorn = false) {
   const context = vm.createContext({
     localStorage: { getItem: () => null, setItem() {} },
   });
-  for (const file of ["items.js", "equipment-data.js", "equipment.js"])
+  for (const file of ["combat-data.js", "classes-data.js", "items.js", "equipment-data.js", "equipment.js"])
     vm.runInContext(
       fs.readFileSync(path.join(__dirname, "..", file), "utf8"),
       context,
