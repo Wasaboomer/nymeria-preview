@@ -31,6 +31,27 @@ const WorldUI = (() => {
   function mark(id) {
     return `<svg viewBox="0 0 60 60" aria-hidden="true" class="world-mark"><path d="${marks[id]}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
+  // Pure presentation contract: new locality art is opt-in and never alters world data.
+  // Preserve the approved Torre Silente markup; future locations can register art here
+  // without cloning the renderer or introducing placeholder game content.
+  const localityVisuals = Object.freeze({
+    "silent-tower": Object.freeze({
+      art: "torre-silente",
+      illustratedHeader: true,
+      destinations: Object.freeze({"vesper-ford": "guado-del-vespro"})
+    })
+  });
+  const localityVisual = id => localityVisuals[id] || null;
+  function localityHeader(location) {
+    const title = `<div class="world-place-heading">${mark(location.mark)}<h1>${escape(location.name)}</h1></div>`;
+    return localityVisual(location.id)?.illustratedHeader
+      ? `<div class="ny-place-banner">${title}</div>`
+      : title;
+  }
+  function destinationArtAttribute(locationId, destinationId) {
+    const art = localityVisual(locationId)?.destinations?.[destinationId];
+    return art ? `data-torre-v1-destination="${escape(art)}" ` : "";
+  }
   function selectView(value) {
     if (!["places", "journal", "quest", "discoveries", "overview", "battle", "travel"].includes(value)) return;
     NymeriaNavigation.open("world", { view: value });
@@ -109,9 +130,9 @@ const WorldUI = (() => {
     const savedLocation = WorldData.location(frontier.location);
     const location = savedLocation.discoveryType && !discovery(savedLocation.id) ? WorldData.location("veyra") : savedLocation;
     node("world-current").hidden = view !== "places";
-    node("world-current").dataset.locationArt = location.id === "silent-tower" ? "torre-silente" : "";
+    node("world-current").dataset.locationArt = localityVisual(location.id)?.art || "";
     node("world-location-detail").dataset.locationArt = location.id === "silent-tower" ? "torre-silente" : "";
-    node("world-current").innerHTML = `${location.id === "silent-tower" ? '<div class="ny-place-banner"><div class="world-place-heading">' + mark(location.mark) + '<h1>' + escape(location.name) + '</h1></div></div>' : '<div class="world-place-heading">' + mark(location.mark) + '<h1>' + escape(location.name) + '</h1></div>'}<p>${escape(location.description)}</p>`;
+    node("world-current").innerHTML = `${localityHeader(location)}<p>${escape(location.description)}</p>`;
     if (talkedLocation !== location.id) { talked = null; talkedLocation = location.id; }
     const key = JSON.stringify([location.id, Equipment.state.resultingStats, ClassSystem.state, Object.values(Equipment.state.equipment).map(e => e.equippedItem)]);
     if (key !== estimateKey) {
@@ -127,7 +148,7 @@ const WorldUI = (() => {
     }).join("")}</div>${location.enemies.length && !ClassSystem.kitRequirement(Equipment.equipped("mainHand"), Equipment.equipped("support")) ? '<p class="compatibility">Prepara il kit della classe prima degli incontri.</p><button data-world-equipment>Prepara equipaggiamento</button>' : ""}`;
     node("world-location-detail").innerHTML += `<section class="world-destinations"><h3>Dove puoi andare</h3>${(WorldData.connections[location.id] || []).concat(location.id === "veyra" && discovery("vesper-outpost") ? ["vesper-outpost"] : []).map(id => {
       const destination = WorldData.location(id), unlocked = destination.discoveryType ? discovery(id) : state.unlockedContent.includes(`world:${id}`);
-      return `<button ${location.id === "silent-tower" && id === "vesper-ford" ? 'data-torre-v1-destination="guado-del-vespro" ' : ""}data-world-enter="${id}" ${!unlocked || frontier.activeEncounter || state.travel.active || state.travel.recoveryRequired || busy ? "disabled" : ""}><span><strong>${escape(destination.name)}</strong>${!unlocked ? `<small>Bloccato · ${escape(destination.unlockHint)}</small>` : `<small>Luogo collegato · ${escape(WorldData.zone.name)}</small>`}</span><b aria-hidden="true">${unlocked ? "→" : "🔒"}</b></button>`;
+      return `<button ${destinationArtAttribute(location.id, id)}data-world-enter="${id}" ${!unlocked || frontier.activeEncounter || state.travel.active || state.travel.recoveryRequired || busy ? "disabled" : ""}><span><strong>${escape(destination.name)}</strong>${!unlocked ? `<small>Bloccato · ${escape(destination.unlockHint)}</small>` : `<small>Luogo collegato · ${escape(WorldData.zone.name)}</small>`}</span><b aria-hidden="true">${unlocked ? "→" : "🔒"}</b></button>`;
     }).join("")}<button data-world-view="overview">Apri Atlante →</button>${typeof TravelSystem!=="undefined" && (TravelSystem.routes().some(r=>r.originId===location.id)||state.travel.active||state.travel.recoveryRequired) ? `<button id="travel-open" data-world-view="travel">${state.travel.active ? "Viaggio in corso" : "Viaggio regionale"+(TravelSystem.testMode?" · TEST":"")}</button>` : ""}</section>`;
     // Objective markers are semantic UI hints, never quest-engine branches.
     for (const tracked of QuestUI.relevantQuests(state)) {
