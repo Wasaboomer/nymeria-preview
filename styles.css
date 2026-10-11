@@ -2189,11 +2189,22 @@ body { min-height: 100dvh; }
 .priority-row .ability-toggle { min-height: 44px; font-size: 12px; cursor: pointer; }
 .priority-row input[data-enabled] { width: 20px; height: 20px; padding: 0; flex: 0 0 20px; }
 
-/* Inventory availability is text-labelled; blocked cards remain readable and tappable. */
-.inventory-item .item-availability { display: grid; gap: .2rem; font-size: .75rem; line-height: 1.4; overflow-wrap: anywhere; }
-.item-availability.available { color: #bce5ce; }
-.inventory-item.item-usable { border-left: 3px solid #7eb99a; }
-.inventory-item.item-blocked { background: #191b23; border-style: dashed; }
-.item-availability.unavailable { color: #d7c4b2; }
+/* Explicit availability badges, separate from rarity and readable without colour. */
+.inventory-item .item-availability { display:grid; gap:4px; min-width:0; width:100%; line-height:1.35; }
+.availability-badge { display:flex; align-items:flex-start; gap:5px; padding:5px 6px; border-radius:5px; font-size:12px; font-weight:700; line-height:1.35; }
+.availability-badge > span { min-width:0; overflow-wrap:anywhere; }
+.availability-icon { width:18px; height:18px; flex:0 0 18px; }
+.availability-badge.available { background:#213d32; color:#d0f1db; }
+.availability-badge.unavailable { background:#322c2a; color:#eedbd0; }
+.availability-badge.equipped { background:#363224; color:#f3e4ad; }
+.inventory-item.item-usable { background:#192d29; }
+.inventory-item.item-blocked { background:#1b2025; }
+.inventory-item .availability-reason { color:#ddcfc5; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+@media (max-width:430px) {
+  #panel-inventory #inventory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .inventory-item .availability-badge { display:block; padding:5px; }
+  .inventory-item .availability-icon { display:inline-block; vertical-align:middle; margin-right:4px; }
+  .inventory-item .availability-badge > span { vertical-align:middle; }
+}
 .hypothetical-comparison { margin: .4rem 0; }
 .hypothetical-comparison > summary { min-height: 44px; padding: .65rem .4rem; cursor: pointer; }

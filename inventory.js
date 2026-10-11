@@ -39,10 +39,17 @@ const InventoryUI = (() => {
   function availabilityMarkup(item, slot) {
     const validation = itemValidation(item, slot);
     const worn = equippedSlot(item.id) === (slot || slotFilter || equippedSlot(item.id) || Equipment.compatibleSlots(item)[0]);
-    const labels = validation.ok ? [worn ? "● Già equipaggiato" : "✓ Equipaggiabile"]
-      : validation.reasons.map(reason => reason.code === "level" ? `🔒 ${reason.message}` : `⊘ Kit incompatibile · ${reason.message}`);
-    if (!validation.ok && worn) labels.unshift("● Già equipaggiato");
-    return `<span class="item-availability ${validation.ok ? "available" : "unavailable"}">${labels.map(label => `<span>${escape(armorText(label))}</span>`).join("")}</span>`;
+    // Presentation only: all eligibility decisions come from equipValidation.
+    const icon = kind => `<svg class="availability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${kind === "available" ? '<circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/>' : kind === "equipped" ? '<path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7z"/><path d="m8 12 3 3 5-6"/>' : '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/>'}</svg>`;
+    const badge = (kind, text) => `<span class="availability-badge ${kind}">${icon(kind)}<span>${text}</span></span>`;
+    const reasons = validation.reasons.map(reason => {
+      const message = reason.message === "Arma non utilizzabile con questo kit."
+        ? `Arma incompatibile con ${ClassSystem.build().name}`
+        : reason.message === "Supporto non utilizzabile con questo kit."
+          ? `Supporto incompatibile con ${ClassSystem.build().name}` : armorText(reason.message);
+      return `<span class="availability-reason">${escape(message)}</span>`;
+    }).join("");
+    return `<span class="item-availability ${validation.ok ? "available" : "unavailable"}">${worn ? badge("equipped", "EQUIPAGGIATO") : validation.ok ? badge("available", "EQUIPAGGIABILE") : ""}${!validation.ok ? badge("unavailable", "NON EQUIPAGGIABILE") + reasons : ""}</span>`;
   }
   function visibleItems() {
     return Equipment.state.inventory

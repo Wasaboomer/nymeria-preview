@@ -10,9 +10,9 @@ try {for(const width of [320,375,390,430]){
  InventoryUI.openSlot('mainHand');});
  for(const id of ['greatsword','spear','greataxe','warhammer']) {
   assert.equal(await page.locator(`[data-item-id="${id}"]`).count(),1);
-  assert.match(await page.locator(`[data-item-id="${id}"] .item-availability`).innerText(),/Equipaggiabile/);
+  assert.match(await page.locator(`[data-item-id="${id}"] .item-availability`).innerText(),/EQUIPAGGIABILE/);
  }
- assert.match(await page.locator('[data-item-id="sword"] .item-availability').innerText(),/Kit incompatibile/);
+ assert.match(await page.locator('[data-item-id="sword"] .item-availability').innerText(),/NON EQUIPAGGIABILE[\s\S]*Arma incompatibile con Vendicatore/);
  assert.equal(await page.locator('[data-item-id="shield"]').count(),0);
  assert(await page.evaluate(()=>{const cards=[...document.querySelectorAll('#inventory-grid .inventory-item')];const blocked=cards.findIndex(c=>c.classList.contains('item-blocked'));return blocked<0||cards.slice(blocked).every(c=>c.classList.contains('item-blocked'));}));
  assert.equal(await page.evaluate(()=>ProgressionSystem.snapshot().profile.kitValid),false);
@@ -39,6 +39,23 @@ try {for(const width of [320,375,390,430]){
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.locator('#close-detail').tap();
  }
+ // The same renderer must label the owned item and legacy weapon/support lists.
+ for(const [cls,build,main,support] of [['warden','bulwark','sword','shield'],['hunter','predator','bow','quiver']]) {
+  await page.evaluate(([cls,build,main,support])=>{ClassSystem.selectClass(cls);ClassSystem.selectBuild(build);Equipment.equip(main,'mainHand');Equipment.equip(support,'support');InventoryUI.openSlot('mainHand');},[cls,build,main,support]);
+  assert.match(await page.locator(`[data-item-id="${main}"] .item-availability`).innerText(),/^EQUIPAGGIATO$/);
+  await page.evaluate(()=>InventoryUI.openSlot('support'));
+  assert.match(await page.locator(`[data-item-id="${support}"] .item-availability`).innerText(),/^EQUIPAGGIATO$/);
+ }
+ await page.evaluate(()=>{ClassSystem.selectClass('warden');ClassSystem.selectBuild('bulwark');Equipment.equip('sword','mainHand');ClassSystem.selectSpecialization('avenger');const item=Equipment.state.inventory.find(i=>i.id==='sword');item.requiredLevel=99;item.name='Lama cerimoniale della frontiera dalle iscrizioni antichissime';InventoryUI.openSlot('mainHand');});
+ const blocked=page.locator('[data-item-id="sword"]');
+ assert.match(await blocked.locator('.item-availability').innerText(),/NON EQUIPAGGIABILE[\s\S]*Richiede livello 99[\s\S]*Arma incompatibile con Vendicatore/);
+ assert.equal(await blocked.locator('.availability-icon').count(),2); // Worn but invalid: both statuses remain explicit.
+ assert(await page.evaluate(()=>[...document.querySelectorAll('#inventory-grid .inventory-item')].every(card=>card.scrollWidth<=card.clientWidth+1)));
+ // WCAG contrast for actual badge text colours, not assumed theme tokens.
+ assert(await page.evaluate(()=>{
+  const luminance=color=>{const values=color.match(/\d+/g).slice(0,3).map(v=>{const n=Number(v)/255;return n<=.04045?n/12.92:((n+.055)/1.055)**2.4;});return values[0]*.2126+values[1]*.7152+values[2]*.0722;};
+  return [...document.querySelectorAll('.availability-badge')].every(node=>{const s=getComputedStyle(node),a=luminance(s.color),b=luminance(s.backgroundColor);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5;});
+ }));
  assert.deepEqual(errors,[]);
  await context.close();console.log('PASS inventory compatibility touch',width);
 }}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
