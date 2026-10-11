@@ -11,3 +11,11 @@
 - Do not change gameplay, save format, progression, combat, Avatar Lab, or Mage/Elementalist unless explicitly requested.
 
 - Changes to CI workflows must be reviewed for test gating, branch restrictions and stale-commit protection.
+
+
+## Frozen visual contract — Torre Silente
+- The user approved and froze the exact latest Torre Silente mobile mockup on 2026-10-11.
+- Before changing locality presentation, read docs/torre-silente-visual-freeze-v1.md.
+- Do not redesign, reinterpret, regenerate, or replace the approved visual without explicit user permission.
+- Separate images, text, UI panels and actions into real responsive elements; do not use the whole screenshot as a clickable backdrop.
+- Report after each implementation: work completed, verification performed, next step and a copyable prompt.
