@@ -12,3 +12,5 @@ Upload the following binary images without renaming:
 Do not modify the frozen design. See `docs/torre-silente-visual-freeze-v1.md`.
 
 Artwork uploaded; DEV 89 passed at bfcdd2c38d66ee85257546d9a3e998263d535064. The user explicitly authorized publishing the DEV preview only on 2026-10-11. Stable main must remain untouched.
+
+DEV preview publication authorized after DEV Tests #95 succeeded at c07deca7f1bd30811d97def34321203fbeee8b5f. This documentation-only commit triggers the existing test-gated DEV preview workflow; do not update stable main.
