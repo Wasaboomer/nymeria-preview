@@ -5,7 +5,7 @@ const Store = require('../progression-store.js');
 const Data = require('../progression-data.js');
 
 (async () => {
-  const browser = await chromium.launch({executablePath: process.env.NYMERIA_CHROMIUM || '/usr/bin/chromium', args:['--no-sandbox']});
+  const browser = await chromium.launch({executablePath: process.env.NYMERIA_CHROMIUM || chromium.executablePath(), args:['--no-sandbox']});
   try {
     fs.mkdirSync('test-results/torre-silente-v1', {recursive:true});
     for (const width of [320,375,390,430]) {
