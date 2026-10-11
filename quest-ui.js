@@ -141,8 +141,10 @@ const QuestUI = (() => {
     if (objective.type === "completeExpedition") return "activities";
     return WorldData.locations.find(location => location.id === objective.target || location.enemies.includes(objective.target) || location.points.some(p => p.id === objective.target || p.collect === objective.target) || location.enemies.some(id => WorldData.enemy(id).drops.includes(objective.target)))?.id;
   }
-  function tracker(state) {
-    const main = QuestData.quests.find(q => q.type === "main" && ["completed", "active", "available"].includes(state.frontier.quests[q.id]?.status));
+  function tracker(state, options) {
+    const locality = !!options?.locality;
+    const tracked = QuestData.get(state.frontier.trackedQuest);
+    const main = locality && tracked && ["active", "completed"].includes(state.frontier.quests[tracked.id]?.status) ? tracked : QuestData.quests.find(q => q.type === "main" && ["completed", "active", "available"].includes(state.frontier.quests[q.id]?.status));
     const side = QuestData.quests.filter(q => q.type === "side" && ["active", "completed"].includes(state.frontier.quests[q.id]?.status));
     const mainPanel = main ? (() => {
       const entry = state.frontier.quests[main.id];
@@ -150,7 +152,7 @@ const QuestUI = (() => {
       const locationName=step.destinationName||'Non indicata nei dati della missione';
       const count = objective ? `<div class="main-quest-progress"><span>${escape(objective.label)}</span><b>${entry.progress[index]}/${objective.count}</b></div><progress max="${objective.count}" value="${entry.progress[index]}" aria-label="Progresso obiettivo"></progress>` : "";
       const next = entry.status === "available" ? actions(main, entry, state) : entry.status === "completed" ? actions(main, entry, state) : guidance(main, state, true);
-      return `<section class="main-quest-panel quest-${entry.status}" aria-label="Missione principale"><span class="world-eyebrow">STORIA PRINCIPALE · ${statusNames[entry.status]}</span><button class="tracker-title" data-quest-open="${main.id}">${escape(main.title)} →</button>${count}<p class="main-quest-destination">${entry.status === "completed" ? "Riscossione: Diario" : "Destinazione: <strong>"+escape(locationName)+"</strong>"}</p>${next}</section>`;
+      return `<section class="main-quest-panel quest-${entry.status}" aria-label="${locality ? "Missione in evidenza" : "Missione principale"}"><span class="world-eyebrow">${locality ? "MISSIONE IN EVIDENZA" : "STORIA PRINCIPALE"} · ${statusNames[entry.status]}</span><button class="tracker-title" data-quest-open="${main.id}">${escape(main.title)} →</button>${count}<p class="main-quest-destination">${entry.status === "completed" ? "Riscossione: Diario" : "Destinazione: <strong>"+escape(locationName)+"</strong>"}</p>${next}</section>`;
     })() : '<section class="main-quest-panel"><span class="world-eyebrow">STORIA PRINCIPALE</span><strong>Storia della Frontiera completata</strong><p>Esplora il mondo o consulta il Diario.</p></section>';
     const sidePanel = side.length ? `<details class="side-quest-panel" ${side.some(q => state.frontier.trackedQuest === q.id) ? "open" : ""}><summary>Missioni secondarie · ${side.length} (facoltative)</summary>${side.map(q => {
       const entry = state.frontier.quests[q.id];
@@ -159,7 +161,7 @@ const QuestUI = (() => {
       return `<div class="side-quest-row"><button data-quest-open="${q.id}">${escape(q.title)} →</button><small>${category(q).id === "profession" ? "Professioni · " : ""}${escape(progress)}</small>${state.frontier.trackedQuest === q.id ? guidance(q, state) : ""}${entry.status === "completed" ? actions(q, entry, state) : ""}</div>`;
     }).join("")}</details>` : '<p class="side-quest-empty">Missioni secondarie: consulta il Diario per le attività facoltative.</p>';
     const recentReward = state.frontier.lastQuestClaim?.id;
-    return (recentReward ? rewardComparison(recentReward, state) : "") + mainPanel + sidePanel;
+    return locality ? mainPanel : (recentReward ? rewardComparison(recentReward, state) : "") + mainPanel + sidePanel;
   }
   return { escape, rewards, journal, offers, tracker, card, objectiveLocation, guidance, rewardComparison, relevantQuests, category, nextStep };
 })();

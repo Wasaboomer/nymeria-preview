@@ -27,7 +27,7 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
       await page.evaluate(() => Character.ready());
       assert.deepEqual(await page.evaluate(()=>Character.diagnostics()),[]);
       const startupMs = performance.now() - began;
-      await press(page,'#tab-character');
+      await page.locator('#tab-menu').tap();await press(page,'#tab-character');
       await press(page,'#save');
       await page.waitForFunction(() => Equipment.state.characterCreated);
       const routeMs = {};
@@ -38,7 +38,7 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
         routeMs[route] = performance.now()-start;
         await audit(page);
       }
-      await press(page,'#tab-character');
+      await page.locator('#tab-menu').tap();await press(page,'#tab-character');
       const beforeAvatar = await page.locator('#character').innerHTML();
       const candidate = await page.evaluate(() => {
         for (const slot of ['torso','legs','boots','mainHand']) {
@@ -69,7 +69,7 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
       }
       // Context offline cannot load a fresh HTTP app; this tests already loaded UI/saves only.
       await context.setOffline(true);
-      await press(page,'#tab-character');
+      await page.locator('#tab-menu').tap();await press(page,'#tab-character');
       assert.equal(await page.evaluate(() => localStorage.getItem(Equipment.SAVE_KEY)),saved);
       await context.setOffline(false);
       // New page in the same browser storage context models reopening, not OS process death.
@@ -98,7 +98,7 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
         else Storage.prototype[mode==='read-denied'?'getItem':'setItem']=()=>{throw new DOMException('Validation fault','QuotaExceededError');};
       },fault);
       await page.goto(url); await page.evaluate(()=>Character.ready());
-      await press(page,'#tab-character'); await press(page,'#save');
+      await page.locator('#tab-menu').tap();await press(page,'#tab-character'); await press(page,'#save');
       if (fault==='write-denied') {
         assert.equal(await page.evaluate(()=>Equipment.state.characterCreated),false);
         assert.match(await page.locator('#notice').innerText(),/Salvataggio non disponibile/);

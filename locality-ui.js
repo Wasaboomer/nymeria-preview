@@ -28,10 +28,10 @@
     sections.missions.innerHTML='<button data-world-view="journal">Apri tutte le missioni →</button>';
     // Canonical tracker stays outside the rebuilt detail tree; it must survive future renders.
     var tracker=document.getElementById('world-tracked');
-    tracker.dataset.localitySection='missions';
-    tracker.hidden=!visible || selected[place]!=='missions';
+    delete tracker.dataset.localitySection;
+    tracker.hidden=!visible;
     var current=document.getElementById('world-current');
-    var description=current.querySelector('p');if(description)sections.overview.prepend(description);
+    var description=current.querySelector('p');if(description)description.classList.add('locality-description');
     var available=Object.keys(names).filter(function(id){return id==='overview'||id==='missions'||sections[id].querySelector('button,article');});
     if(!available.includes(selected[place]))selected[place]='overview';
     var main=QuestData.quests.find(function(q){return q.type==='main' && ProgressionStore.state.frontier.quests[q.id]?.status==='active';});
@@ -40,8 +40,18 @@
     nav.innerHTML=available.map(function(id){return '<button data-locality-tab="'+id+'" aria-controls="locality-'+id+'" aria-pressed="'+(selected[place]===id)+'">'+names[id]+(id==='encounters' && encounterNeeded?' · Missione':'')+'</button>';}).join('');
     detail.replaceChildren();
     available.forEach(function(id){var section=sections[id];var heading=document.createElement('h3');heading.textContent=names[id];if(id==='overview')heading.hidden=true;section.prepend(heading);section.hidden=!visible||selected[place]!==id;detail.append(section);});
-    document.getElementById('world-tracked').hidden=!visible||selected[place]!=='missions';
-    document.querySelector('.world-shortcuts').hidden=!visible||selected[place]!=='overview';
+    document.getElementById('world-tracked').hidden=!visible;
+    document.querySelector('.world-shortcuts').hidden=!visible;
+    // One primary action: retain the activity card but remove its duplicate control.
+    var primary=tracker.querySelector('.quest-primary');
+    if(primary){['worldFight','worldTalk','worldExplore','questAccept','questClaim','questGiver','questDestination'].forEach(function(key){
+      if(!primary.dataset[key])return;
+      detail.querySelectorAll('button').forEach(function(button){
+        if(button.dataset[key === 'questDestination' ? 'worldEnter' : key]===primary.dataset[key]){
+          var note=document.createElement('small');note.className='locality-primary-note';note.textContent='Azione disponibile nella missione in evidenza';button.replaceWith(note);
+        }
+      });
+    });}
     if(lastLocation!==place){lastLocation=place;document.getElementById('panel-world').scrollTop=0;}
   }
   document.addEventListener('nymeria:world-render',render);

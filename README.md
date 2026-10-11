@@ -1166,3 +1166,7 @@ Le formule, le regole e il formato delle preferenze restano invariati.
 Mago ed Elementalista sono registrati ma **non giocabili**. Nessuna nuova abilità,
 ricompensa o modifica al bilanciamento. Migrazione v2 additiva delle selezioni e
 contratto puro delle quattro tracce: [specifica e test](docs/elemental-foundation.md).
+
+## Località UI/UX — Fase 1
+
+Navigazione a quattro destinazioni e Atlante secondario: [specifica e responsabilità dei componenti](docs/locality-ux-foundation.md). Illustrazioni ambientali esistenti; gameplay e salvataggi invariati. Collaudo fisico iOS/Android ancora necessario.

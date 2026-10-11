@@ -10,7 +10,7 @@
     <title>Nymeria Frontiera del Vespro &amp; Quest System 0.1</title>
     <!-- Version changed UI assets together; retain frozen game asset versions. -->
     <link rel="stylesheet" href="styles.css?v=sprint29dc-1" />
-    <script src="navigation.js?v=sprint282-1" defer></script>
+    <script src="navigation.js?v=ux-phase1" defer></script>
     <script src="guild-data.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-system.js?v=sprint1-mobile-1" defer></script>
     <script src="guild-project-data.js?v=sprint1-mobile-1" defer></script>
@@ -55,10 +55,10 @@
     <script src="expedition-ui.js?v=sprint29dc-1" defer></script>
     <script src="world-discovery.js?v=sprint1-mobile-1" defer></script>
     <script src="world-system.js?v=sprint25-1" defer></script>
-    <script src="quest-ui.js?v=sprint282-1" defer></script>
-    <script src="world-ui.js?v=sprint283-1" defer></script>
-    <script src="locality-ui.js?v=sprint282-1" defer></script>
-    <link rel="stylesheet" href="locality-ui.css?v=sprint282-1" />
+    <script src="quest-ui.js?v=ux-phase1" defer></script>
+    <script src="world-ui.js?v=ux-phase1" defer></script>
+    <script src="locality-ui.js?v=ux-phase1" defer></script>
+    <link rel="stylesheet" href="locality-ui.css?v=ux-phase1" />
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
     <script src="notification-ui.js?v=sprint282-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
@@ -73,7 +73,7 @@
       <link rel="stylesheet" href="kaelith-dev.css?v=1" />
     <script src="kaelith-dev.js?v=1" defer></script>
     <script src="modular-proof.js?v=1" defer></script>
-    <link rel="stylesheet" href="fixed-screens.css?v=sprint284-1" />
+    <link rel="stylesheet" href="fixed-screens.css?v=ux-phase1" />
     <script src="fixed-screens.js?v=sprint283-1" defer></script>
     <link rel="stylesheet" href="fantasy-theme.css?v=sprint2-1" />
     <script src="fantasy-ui.js?v=sprint2-1" defer></script>
@@ -89,14 +89,14 @@
         <span id="topbar-context">Frontiera del Vespro</span><button id="current-quest-link" hidden>Missione</button>
       </header>
       <nav class="screen-tabs bottom-nav" role="tablist" aria-label="Navigazione principale">
-        <button id="tab-world" role="tab" aria-selected="true" aria-controls="panel-world" data-screen="world"><span aria-hidden="true">◇</span>Mappa</button>
+        <button id="tab-world" role="tab" aria-selected="true" aria-controls="panel-world" data-screen="world"><span aria-hidden="true">◇</span>Località</button>
         <button id="tab-missions" role="tab" aria-selected="false" aria-controls="panel-world" data-screen="missions"><span aria-hidden="true">◆</span>Missioni<span id="badge-world" class="nav-badge" hidden></span></button>
-        <button id="tab-character" role="tab" aria-selected="false" aria-controls="panel-character" data-screen="character"><span aria-hidden="true">♙</span>Eroe</button>
         <button id="tab-inventory" role="tab" aria-selected="false" aria-controls="panel-inventory" data-screen="inventory"><span aria-hidden="true">▣</span>Inventario</button>
         <button id="tab-menu" role="tab" aria-selected="false" aria-controls="panel-menu" data-screen="menu"><span aria-hidden="true">≡</span>Menu</button>
       </nav>
       <div id="context-bar" class="context-bar" hidden><button id="navigation-locality" hidden>Località attuale →</button><button id="navigation-back">← Indietro</button><strong id="context-title"></strong></div>
       <section id="panel-menu" hidden aria-label="Menu"><h1>Le vie del Vespro</h1><p class="hint">Attività e conoscenze oltre il sentiero.</p>
+        <section class="menu-group"><h2>Personaggio</h2><div class="hub-links"><button id="tab-character" data-nav="character"><span aria-hidden="true">♙</span><span><strong>Eroe</strong><small>Statistiche e dati del personaggio.</small></span></button><button data-nav="class"><span><strong>Classe / Strategia</strong><small>Profilo e priorità delle abilità.</small></span></button></div></section>
         <section class="menu-group"><h2>Attività</h2><div class="hub-links">
           <button data-nav="professions"><span aria-hidden="true">⚒</span><span><strong>Professioni e creazione</strong><small>Raccolta, forgia e cartografia nei luoghi della Frontiera.</small></span></button>
           <button id="tab-expeditions" data-nav="expeditions"><span aria-hidden="true">⌁</span><span><strong>Spedizioni</strong><small>Prepara il viaggio e riscuoti i risultati.</small></span><span id="badge-activities" class="nav-badge" hidden></span></button>
@@ -512,12 +512,12 @@
       <section id="panel-world" role="tabpanel" aria-labelledby="tab-world" hidden>
         <header class="world-intro"><span class="world-eyebrow" id="world-zone-name"></span><p id="world-zone-story" hidden></p><div id="world-summary" hidden></div></header>
         <section id="world-current" tabindex="-1"></section>
-        <nav id="locality-tabs" aria-label="Attività della località" hidden></nav>
-        <div class="world-shortcuts"><button id="world-active-link" data-world-view="battle" hidden>Riprendi incontro</button><button data-world-view="journal">Diario <span id="journal-badge"></span></button><button data-world-view="overview">Mappa dei luoghi</button></div>
+        <div class="world-shortcuts"><button id="world-active-link" data-world-view="battle" hidden>Riprendi incontro</button><button data-world-view="journal">Diario <span id="journal-badge"></span></button><button data-world-view="overview">Atlante</button></div>
         <p id="world-message" class="world-message" role="status" aria-live="polite"></p>
         <p id="world-storage" class="compatibility" role="status"></p>
         <section id="world-quest-reward" class="world-result" hidden></section>
         <aside id="world-tracked" class="quest-tracker" hidden></aside>
+        <nav id="locality-tabs" aria-label="Attività della località" hidden></nav>
         <section id="world-places">
           <button id="world-return-place" data-world-view="places" hidden>Esplora il luogo attuale</button>
           <div id="world-locations" class="world-locations" hidden></div>

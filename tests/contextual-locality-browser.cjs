@@ -18,7 +18,7 @@ for(const width of [320,375,390,430]){
    await tab.tap();await p.waitForTimeout(100);assert.equal(await tab.getAttribute('aria-pressed'),'true');
    const box=await tab.boundingBox();assert.ok(box.height>=44);await swipe(p,p.locator('#panel-world'));await audit(p);
    const panel=await p.locator('#panel-world').boundingBox(),nav=await p.locator('.bottom-nav').boundingBox();assert.ok(panel.y+panel.height<=nav.y+1,'Locality content cannot cover bottom navigation');
-   const tabs=await p.locator('#locality-tabs').boundingBox();assert.ok(tabs.y>=panel.y&&tabs.y+tabs.height<=panel.y+panel.height,'Section controls remain in view after swiping');
+   await tab.scrollIntoViewIfNeeded();assert.ok(await tab.isVisible(),'Activity categories remain reachable through the locality scroll panel');
   }
  }
  assert.equal(await p.evaluate(()=>JSON.stringify({...localStorage})),initial,'Section selection/scroll never writes game saves');await p.setViewportSize({width,height:844});
@@ -33,11 +33,11 @@ for(const width of [320,375,390,430]){
  assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.location),'elar-ruins');assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.quests.mq03.status),'claimed');
  for(let n=0;n<10&&await p.evaluate(()=>NymeriaNavigation.depth);n++){await p.locator('#navigation-back').tap();assert.notEqual(await p.evaluate(()=>NymeriaNavigation.route.view),'battle');assert.notEqual(await p.evaluate(()=>NymeriaNavigation.route.activity),'preparation');assert.ok(await p.locator('#world-result').isHidden());}
  // Tabs and consultations preserve the durable locality and offer a direct return.
- for(const tab of ['missions','inventory','character','menu']){
+ for(const tab of ['missions','inventory','menu']){
   await p.locator('#tab-'+tab).tap();await press(p,'#navigation-locality');assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'places');assert.equal(await p.evaluate(()=>ProgressionStore.state.frontier.location),'elar-ruins');
  }
- await press(p,'#world-location-detail [data-world-talk="ilyen"]');await press(p,'#world-location-detail [data-quest-accept="mq04"]');
- await press(p,'#world-location-detail [data-world-fight="elar-sentinel"]');assert.ok(await p.locator('#world-battle').isVisible());
+ await press(p,'#world-location-detail [data-world-talk="ilyen"]');await press(p,'#panel-world [data-quest-accept="mq04"]');
+ await press(p,'#panel-world [data-world-fight="elar-sentinel"]');assert.ok(await p.locator('#world-battle').isVisible());
  await p.evaluate(async()=>{WorldUI.engine.advance(180);await WorldUI.settle();});await dismiss(p);await press(p,'[data-world-continue]');assert.equal(await p.evaluate(()=>NymeriaNavigation.route.view),'places');assert.ok(await p.locator('#world-result').isHidden());
  const saved=await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY));assert.equal((await p.evaluate(id=>WorldSystem.finishEncounter(id),ticket)).ok,false,'An older receipt cannot be rewarded again after a new encounter');
  assert.equal((await p.evaluate(()=>QuestSystem.claim('mq03'))).ok,false);assert.equal(await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),saved);

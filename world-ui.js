@@ -89,7 +89,7 @@ const WorldUI = (() => {
     node("world-storage").textContent = [ProgressionStore.error, typeof WorldDiscovery !== "undefined" && WorldDiscovery?.storageIssue ? "Salvataggio discovery non disponibile. Il progetto resta conservato; riprova riaprendo la pagina." : ""].filter(Boolean).join(" ");
     for (const b of document.querySelectorAll("[data-world-view]")) b.setAttribute("aria-pressed", String(b.dataset.worldView === view));
     for (const [id, value] of [["world-places", "places"], ["world-journal", "journal"], ["world-discoveries", "discoveries"]]) node(id).hidden = value === "places" ? !["places", "overview", "travel"].includes(view) : value === "journal" ? !["journal", "quest"].includes(view) : view !== value;
-    node("world-tracked").innerHTML = QuestUI.tracker(state);
+    node("world-tracked").innerHTML = QuestUI.tracker(state, {locality:true});
     node("world-tracked").hidden = view !== "places";
     node("world-locations").hidden = view !== "overview";
     node("world-return-place").hidden = true;

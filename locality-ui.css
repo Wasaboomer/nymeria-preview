@@ -1,8 +1,8 @@
 /* Locality content scrolls inside the fixed shell; location and section controls stay visible. */
-.locality-view #world-current { position:sticky;top:0;z-index:3;background:#111b1c;margin:0;padding:0; }
-.locality-view #world-current .ny-place-banner { min-height:64px;height:72px;margin:0; }
+.locality-view #world-current { position:relative;background:#111b1c;margin:0;padding:0; }
+.locality-view #world-current .ny-place-banner { min-height:100px;height:clamp(100px,20dvh,160px);margin:0; }
 .locality-view #world-current h1 { font-size:clamp(1.2rem,5vw,1.55rem); }
-.locality-view #locality-tabs { position:sticky;top:72px;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#111b1c;padding:6px 0; }
+.locality-view #locality-tabs { position:sticky;top:0;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#111b1c;padding:6px 0; }
 #locality-tabs[hidden] { display:none; }
 #locality-tabs button { min-height:44px;padding:6px 4px;font-size:.8rem;line-height:1.2;white-space:normal; }
 #locality-tabs button[aria-pressed="true"] { border-color:#d4b977;background:#384134;color:#f3e8bf; }
@@ -21,3 +21,20 @@
 #panel-world.fixed-scroll-panel #world-message.world-feedback-slot:empty {
   display:block;visibility:hidden;height:var(--world-feedback-height);box-sizing:border-box;
 }
+
+/* Phase 1: one locality presenter, existing environmental art and game handlers. */
+.locality-view .locality-description { margin:10px 0; line-height:1.5; }
+.locality-view #panel-world #world-tracked .main-quest-panel { padding:12px; border:1px solid #a88a55; background:linear-gradient(120deg,#302719,#101a1b); }
+.locality-view #world-tracked .tracker-title { text-align:left; font:18px/1.3 Georgia,serif; }
+.locality-view #panel-world #world-tracked .quest-primary { width:100%; min-height:48px; background:#344336; border-color:#a88a55; }
+.locality-view #panel-world #world-tracked .quest-completed { border-color:#b5bd88; }
+.locality-view .locality-primary-note { display:block; padding:8px 0; color:#d3c6a7; }
+.locality-view .world-destinations button:disabled { opacity:1; background:#151b20; color:#c5c1b5; }
+.locality-view .world-destinations button small { display:block; white-space:normal; line-height:1.45; }
+.locality-view #world-tracked p { margin:6px 0; }
+.locality-view #world-tracked button { white-space:normal; overflow-wrap:anywhere; }
+
+.locality-view #panel-world #world-tracked { padding:0; border:0; background:transparent; }
+.locality-view #panel-world #world-tracked .main-quest-panel { gap:6px; }
+.locality-view #panel-world #world-tracked .main-quest-destination { margin:0; }
+.locality-view #panel-world .world-place-heading h1 { overflow-wrap:anywhere; }

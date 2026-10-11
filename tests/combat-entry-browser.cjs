@@ -19,7 +19,7 @@ fixture.frontier.quests.mq01.status=fixture.frontier.quests.mq02.status='claimed
   });
   await press(p,'#world-location-detail [data-world-explore="cold-lantern"]');
   if(source==='quest')await press(p,'#world-tracked [data-quest-open="mq03"]');else await press(p,'[data-locality-tab="encounters"]');
-  const target=p.locator((source==='quest'?'#quest-detail':'#world-location-detail')+' [data-world-fight="corrupt-hound"]');
+  const target=p.locator((source==='quest'?'#quest-detail':'#panel-world')+' [data-world-fight="corrupt-hound"]');
   await target.scrollIntoViewIfNeeded();
   await p.waitForFunction(()=>feedbackAt>0&&performance.now()>=feedbackAt+3250);
   const rect=await target.boundingBox(),point={x:rect.x+rect.width/2,y:rect.y+rect.height/2};

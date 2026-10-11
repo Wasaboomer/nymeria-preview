@@ -1,12 +1,12 @@
 /* UI-only context stack. No imports, storage writes or dependency on game initialization. */
 (function () {
   var roots = ["character", "world", "inventory", "expeditions", "menu"];
-  var destinations = { world: {screen:"world",view:"overview"}, missions:{screen:"world",view:"journal"}, character:{screen:"character"}, inventory:{screen:"inventory"}, menu:{screen:"menu"} };
+  var destinations = { world: {screen:"world",view:"places"}, missions:{screen:"world",view:"journal"}, character:{screen:"character"}, inventory:{screen:"inventory"}, menu:{screen:"menu"} };
   var contexts = {};
   function combatLocked() { return route.screen === "world" && route.view === "battle" && typeof ProgressionStore !== "undefined" && !!ProgressionStore.state.frontier.activeEncounter; }
   var screens = roots.concat(["equipment", "inventory", "class", "combat", "debug", "guild", "professions"]);
   var route = { screen: "world", root: "world", view: "places" }, stack = [];
-  var labels = { character: "Eroe", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professioni", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Missioni", quest: "Missione", discoveries: "Scoperte", places: "Località", overview: "Mappa dei luoghi", travel: "Itinerario", battle: "Incontro" };
+  var labels = { character: "Eroe", equipment: "Equipaggiamento", inventory: "Inventario", class: "Classe / Build", expeditions: "Attività", menu: "Menu", guild: "Gilda", professions: "Professioni", combat: "Incontro dimostrativo", debug: "DEBUG", journal: "Missioni", quest: "Missione", discoveries: "Scoperte", places: "Località", overview: "Atlante", travel: "Itinerario", battle: "Incontro" };
   function transient(value) { return value.screen === "world" && (value.view === "battle" || value.activity === "preparation"); }
   // Encounter reports are terminal views, not exploration history. Prune cached tabs too.
   function discardFinishedEncounter() {
@@ -110,7 +110,9 @@
     if (!transient(route)) contexts[route.root] = { current: current, stack: stack.slice() };
     var dialog = document.getElementById("item-dialog");
     if (dialog && dialog.open) dialog.close();
-    var saved = id === "world" ? null : contexts[id];
+    // Menu is a hub: its primary destination always exposes its sections.
+    var saved = id === "menu" ? null : contexts[id];
+    if (id === "world" && saved && (saved.current.route.view !== "places" || saved.current.route.activity)) saved = null;
     stack = saved ? saved.stack.slice() : [];
     apply(saved ? saved.current.route : Object.assign({root:id}, destinations[id]), saved && saved.current);
   }
