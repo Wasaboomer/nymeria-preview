@@ -278,5 +278,28 @@
   border-bottom:1px solid rgba(191,157,101,.45);
 }
 
-/* Torre Silente V1: guard against stale Safari JS injecting a second hero. */
-.locality-view #world-current[data-location-art="torre-silente"] > .ny-place-banner { display:none!important; }
+
+/* Torre Silente V1: a single illustrated hero containing the real location title. */
+.locality-view #world-current[data-location-art="torre-silente"] > .ny-place-banner {
+  display:flex;
+  box-sizing:border-box;
+  align-items:flex-end;
+  padding:14px;
+  margin:0;
+  min-height:166px;
+  height:clamp(166px,27dvh,230px);
+}
+.locality-view #world-current[data-location-art="torre-silente"] > .ny-place-banner .world-place-heading {
+  display:flex;
+  align-items:center;
+  min-width:0;
+  margin:0;
+  width:100%;
+}
+.locality-view #world-current[data-location-art="torre-silente"] > .ny-place-banner h1 {
+  display:block;
+  margin:0;
+  color:#f1e5ce;
+  font-size:clamp(1.3rem,5.2vw,1.85rem);
+  line-height:1.15;
+}
