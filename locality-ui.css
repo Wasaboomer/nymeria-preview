@@ -256,3 +256,24 @@
     grid-column:2;grid-row:2;
   }
 }
+
+/* Approved V1 Guado art — only when reached as a destination from Torre Silente.
+   Preserve the original travel button, disabled status, and accessible text. */
+.locality-view #world-location-detail[data-location-art="torre-silente"]
+.world-destinations button[data-torre-v1-destination="guado-del-vespro"] {
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  padding-top:88px;
+}
+.locality-view #world-location-detail[data-location-art="torre-silente"]
+.world-destinations button[data-torre-v1-destination="guado-del-vespro"]::before {
+  content:"";
+  position:absolute;
+  inset:0 0 auto;
+  height:80px;
+  z-index:-1;
+  background:linear-gradient(0deg,rgba(10,19,22,.55),rgba(10,19,22,.03)),
+    url("assets/torre-silente-v1/guado-del-vespro.webp") center 50%/cover no-repeat;
+  border-bottom:1px solid rgba(191,157,101,.45);
+}
