@@ -131,7 +131,7 @@ const WorldUI = (() => {
     const location = savedLocation.discoveryType && !discovery(savedLocation.id) ? WorldData.location("veyra") : savedLocation;
     node("world-current").hidden = view !== "places";
     node("world-current").dataset.locationArt = localityVisual(location.id)?.art || "";
-    node("world-location-detail").dataset.locationArt = location.id === "silent-tower" ? "torre-silente" : "";
+    node("world-location-detail").dataset.locationArt = localityVisual(location.id)?.art || "";
     node("world-current").innerHTML = `${localityHeader(location)}<p>${escape(location.description)}</p>`;
     if (talkedLocation !== location.id) { talked = null; talkedLocation = location.id; }
     const key = JSON.stringify([location.id, Equipment.state.resultingStats, ClassSystem.state, Object.values(Equipment.state.equipment).map(e => e.equippedItem)]);
