@@ -33,15 +33,26 @@ const InventoryUI = (() => {
       })
       .join("");
   }
+  function itemValidation(item, slot = slotFilter || equippedSlot(item.id) || Equipment.compatibleSlots(item)[0]) {
+    return Equipment.equipValidation(item, slot);
+  }
+  function availabilityMarkup(item, slot) {
+    const validation = itemValidation(item, slot);
+    const worn = equippedSlot(item.id) === (slot || slotFilter || equippedSlot(item.id) || Equipment.compatibleSlots(item)[0]);
+    const labels = validation.ok ? [worn ? "● Già equipaggiato" : "✓ Equipaggiabile"]
+      : validation.reasons.map(reason => reason.code === "level" ? `🔒 ${reason.message}` : `⊘ Kit incompatibile · ${reason.message}`);
+    if (!validation.ok && worn) labels.unshift("● Già equipaggiato");
+    return `<span class="item-availability ${validation.ok ? "available" : "unavailable"}">${labels.map(label => `<span>${escape(armorText(label))}</span>`).join("")}</span>`;
+  }
   function visibleItems() {
     return Equipment.state.inventory
       .filter(
         (i) =>
           (filter === "all" || filter === "equipment" || group(i) === filter) &&
-          (!slotFilter || (Equipment.compatibleSlots(i).includes(slotFilter) && !ArmorRules.unavailableLabel(i, ClassSystem.selected()) && BuildSystem.compatible(i, ClassSystem.state.classId))),
+          (!slotFilter || (Equipment.compatibleSlots(i).includes(slotFilter))),
       )
       .sort((a, b) =>
-        order === "rarity"
+        Number(itemValidation(b).ok) - Number(itemValidation(a).ok) || (order === "rarity"
           ? GearData.rarities.indexOf(b.rarity) -
               GearData.rarities.indexOf(a.rarity) ||
             b.itemLevel - a.itemLevel ||
@@ -49,7 +60,7 @@ const InventoryUI = (() => {
           : b.itemLevel - a.itemLevel ||
             GearData.rarities.indexOf(b.rarity) -
               GearData.rarities.indexOf(a.rarity) ||
-            a.id.localeCompare(b.id),
+            a.id.localeCompare(b.id)),
       );
   }
   function advisorMarkup(item, slot) {
@@ -96,7 +107,7 @@ const InventoryUI = (() => {
       ? rows
           .map(
             (item) =>
-              `<button class="inventory-item ${rarityClass(item)}" data-item-id="${item.id}"><span class="inventory-icon">${GearData.icon(item)}</span><span class="inventory-name">${item.name}</span>${advisorMarkup(item, slotFilter || Equipment.compatibleSlots(item)[0])}<small class="item-category">${GearData.typeLabels[item.type] || item.type}</small><small class="item-preview">${Object.entries(item.stats).slice(0,2).map(([key,value])=>`${GearData.statLabels[key]} +${value}${["critical","speed"].includes(key)?"%":""}`).join(" · ")}</small><span class="rarity-text">${rarityLabel(item)}</span><small>iLv ${item.itemLevel} · Lv ${item.requiredLevel}</small><span class="item-location">${item.equipped ? `● ${slotLabel(equippedSlot(item.id))}` : "In sacca"}</span></button>`,
+              `<button class="inventory-item ${rarityClass(item)} ${itemValidation(item).ok ? "item-usable" : "item-blocked"}" data-item-id="${item.id}"><span class="inventory-icon">${GearData.icon(item)}</span><span class="inventory-name">${item.name}</span>${availabilityMarkup(item)}${advisorMarkup(item, slotFilter || Equipment.compatibleSlots(item)[0])}<small class="item-category">${GearData.typeLabels[item.type] || item.type}</small><small class="item-preview">${Object.entries(item.stats).slice(0,2).map(([key,value])=>`${GearData.statLabels[key]} +${value}${["critical","speed"].includes(key)?"%":""}`).join(" · ")}</small><span class="rarity-text">${rarityLabel(item)}</span><small>iLv ${item.itemLevel} · Lv ${item.requiredLevel}</small><span class="item-location">${item.equipped ? `● ${slotLabel(equippedSlot(item.id))}` : "In sacca"}</span></button>`,
           )
           .join("")
       : '<p class="hint">Nessun oggetto per questo filtro.</p>';
@@ -121,9 +132,10 @@ const InventoryUI = (() => {
       Equipment,
     );
     const comparison = Equipment.comparison(item.id, target),
-      error = armorText(Equipment.canEquip(item.id, target)),
+      validation = itemValidation(item, target),
+      error = validation.reasons.map(reason => armorText(reason.message)).join(" "),
       ownSlot = equippedSlot(item.id);
-    const verdict = error ? "Requisiti non soddisfatti: consulta il motivo sotto."
+    const verdict = error ? error
       : ownSlot === target ? "Questo oggetto è già equipaggiato."
       : advice ? `${advice.delta > 0 ? "↑ Migliore" : advice.delta < 0 ? "↓ Meno adatto" : "= Equivalente"} per ${ClassSystem.selected().name} / ${ClassSystem.build().name}. Verifica anche le singole statistiche.`
       : "Confronta le statistiche prima di equipaggiare.";
@@ -155,7 +167,18 @@ const InventoryUI = (() => {
     Array.from(body.children).filter(element => element.matches(".description, .hint, .effect, .advisor-explanation")).forEach(element => secondary.append(element));
     const comparisonPanel = body.querySelector(".comparison");
     const verdictPanel = body.querySelector(".item-verdict");
-    comparisonPanel.before(verdictPanel);
+    body.querySelector(".detail-meta").after(verdictPanel);
+    const blockage = body.querySelector(".compatibility");
+    if (blockage) blockage.remove(); // Reasons are already prominent in the verdict.
+    if (error && ownSlot !== target) {
+      const hypothetical = document.createElement("details");
+      hypothetical.className = "hypothetical-comparison";
+      hypothetical.innerHTML = "<summary>Confronto ipotetico · oggetto non utilizzabile</summary>";
+      comparisonPanel.before(hypothetical);
+      hypothetical.append(comparisonPanel);
+    }
+    const handHint = secondary.querySelector(".hint");
+    if (item.handedness === "2H" && handHint) body.querySelector(".detail-actions").before(handHint);
     body.append(secondary);
   }
   function openItem(id, preferred) {

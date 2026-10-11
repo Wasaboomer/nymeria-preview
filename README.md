@@ -1134,3 +1134,13 @@ The **existing editor in Classe / Build → Strategia di combattimento** support
 **Normal narrative acquisition:** the existing `Pietre che ricordano` reward has a 2H counterpart. Accept that quest with Vendicatore selected to fix its personal preparation; if no 2H weapon is owned, the prototype permits switching back to Baluardo, explicitly preparing sword/shield and completing the normal Sentinel encounters. Claim still grants `frontier-greatsword` from the saved preparation. Switch to Vendicatore and equip it explicitly. This needs no debug command or demo 2H ownership. Already accepted quests/reports retain their original loot policy; no retrospective conversion or duplicate reward is introduced. This temporary prototype path relies on permitted specialization switching and must be revisited when class identity becomes permanent, without rewriting historical quest preparations.
 
 Validation: `tests/avenger-engine.cjs` exercises all four kits, skills/resource/effects, exact execution boundary, sustained AUTO, CUSTOM isolation/normalization, selection/reload, frozen activities/unique claims and real MQ04 encounters from a prior-history fixture with no 2H weapon and no DEBUG API. The deterministic smoke reports its level, gear and seed; it does not certify narrative balance. `tests/avenger-browser.cjs` uses the normal Class editor and World encounter with touch at 320/375/390/430 px, heights 568/667/844, reload and JS/rejection checks. Existing six-profile/90,000-snapshot reference is unchanged. Physical Safari/iPhone testing and full narrative balance remain pending; no manual deployment is part of this sprint.
+
+### Sprint 2.9D-C.1 — Compatibilità inventario
+
+La selezione di uno slot mostra tutti gli oggetti posseduti appartenenti allo slot,
+anche quando incompatibili con la specializzazione corrente. `Equipment.equipValidation`
+restituisce tutti i motivi (kit/livello/slot); `canEquipCandidate` conserva il precedente
+contratto del primo errore. La lista ordina prima gli oggetti equipaggiabili, mantenendo
+il criterio scelto all'interno dei gruppi. Il dettaglio mostra subito il blocco e mantiene
+il confronto ipotetico comprimibile. Non assegna armi, modifica premi o equipaggia
+oggetti automaticamente. Test touch: `tests/inventory-compatibility-browser.cjs`.

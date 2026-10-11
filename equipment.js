@@ -285,16 +285,23 @@ const Equipment = (() => {
     if (!item) return "Oggetto non disponibile.";
     return canEquipCandidate(item, slot);
   }
-  function canEquipCandidate(item, slot) {
-    if (!compatibleSlots(item).includes(slot))
-      return "Questo oggetto non appartiene allo slot.";
+  // Structured presentation contract; the legacy first-error API stays unchanged.
+  function equipValidation(item, slot) {
+    const reasons = [];
+    if (!item || !compatibleSlots(item).includes(slot))
+      return { ok: false, reasons: [{ code: "slot", message: "Questo oggetto non appartiene allo slot." }] };
     const proficiencyError = armorError(item);
-    if (proficiencyError) return proficiencyError;
+    if (proficiencyError) reasons.push({ code: "kit", message: proficiencyError });
     if (item.requiredLevel > state.character.level)
-      return `Richiede livello ${item.requiredLevel}.`;
+      reasons.push({ code: "level", message: `Richiede livello ${item.requiredLevel}.` });
     const spec = typeof ClassSystem !== "undefined" ? ClassSystem.resolved().specialization : null;
-    return ClassesData.wearableReason(item, slotById[slot].type,
+    const kitError = ClassesData.wearableReason(item, slotById[slot].type,
       equipped("mainHand"), spec?.requirements, !spec || !!spec.legacyBuildId);
+    if (kitError) reasons.push({ code: "kit", message: kitError });
+    return { ok: reasons.length === 0, reasons };
+  }
+  function canEquipCandidate(item, slot) {
+    return equipValidation(item, slot).reasons[0]?.message || null;
   }
   function equip(id, slot) {
     const error = canEquip(id, slot);
@@ -453,6 +460,7 @@ const Equipment = (() => {
     supportRule,
     canEquip,
     canEquipCandidate,
+    equipValidation,
     equipped,
     appearance,
     equip,

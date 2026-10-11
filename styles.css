@@ -2188,3 +2188,12 @@ body { min-height: 100dvh; }
 /* Opt-in specialization strategy controls; existing priority rows are unchanged. */
 .priority-row .ability-toggle { min-height: 44px; font-size: 12px; cursor: pointer; }
 .priority-row input[data-enabled] { width: 20px; height: 20px; padding: 0; flex: 0 0 20px; }
+
+/* Inventory availability is text-labelled; blocked cards remain readable and tappable. */
+.inventory-item .item-availability { display: grid; gap: .2rem; font-size: .75rem; line-height: 1.4; overflow-wrap: anywhere; }
+.item-availability.available { color: #bce5ce; }
+.inventory-item.item-usable { border-left: 3px solid #7eb99a; }
+.inventory-item.item-blocked { background: #191b23; border-style: dashed; }
+.item-availability.unavailable { color: #d7c4b2; }
+.hypothetical-comparison { margin: .4rem 0; }
+.hypothetical-comparison > summary { min-height: 44px; padding: .65rem .4rem; cursor: pointer; }
