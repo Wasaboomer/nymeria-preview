@@ -11,6 +11,7 @@ const CombatUI = (() => {
     activeClass = ClassSystem.state.classId,
     activeSpec = ClassSystem.resolved().specialization;
   let settings = preferences.read(activeClass, activeSpec, profile());
+  let expandedAbility = null; // View state only: never written into combat preferences.
   let engine = null,
     frameId = null,
     lastWallTime = null,
@@ -51,18 +52,40 @@ const CombatUI = (() => {
     renderStrategyHint();
   }
   function renderStrategyHint() {
-    text(
-      "combat-strategy-hint",
-      (settings.mode === "auto"
-        ? "Priorità predefinite: viene usata la prima abilità valida e disponibile."
-        : "Il personaggio segue l’ordine dall’alto. Le modifiche valgono dalla prossima azione.") +
-        (storageError ? " Salvataggio preferenze non disponibile." : ""),
-    );
+    text("combat-strategy-hint",
+      "Il personaggio controlla le abilità dall’alto verso il basso e usa la prima disponibile che soddisfa le condizioni." +
+      (storageError ? " Salvataggio preferenze non disponibile." : ""));
+    const current = profile(), generator = current.abilities.find(skill => skill.resourceGainOnHit > 0);
+    const resourceHint = node("combat-resource-hint");
+    resourceHint.hidden = !generator;
+    resourceHint.textContent = generator
+      ? `${current.resource.name} parte da ${current.resource.initial}. ${generator.name} ne genera ${generator.resourceGainOnHit} quando infligge danno. Le altre abilità la consumano.` : "";
   }
+  const strategyDescriptions = {
+    "avenger-slash": "Genera Risolutezza quando infligge danno.",
+    "avenger-assault": "Un assalto potente contro il nemico.",
+    "avenger-shatter": "Riduce temporaneamente l’armatura nemica.",
+    "avenger-wrath": "Potenzia i prossimi attacchi.",
+    "avenger-execution": "Più danni ai nemici quasi sconfitti.",
+    slash: "Attacco di spada senza costo.",
+    "iron-guard": "Riduce i danni subiti e favorisce i blocchi.",
+    "shield-strike": "Colpisce e indebolisce gli attacchi nemici.",
+    retaliation: "Consuma Risolutezza per un colpo potente.",
+    "last-bastion": "Una difesa forte per i momenti critici.",
+    rapid: "Un tiro affidabile, sempre disponibile.",
+    lacerating: "Fa sanguinare il nemico nel tempo.",
+    power: "Un tiro che infligge danni elevati.",
+    final: "Più danni ai nemici quasi sconfitti.",
+    wind: "Favorisce agilità, velocità e schivata.",
+  };
+
   function conditionLabel(condition) {
-    if (condition.type === "all") return condition.conditions.map(conditionLabel).join(" · ");
+    if (condition.type === "all") return condition.conditions.map(conditionLabel).join(" e ");
     if (condition.type === "not") return "Non: " + conditionLabel(condition.condition);
     if (condition.type === "enemyHpBelow") return `HP nemico < ${condition.threshold}%`;
+    if (condition.type === "playerHpBelow") return `HP personaggio < ${condition.threshold}%`;
+    if (condition.type === "resourceAbove") return `${profile().resource.name} > ${condition.threshold}`;
+    if (condition.type === "resourceBelow") return `${profile().resource.name} < ${condition.threshold}`;
     if (condition.type === "buffAbsent" || condition.type === "debuffAbsent")
       return `${profile().effects[condition.effectId]?.name || "Effetto"} assente`;
     return CombatData.conditions.find(c => c.id === condition.type)?.label || "Sempre";
@@ -85,13 +108,14 @@ const CombatUI = (() => {
         ),
       );
     renderStrategyHint();
+    document.querySelector(".combat-strategy").dataset.mode = settings.mode;
     const list = rules(),
       custom = settings.mode === "custom";
     node("combat-priorities").innerHTML = list
       .map((rule, index) => {
         const condition = rule.condition,
           skill = ability(rule.abilityId);
-        return `<article class="priority-row" data-priority-id="${rule.abilityId}"><div class="priority-heading"><span class="priority-number">${index + 1}</span><div><strong>${skill.name}</strong><small>${skill.description} · Costo ${skill.cost} · CD ${skill.cooldown}s</small></div><div class="priority-order"><button data-move="-1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in alto" ${!custom || index === 0 ? "disabled" : ""}>↑</button><button data-move="1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in basso" ${!custom || index === list.length - 1 ? "disabled" : ""}>↓</button></div></div>${profile().strategyControls?.allowDisable ? `<label class="ability-toggle"><input type="checkbox" data-enabled="${rule.abilityId}" ${rule.enabled !== false ? "checked" : ""} ${!custom ? "disabled" : ""}> Abilità attiva</label>` : ""}<label>Condizione<select data-condition="${rule.abilityId}" ${!custom ? "disabled" : ""}>${["all", "not"].includes(condition.type) ? `<option value="${condition.type}" selected>Condizioni AUTO combinate</option>` : ""}${CombatData.conditions.map((c) => `<option value="${c.id}" ${c.id === condition.type ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>${
+        return `<details class="priority-row" data-priority-id="${rule.abilityId}" ${expandedAbility === rule.abilityId ? "open" : ""}><summary class="priority-heading"><span class="priority-number">${index + 1}</span><span class="priority-copy"><strong>${skill.name}${rule.enabled === false ? ' <em>Disattivata</em>' : ""}</strong><small>${strategyDescriptions[skill.id] || skill.description}</small></span><span class="priority-chevron" aria-hidden="true">⌄</span></summary><div class="priority-controls"><p class="priority-technical">${skill.description}</p><p class="priority-cost">Costo ${skill.cost || 0} ${profile().resource.name} · Recupero ${skill.cooldown}s</p><div class="priority-order"><button data-move="-1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in alto" ${!custom || index === 0 ? "disabled" : ""}>↑</button><button data-move="1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in basso" ${!custom || index === list.length - 1 ? "disabled" : ""}>↓</button></div>${profile().strategyControls?.allowDisable ? `<label class="ability-toggle"><input type="checkbox" data-enabled="${rule.abilityId}" ${rule.enabled !== false ? "checked" : ""} ${!custom ? "disabled" : ""}> Abilità attiva</label>` : ""}<label>Condizione<select data-condition="${rule.abilityId}" ${!custom ? "disabled" : ""}>${["all", "not"].includes(condition.type) ? `<option value="${condition.type}" selected>Condizioni predefinite</option>` : ""}${CombatData.conditions.map((c) => `<option value="${c.id}" ${c.id === condition.type ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>${
           [
             "enemyHpBelow",
             "playerHpBelow",
@@ -115,7 +139,7 @@ const CombatUI = (() => {
                   )
                   .join("")}</select></label>`
               : ""
-        }${["all", "not"].includes(condition.type) ? `<small>${conditionLabel(condition)}</small>` : ""}</article>`;
+        }${["all", "not"].includes(condition.type) ? `<p class="condition-explanation">Usa solo quando tutte le condizioni predefinite sono rispettate.</p>` : ""}<p class="condition-exact">Condizione effettiva: ${conditionLabel(condition)}</p></div></details>`;
       })
       .join("");
     if (engine) engine.setRules(rules());
@@ -528,6 +552,16 @@ const CombatUI = (() => {
       }
     }
   });
+  node("combat-priorities").addEventListener("toggle", event => {
+    const row = event.target;
+    if (!row.matches("details.priority-row") || !row.isConnected) return;
+    if (row.open) {
+      expandedAbility = row.dataset.priorityId;
+      node("combat-priorities").querySelectorAll("details[open]").forEach(other => {
+        if (other !== row) other.open = false;
+      });
+    } else if (expandedAbility === row.dataset.priorityId) expandedAbility = null;
+  }, true);
   node("combat-priorities").addEventListener("change", (event) => {
     if (settings.mode !== "custom") return;
     const element = event.target;
@@ -558,6 +592,7 @@ const CombatUI = (() => {
     const nextClass = ClassSystem.state.classId, nextSpec = ClassSystem.resolved().specialization;
     if (preferences.key(activeClass, activeSpec) !== preferences.key(nextClass, nextSpec)) {
       preferences.write(activeClass, activeSpec, settings);
+      expandedAbility = null;
       activeClass = nextClass; activeSpec = nextSpec;
       settings = preferences.read(activeClass, activeSpec, profile());
     } else { activeClass = nextClass; activeSpec = nextSpec; }

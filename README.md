@@ -1144,3 +1144,13 @@ contratto del primo errore. La lista ordina prima gli oggetti equipaggiabili, ma
 il criterio scelto all'interno dei gruppi. Il dettaglio mostra subito il blocco e mantiene
 il confronto ipotetico comprimibile. Non assegna armi, modifica premi o equipaggia
 oggetti automaticamente. Test touch: `tests/inventory-compatibility-browser.cjs`.
+
+### Sprint 2.9D-C.3 — Strategia compatta
+
+Il renderer condiviso della strategia usa righe espandibili, una alla volta. Priorità,
+nome e descrizione sintetica restano visibili; costi, recupero, descrizione tecnica,
+condizioni esatte e controlli esistenti sono nella riga aperta. Lo stato di apertura è
+solo UI: non modifica il formato delle preferenze né i profili di combattimento.
+AUTO mantiene le regole del profilo; PERSONALIZZATA conserva configurazioni e soglie.
+Il riepilogo di Risolutezza legge i valori dal profilo. Regressione mobile e confronto
+tra risultati equivalenti: `tests/strategy-compact-browser.cjs`.

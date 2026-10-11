@@ -2208,3 +2208,31 @@ body { min-height: 100dvh; }
 }
 .hypothetical-comparison { margin: .4rem 0; }
 .hypothetical-comparison > summary { min-height: 44px; padding: .65rem .4rem; cursor: pointer; }
+
+/* Strategy accordion: view state only; the combat rules stay in their existing store. */
+.combat-strategy .combat-mode { gap:6px; }
+.combat-strategy .combat-mode button { min-height:44px; font-size:13px; }
+.combat-strategy .combat-mode button[aria-pressed="true"] { background:#393725; color:#f1dfaa; border-color:#b99c59; box-shadow:inset 0 -2px #b99c59; }
+.combat-strategy .combat-mode button[aria-pressed="true"]::after { content:" ✓"; }
+.combat-strategy #combat-strategy-hint, .combat-strategy #combat-resource-hint { margin:8px 0; font-size:13px; line-height:1.4; }
+.combat-strategy .priority-row { margin-top:6px; padding:0; background:#18282b; overflow-wrap:anywhere; }
+.combat-strategy .priority-heading { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; min-height:64px; padding:8px; cursor:pointer; list-style:none; }
+.combat-strategy .priority-heading::-webkit-details-marker { display:none; }
+.combat-strategy .priority-heading:focus-visible { outline:2px solid #dac28a; outline-offset:2px; }
+.combat-strategy .priority-copy { flex:1; min-width:0; }
+.combat-strategy .priority-heading strong { display:block; font-size:15px; line-height:1.25; }
+.combat-strategy .priority-heading small { font-size:12px; line-height:1.35; margin-top:3px; }
+.combat-strategy .priority-heading em { font:12px sans-serif; color:#d7c6a0; }
+.combat-strategy .priority-chevron { font-size:20px; color:#dac28a; flex:0 0 18px; text-align:center; }
+.combat-strategy .priority-row[open] .priority-chevron { transform:rotate(180deg); }
+.combat-strategy .priority-row[open] { border-color:#a58d55; }
+.combat-strategy .priority-controls { padding:0 10px 10px; border-top:1px solid #ffffff14; }
+.combat-strategy .priority-technical, .combat-strategy .priority-cost, .combat-strategy .condition-exact, .combat-strategy .condition-explanation { font-size:13px; line-height:1.45; margin:8px 0; }
+.combat-strategy .priority-cost { color:#dfc999; }
+.combat-strategy .priority-order { margin:8px 0 0; justify-content:flex-end; gap:8px; }
+.combat-strategy .priority-order button { min-width:44px; min-height:44px; }
+.combat-strategy .priority-row label { flex-wrap:wrap; font-size:14px; gap:6px; margin-top:8px; }
+.combat-strategy .priority-row select { min-height:44px; flex-basis:100%; font-size:14px; }
+.combat-strategy .priority-row input { min-height:44px; font-size:14px; }
+.combat-strategy .priority-row input[type="checkbox"] { min-height:20px; }
+.combat-strategy .condition-explanation { color:#dac28a; }
