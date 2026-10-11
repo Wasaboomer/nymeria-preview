@@ -131,7 +131,7 @@ const ExpeditionUI = (() => {
     }
     node("expedition-kit").textContent = snapshot.profile.kitValid
       ? `Preparazione: ${snapshot.profile.className} / ${snapshot.profile.buildName}. Alla partenza vengono salvati classe, build ed equipaggiamento usati per questa spedizione.`
-      : `Per partire prepara ${ClassSystem.selected().requirement} in Equipaggiamento.`;
+      : `Per partire prepara ${ClassSystem.kitRequirements().label} in Equipaggiamento.`;
     const expeditionQuests = QuestData.quests.flatMap(quest => {
       const entry = state.frontier.quests[quest.id];
       if (!["active", "completed"].includes(entry.status)) return [];
@@ -152,7 +152,7 @@ const ExpeditionUI = (() => {
         const reason = locked ? `Richiede livello ${activity.requiredLevel}; il tuo livello è ${state.level}.`
           : state.activeExpedition ? 'Hai già una spedizione in corso. Attendi il termine oppure annullala.'
           : state.pendingExpeditionResult ? 'Riscuoti il risultato della spedizione precedente prima di partire.'
-          : !snapshot.profile.kitValid ? `Equipaggiamento incompleto: ${ClassSystem.selected().requirement}. Usa “Prepara equipaggiamento”.`
+          : !snapshot.profile.kitValid ? `Equipaggiamento incompleto: ${ClassSystem.kitRequirements().label}. Usa “Prepara equipaggiamento”.`
           : busy ? 'Operazione in corso.' : '';
         return `<article class="expedition-card ${requests.length ? 'expedition-mission-required' : ''}" data-activity="${activity.id}">${missionHint}<h3>${activity.name}</h3><p>${duration(activity.durationMs)} · ${activity.encounters} incontri + eventuali eventi</p><p>Rischio: <strong>${estimates[activity.id]}</strong> · grado ${activity.difficulty}</p><small>XP ${activity.encounters * activity.xpPerEncounter + activity.completionXP} base se completata · Corone, materiali, possibilità di loot</small>${reason ? `<p class="expedition-requirement" id="expedition-requirement-${activity.id}">${escape(reason)}</p>` : ""}<button ${reason ? `aria-describedby="expedition-requirement-${activity.id}"` : ""} data-start-expedition="${activity.id}" ${locked || !snapshot.profile.kitValid || state.activeExpedition || state.pendingExpeditionResult || busy ? "disabled" : ""}>${locked ? `Si sblocca al livello ${activity.requiredLevel}` : state.activeExpedition ? "Spedizione in corso" : state.pendingExpeditionResult ? "Riscuoti prima di partire" : !snapshot.profile.kitValid ? "Prepara equipaggiamento" : ProgressionSystem.testMode ? "Avvia spedizione · TEST" : "Avvia spedizione"}</button></article>`;
       })

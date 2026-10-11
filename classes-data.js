@@ -350,6 +350,57 @@ const ClassesData = (() => {
       effectWeights: build.effectWeights || {},
     }];
   }));
+  // New specialization is independent of the legacy Warden defensive adapter.
+  classes.warden.specializationIds = [...classes.warden.buildIds, "avenger"];
+  specializations.avenger = {
+    version: 1, id: "avenger", classId: "warden", name: "Vendicatore",
+    role: "DPS da mischia",
+    description: "Offensiva a due mani: genera Risolutezza con Fendente e spendila in assalti, vulnerabilità ed esecuzioni.",
+    acquisition: "Spadone della Frontiera: ricompensa di Pietre che ricordano accettata come Vendicatore. Il loot resta quello scelto all’accettazione, anche cambiando kit durante la missione.",
+    requirements: { weaponTypes: ["greatsword", "spear", "greataxe", "warhammer"],
+      handedness: "2H", supportTypes: [], supportPolicy: "forbidden",
+      label: "Spadone, lancia, ascia o martello a due mani · supporto vuoto" },
+    preferredStats: ["force", "critical", "speed"],
+    passive: { id: "offensive-resolve", name: "Risolutezza offensiva",
+      description: "Fendente genera 10 Risolutezza dopo un colpo che infligge danno. Nessuna generazione passiva o dai colpi subiti; nessun bonus difensivo del Baluardo." },
+    resource: { id: "resolve", name: "Risolutezza", max: 100, initial: 0,
+      regeneration: 0, decay: 0, events: {} },
+    // Retain the established strength-oriented D formula, without tank bonuses.
+    modifiers: { damageWeights: { force: 1.6, agility: 0.25, spirit: 0.2 } },
+    abilities: [
+      { id: "avenger-slash", name: "Fendente", description: "0,75 × D + 6 danni. Genera 10 Risolutezza se infligge danno.",
+        kind: "attack", coefficient: 0.75, flatDamage: 6, cost: 0, cooldown: 0, resourceGainOnHit: 10, tags: ["meleeHit"] },
+      { id: "avenger-assault", name: "Assalto", description: "1,50 × D + 10 danni. Costa 15 Risolutezza.",
+        kind: "attack", coefficient: 1.5, flatDamage: 10, cost: 15, cooldown: 5, tags: ["meleeHit"] },
+      { id: "avenger-shatter", name: "Spezzaarmatura", description: "1,00 × D + 8 danni; armatura nemica −15% per 6 s. Costa 20 Risolutezza.",
+        kind: "attack", coefficient: 1, flatDamage: 8, cost: 20, cooldown: 8, effectId: "avenger-shattered", tags: ["meleeHit"] },
+      { id: "avenger-wrath", name: "Ira del Vendicatore", description: "Danni diretti +15% per 6 s. Costa 25 Risolutezza; nessun danno all’attivazione.",
+        kind: "buff", cost: 25, cooldown: 18, effectId: "avenger-wrath", tags: [] },
+      { id: "avenger-execution", name: "Colpo di Grazia", description: "1,30 × D + 12 danni, ×1,75 sotto il 25% HP nemici. Costa 35 Risolutezza.",
+        kind: "attack", coefficient: 1.3, flatDamage: 12, cost: 35, cooldown: 7, executeBelow: 0.25, executeMultiplier: 1.75, tags: ["meleeHit"] },
+    ],
+    defaultRules: [
+      { abilityId: "avenger-execution", condition: { type: "enemyHpBelow", threshold: 25 } },
+      { abilityId: "avenger-wrath", condition: { type: "all", conditions: [
+        { type: "buffAbsent", effectId: "avenger-wrath" },
+        { type: "not", condition: { type: "enemyHpBelow", threshold: 40 } },
+      ] } },
+      { abilityId: "avenger-shatter", condition: { type: "all", conditions: [
+        { type: "debuffAbsent", effectId: "avenger-shattered" },
+        { type: "not", condition: { type: "enemyHpBelow", threshold: 25 } },
+      ] } },
+      { abilityId: "avenger-assault", condition: { type: "resourceAbove", threshold: 44 } },
+      { abilityId: "avenger-slash", condition: { type: "always" } },
+    ],
+    strategyControls: { allowDisable: true, allowCompound: true },
+    abilityModifiers: {}, effectModifiers: {}, resultMetrics: [],
+    effects: {
+      "avenger-shattered": { id: "avenger-shattered", name: "Armatura spezzata", kind: "debuff", duration: 6, maxStacks: 1, modifiers: { armorReduction: 0.15 } },
+      "avenger-wrath": { id: "avenger-wrath", name: "Ira del Vendicatore", kind: "buff", duration: 6, maxStacks: 1, modifiers: { outgoingDamageBonus: 0.15 } },
+    },
+    weights: { force: 3.5, critical: 2.5, speed: 2, vigor: 1.5, armor: 1, agility: 0.6, spirit: 0.4 },
+    effectWeights: {},
+  };
   function resolve(classId, selectionId) {
     const cls = classes[classId] || classes.hunter;
     const spec = specializations[selectionId];

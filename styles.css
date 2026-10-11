@@ -2184,3 +2184,7 @@ body { min-height: 100dvh; }
   #panel-world .world-enemy { flex-wrap:wrap; }
   #panel-world .world-enemy > div, #panel-world .world-enemy > button { width:100%; }
 }
+
+/* Opt-in specialization strategy controls; existing priority rows are unchanged. */
+.priority-row .ability-toggle { min-height: 44px; font-size: 12px; cursor: pointer; }
+.priority-row input[data-enabled] { width: 20px; height: 20px; padding: 0; flex: 0 0 20px; }

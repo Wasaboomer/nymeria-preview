@@ -62,7 +62,7 @@ const ClassSystem = (() => {
       classId: identity.id, className: identity.name, armorProficiency: identity.armorProficiency,
       weaponTypes: spec.requirements.weaponTypes, supportTypes: spec.requirements.supportTypes,
       handedness: spec.requirements.handedness, buildId: spec.id, buildName: spec.name,
-      ...(spec.legacyBuildId ? {} : { specializationId: spec.id, requirements: spec.requirements, role: spec.role }),
+      ...(spec.legacyBuildId ? {} : { specializationId: spec.id, requirements: spec.requirements, role: spec.role, strategyControls: spec.strategyControls }),
       abilities: spec.abilities, resource: spec.resource, modifiers: kitValid ? spec.modifiers : {},
       abilityModifiers: spec.abilityModifiers, effectModifiers: spec.effectModifiers,
       resultMetrics: spec.resultMetrics, effects: spec.effects, defaultRules: spec.defaultRules, kitValid,

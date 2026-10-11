@@ -166,43 +166,54 @@ const CombatData = (() => {
         )
           continue;
         used.add(row.abilityId);
-        const condition = row.condition || {};
-        const type = conditions.some((c) => c.id === condition.type)
-          ? condition.type
-          : "always";
-        const normalized = { type };
-        if (
-          [
-            "enemyHpBelow",
-            "playerHpBelow",
-            "resourceAbove",
-            "resourceBelow",
-          ].includes(type)
-        )
-          normalized.threshold = Number.isFinite(Number(condition.threshold))
-            ? clamp(
-                Number(condition.threshold),
-                type.startsWith("resource") ? 0 : 1,
-                type.startsWith("resource") ? 100 : 99,
+        function normalizeCondition(condition, depth = 0) {
+          if (kit.strategyControls?.allowCompound && depth < 3) {
+            if (condition.type === "all" && Array.isArray(condition.conditions) && condition.conditions.length > 0)
+              return { type: "all", conditions: condition.conditions.slice(0, 8).map(c => normalizeCondition(c || {}, depth + 1)) };
+            if (condition.type === "not" && condition.condition && typeof condition.condition === "object")
+              return { type: "not", condition: normalizeCondition(condition.condition, depth + 1) };
+          }
+
+          const type = conditions.some((c) => c.id === condition.type)
+            ? condition.type
+            : "always";
+          const normalized = { type };
+          if (
+            [
+              "enemyHpBelow",
+              "playerHpBelow",
+              "resourceAbove",
+              "resourceBelow",
+            ].includes(type)
+          )
+            normalized.threshold = Number.isFinite(Number(condition.threshold))
+              ? clamp(
+                  Number(condition.threshold),
+                  type.startsWith("resource") ? 0 : 1,
+                  type.startsWith("resource") ? 100 : 99,
+                )
+              : 25;
+          const skill = kit.abilities.find((a) => a.id === row.abilityId);
+          if (type === "debuffAbsent" || type === "buffAbsent") {
+            const effectsForCondition = kit.abilities
+              .filter(
+                (a) =>
+                  a.effectId &&
+                  (type === "buffAbsent" ? a.kind === "buff" : a.kind !== "buff"),
               )
-            : 25;
-        const skill = kit.abilities.find((a) => a.id === row.abilityId);
-        if (type === "debuffAbsent" || type === "buffAbsent") {
-          const effectsForCondition = kit.abilities
-            .filter(
-              (a) =>
-                a.effectId &&
-                (type === "buffAbsent" ? a.kind === "buff" : a.kind !== "buff"),
-            )
-            .map((a) => a.effectId);
-          normalized.effectId = effectsForCondition.includes(condition.effectId)
-            ? condition.effectId
-            : skill.effectId && effectsForCondition.includes(skill.effectId)
-              ? skill.effectId
-              : effectsForCondition[0];
-          if (!normalized.effectId) normalized.type = "always";
+              .map((a) => a.effectId);
+            normalized.effectId = effectsForCondition.includes(condition.effectId)
+              ? condition.effectId
+              : skill.effectId && effectsForCondition.includes(skill.effectId)
+                ? skill.effectId
+                : effectsForCondition[0];
+            if (!normalized.effectId) normalized.type = "always";
+          }
+          return normalized;
         }
-        result.push({ abilityId: row.abilityId, condition: normalized });
+        const normalized = normalizeCondition(row.condition || {});
+        result.push({ abilityId: row.abilityId, condition: normalized,
+          ...(kit.strategyControls?.allowDisable && row.enabled === false ? { enabled: false } : {}) });
       }
     for (const rule of kit.defaultRules)
       if (!used.has(rule.abilityId)) result.push(copy(rule));

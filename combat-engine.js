@@ -165,6 +165,11 @@ const CombatEngine = (() => {
     }
     conditionMet(condition, abilityId) {
       switch (condition.type) {
+        case "all":
+          return Array.isArray(condition.conditions) && condition.conditions.length > 0 &&
+            condition.conditions.every(row => this.conditionMet(row, abilityId));
+        case "not":
+          return !!condition.condition && !this.conditionMet(condition.condition, abilityId);
         case "debuffAbsent":
           return !this.hasEffect(this.enemy, condition.effectId);
         case "buffAbsent":
@@ -188,6 +193,7 @@ const CombatEngine = (() => {
     chooseAbility() {
       for (const rule of this.rules)
         if (
+          (!this.profile.strategyControls?.allowDisable || rule.enabled !== false) &&
           this.ready(rule.abilityId) &&
           this.canAfford(rule.abilityId) &&
           this.conditionMet(rule.condition, rule.abilityId)

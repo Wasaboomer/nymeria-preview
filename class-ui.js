@@ -12,7 +12,7 @@ const ClassUI = (() => {
       )
       .join("");
     node("class-info").innerHTML =
-      `<h3>${cls.name} · ${spec.role}</h3><p>${cls.description}</p><dl><div><dt>Risorsa</dt><dd>${spec.resource.name} · ${spec.resource.max}</dd></div><div><dt>Statistiche consigliate</dt><dd>${cls.preferredStats.map((s) => GearData.statLabels[s]).join(" · ")}</dd></div><div><dt>Competenza armature</dt><dd>${ArmorRules.labels[cls.armorProficiency]}</dd></div><div><dt>Equipaggiamento richiesto</dt><dd>${spec.requirements.label}</dd></div></dl><p><strong>${spec.passive.name}</strong> — ${spec.passive.description}</p><h3>Abilità</h3><ul>${spec.abilities.map((a) => `<li><strong>${a.name}</strong> — ${a.description} <small>Costo ${a.cost} · CD ${a.cooldown}s${a.resourceGain ? ` · recupera ${a.resourceGain}` : ""}</small></li>`).join("")}</ul>`;
+      `<h3>${cls.name} · ${spec.role}</h3><p>${spec.legacyBuildId ? cls.description : spec.description}</p><dl><div><dt>Risorsa</dt><dd>${spec.resource.name} · ${spec.resource.max}</dd></div><div><dt>Statistiche consigliate</dt><dd>${(spec.preferredStats || cls.preferredStats).map((s) => GearData.statLabels[s]).join(" · ")}</dd></div><div><dt>Competenza armature</dt><dd>${ArmorRules.labels[cls.armorProficiency]}</dd></div><div><dt>Equipaggiamento richiesto</dt><dd>${spec.requirements.label}</dd></div></dl><p><strong>${spec.passive.name}</strong> — ${spec.passive.description}</p><h3>Abilità</h3><ul>${spec.abilities.map((a) => `<li><strong>${a.name}</strong> — ${a.description} <small>Costo ${a.cost} · CD ${a.cooldown}s${a.resourceGain ? ` · recupera ${a.resourceGain}` : ""}</small></li>`).join("")}</ul>${spec.acquisition ? `<p>${spec.acquisition}</p><p role="status">${ClassSystem.kitRequirement(Equipment.equipped("mainHand"), Equipment.equipped("support")) ? "Kit valido per il combattimento." : "Kit incompatibile: equipaggia un’arma a due mani e lascia vuoto il supporto. Il cambio di specializzazione non modifica gli oggetti indossati."}</p>` : ""}`;
     node("build-choices").innerHTML = (cls.specializationIds || cls.buildIds)
       .map((id) => ClassesData.builds[id] || ClassesData.specializations[id])
       .map(
@@ -41,6 +41,7 @@ const ClassUI = (() => {
       ClassSystem.selectSpecialization(button.dataset.buildId);
   });
   ClassSystem.subscribe(render);
+  Equipment.subscribe(render);
   render();
   return { render };
 })();

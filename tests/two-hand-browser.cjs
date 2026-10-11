@@ -55,11 +55,11 @@ const classFixture=require('./two-hand-fixture.cjs');
   assert.deepEqual(errors,[]);assert.deepEqual(await page.evaluate(()=>rejections),[]);
   await context.close();console.log(`PASS 2H ${width}: 4 weapons, 3 heights, actual touch equip, shield retained, invalid support disabled, no auto-equip, reload/no JS errors`);
  }
- // Production never registers the fixture or a new specialization.
+ // Production registers Vendicatore, but never the test-only kit.
  const context=await browser.newContext(),page=await context.newPage();
  await page.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8026');
- assert.equal(await page.evaluate(()=>Object.keys(ClassesData.specializations).length),6);
+ assert.equal(await page.evaluate(()=>Object.keys(ClassesData.specializations).length),7);
  assert.equal(await page.evaluate(()=>Equipment.state.inventory.some(i=>['greataxe','warhammer'].includes(i.id))),false);
- await context.close();console.log('PASS normal game: six legacy selections only, no new catalog-only items automatically granted');
+ await context.close();console.log('PASS normal game: six legacy selections plus Vendicatore, no test kit or catalog-only items automatically granted');
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

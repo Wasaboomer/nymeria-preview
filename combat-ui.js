@@ -59,6 +59,14 @@ const CombatUI = (() => {
         (storageError ? " Salvataggio preferenze non disponibile." : ""),
     );
   }
+  function conditionLabel(condition) {
+    if (condition.type === "all") return condition.conditions.map(conditionLabel).join(" · ");
+    if (condition.type === "not") return "Non: " + conditionLabel(condition.condition);
+    if (condition.type === "enemyHpBelow") return `HP nemico < ${condition.threshold}%`;
+    if (condition.type === "buffAbsent" || condition.type === "debuffAbsent")
+      return `${profile().effects[condition.effectId]?.name || "Effetto"} assente`;
+    return CombatData.conditions.find(c => c.id === condition.type)?.label || "Sempre";
+  }
   function renderSettings() {
     document
       .querySelectorAll("[data-combat-mode]")
@@ -83,7 +91,7 @@ const CombatUI = (() => {
       .map((rule, index) => {
         const condition = rule.condition,
           skill = ability(rule.abilityId);
-        return `<article class="priority-row" data-priority-id="${rule.abilityId}"><div class="priority-heading"><span class="priority-number">${index + 1}</span><div><strong>${skill.name}</strong><small>${skill.description} · Costo ${skill.cost} · CD ${skill.cooldown}s</small></div><div class="priority-order"><button data-move="-1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in alto" ${!custom || index === 0 ? "disabled" : ""}>↑</button><button data-move="1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in basso" ${!custom || index === list.length - 1 ? "disabled" : ""}>↓</button></div></div><label>Condizione<select data-condition="${rule.abilityId}" ${!custom ? "disabled" : ""}>${CombatData.conditions.map((c) => `<option value="${c.id}" ${c.id === condition.type ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>${
+        return `<article class="priority-row" data-priority-id="${rule.abilityId}"><div class="priority-heading"><span class="priority-number">${index + 1}</span><div><strong>${skill.name}</strong><small>${skill.description} · Costo ${skill.cost} · CD ${skill.cooldown}s</small></div><div class="priority-order"><button data-move="-1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in alto" ${!custom || index === 0 ? "disabled" : ""}>↑</button><button data-move="1" data-rule="${rule.abilityId}" aria-label="Sposta ${skill.name} in basso" ${!custom || index === list.length - 1 ? "disabled" : ""}>↓</button></div></div>${profile().strategyControls?.allowDisable ? `<label class="ability-toggle"><input type="checkbox" data-enabled="${rule.abilityId}" ${rule.enabled !== false ? "checked" : ""} ${!custom ? "disabled" : ""}> Abilità attiva</label>` : ""}<label>Condizione<select data-condition="${rule.abilityId}" ${!custom ? "disabled" : ""}>${["all", "not"].includes(condition.type) ? `<option value="${condition.type}" selected>Condizioni AUTO combinate</option>` : ""}${CombatData.conditions.map((c) => `<option value="${c.id}" ${c.id === condition.type ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>${
           [
             "enemyHpBelow",
             "playerHpBelow",
@@ -107,7 +115,7 @@ const CombatUI = (() => {
                   )
                   .join("")}</select></label>`
               : ""
-        }</article>`;
+        }${["all", "not"].includes(condition.type) ? `<small>${conditionLabel(condition)}</small>` : ""}</article>`;
       })
       .join("");
     if (engine) engine.setRules(rules());
@@ -528,10 +536,11 @@ const CombatUI = (() => {
         rule.abilityId ===
         (element.dataset.condition ||
           element.dataset.threshold ||
-          element.dataset.effect),
+          element.dataset.effect || element.dataset.enabled),
     );
     if (!row) return;
-    if (element.dataset.condition)
+    if (element.dataset.enabled) row.enabled = element.checked;
+    if (element.dataset.condition && !["all", "not"].includes(element.value))
       row.condition = { type: element.value, threshold: 25 };
     if (element.dataset.effect) row.condition.effectId = element.value;
     if (element.dataset.threshold)
