@@ -191,3 +191,23 @@
   .locality-view #world-location-detail .world-enemy *,
   .locality-view #world-current * {transition:none!important;animation:none!important;}
 }
+
+/* Frozen Torre Silente visual layout: art slots are intentionally empty
+   until separately approved image assets are committed. */
+.locality-view #world-location-detail .world-enemy-portrait {
+  display:none;
+}
+.locality-view #world-location-detail .world-enemy-copy {
+  min-width:0;
+}
+.locality-view #world-location-detail .world-enemy button[data-world-fight] {
+  position:relative;
+  z-index:1;
+}
+@media (min-width:375px) {
+  .locality-view #world-location-detail .world-enemy {
+    grid-template-columns:minmax(0,1fr) minmax(120px,36%);
+  }
+  .locality-view #world-location-detail .world-enemy-copy {grid-column:1;grid-row:1;}
+  .locality-view #world-location-detail .world-enemy button[data-world-fight] {grid-column:2;grid-row:1;}
+}
