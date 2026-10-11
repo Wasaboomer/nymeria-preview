@@ -19,3 +19,11 @@
 - Do not redesign, reinterpret, regenerate, or replace the approved visual without explicit user permission.
 - Separate images, text, UI panels and actions into real responsive elements; do not use the whole screenshot as a clickable backdrop.
 - Report after each implementation: work completed, verification performed, next step and a copyable prompt.
+
+## Efficient DEV cycle (approved 2026-10-11)
+- Batch related edits locally before pushing. Do not use GitHub commits as individual visual trial-and-error steps.
+- For Torre Silente, run `npm run test:torre:fast` in the development workspace (after `npm ci` and `npx playwright install chromium`) to inspect mobile screenshots at 320/375/390/430 in `test-results/torre-silente-v1/` before committing.
+- When no local workspace is available, manually dispatch `NYMERIA DEV Tests` with `test_scope=torre-fast` to run the focused visual suite; manual runs never deploy.
+- Pushes still run the complete existing regression suite. A preview deployment is only permitted after its successful full test gate and explicit user authorization; `[skip dev deploy]` prevents publishing.
+- A green functional test is not a substitute for reviewing visual screenshots against the frozen reference. Do not claim visual approval without such review.
+- If Pages deployment fails for infrastructure reasons, retry only its failed job rather than changing game code or rerunning a full suite.
