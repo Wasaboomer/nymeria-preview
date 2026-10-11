@@ -43,13 +43,15 @@ const Data = require('../progression-data.js');
         const shade=document.querySelector('[data-enemy-id="silent-shade"] .world-enemy-portrait');
         const keeper=document.querySelector('[data-enemy-id="silence-keeper"] .world-enemy-portrait');
         const ford=document.querySelector('[data-torre-v1-destination="guado-del-vespro"]');
-        return {duplicateBannerVisible:banner ? getComputedStyle(banner).display !== 'none' : false,shade:getComputedStyle(shade).backgroundImage,
+        return {bannerCount:document.querySelectorAll('#world-current > .ny-place-banner').length, bannerVisible:banner ? getComputedStyle(banner).display !== 'none' : false, bannerImage:banner ? getComputedStyle(banner).backgroundImage : '', title:banner?.querySelector('h1')?.textContent || '',shade:getComputedStyle(shade).backgroundImage,
           keeper:getComputedStyle(keeper).backgroundImage,ford:getComputedStyle(ford,'::before').backgroundImage,
           overflow:document.documentElement.scrollWidth-innerWidth};
       });
-      for (const [key,name] of Object.entries({shade:'ombra-silente.webp',keeper:'custode-del-silenzio.webp',ford:'guado-del-vespro.webp'}))
+      for (const [key,name] of Object.entries({bannerImage:'torre-silente.webp',shade:'ombra-silente.webp',keeper:'custode-del-silenzio.webp',ford:'guado-del-vespro.webp'}))
         assert.ok(art[key].includes(name),width+' '+key+' image: '+art[key]);
-      assert.equal(art.duplicateBannerVisible,false,width+' duplicate banner must not render');
+      assert.equal(art.bannerCount,1,width+' exactly one Tower banner');
+      assert.equal(art.bannerVisible,true,width+' Tower banner visible');
+      assert.equal(art.title,'Torre Silente',width+' location title inside banner');
       assert.ok(art.overflow<=1,width+' horizontal overflow '+art.overflow);
       await page.screenshot({path:'test-results/torre-silente-v1/'+width+'.png',fullPage:true});
       assert.deepEqual(errors,[],width+' page errors');
