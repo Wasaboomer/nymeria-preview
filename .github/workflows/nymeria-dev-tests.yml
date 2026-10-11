@@ -74,6 +74,7 @@ jobs:
             tests/interface-refinement-browser.cjs
             tests/mobile-foundation-browser.cjs
             tests/mobile-validation-browser.cjs
+            tests/torre-silente-v1-browser.cjs
           )
           printf '## NYMERIA DEV test results\n\n' >> "$GITHUB_STEP_SUMMARY"
           printf '| Test | Result |\n|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
