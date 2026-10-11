@@ -145,3 +145,35 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/Wasaboomer/nymeria-dev-preview/actions/workflows/publish-dev.yml/dispatches \
             -d "{\"ref\":\"main\",\"inputs\":{\"source_sha\":\"$TESTED_SHA\"}}"
+
+  notify-green:
+    name: Notify current DEV green via GitHub Issue
+    needs: test
+    if: ${{ needs.test.result == 'success' && github.ref == 'refs/heads/dev/kaelith-modular-character' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Comment only for latest successful SHA (once)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TESTED_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          repo="Wasaboomer/nymeria-preview"
+          current=$(gh api "repos/$repo/branches/dev/kaelith-modular-character" --jq '.commit.sha')
+          if [[ "$current" != "$TESTED_SHA" ]]; then
+            echo "Skipping stale green run: $TESTED_SHA (current HEAD $current)"
+            exit 0
+          fi
+          marker="[nymeria-dev-green:$TESTED_SHA]"
+          existing=$(gh api --paginate "repos/$repo/issues/1/comments?per_page=100" --jq '.[].body' | grep -F "$marker" || true)
+          if [[ -n "$existing" ]]; then
+            echo "Already notified for $TESTED_SHA"
+            exit 0
+          fi
+          short="${TESTED_SHA:0:12}"
+          body=$(printf '✅ **NYMERIA DEV verde** — commit `%s`\n\nTutti i test DEV sono superati. Possiamo procedere alla fase successiva.\n\n[Apri esecuzione GitHub Actions](https://github.com/Wasaboomer/nymeria-preview/actions/runs/%s)\n\n%s\n\n*Questo avviso non pubblica il gioco e non modifica main.*' "$short" "$RUN_ID" "$marker")
+          gh api --method POST "repos/$repo/issues/1/comments" -f body="$body" --silent
