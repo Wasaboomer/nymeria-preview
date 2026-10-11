@@ -154,3 +154,40 @@
   .locality-view #world-location-detail .world-enemy {padding:13px;}
   .locality-view #world-current .ny-place-banner {height:166px;}
 }
+
+/* Torre Silente V1 — responsive card composition, pending approved art assets.
+   All content stays real and clickable; no invented art or gameplay data. */
+.locality-view #world-location-detail .world-enemy {
+  isolation:isolate;
+}
+.locality-view #world-location-detail .world-enemy > div {
+  min-width:0;
+}
+.locality-view #world-location-detail .world-enemy button[data-world-fight] {
+  cursor:pointer;
+}
+@media (min-width:375px) {
+  .locality-view #world-location-detail .world-enemy {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(120px,36%);
+    align-items:center;
+    column-gap:12px;
+  }
+  .locality-view #world-location-detail .world-enemy > div {
+    grid-column:1;
+  }
+  .locality-view #world-location-detail .world-enemy button[data-world-fight] {
+    grid-column:2;
+    width:100%;
+  }
+}
+@media (max-width:374px) {
+  .locality-view #world-location-detail .world-enemy {
+    display:flex;
+    flex-direction:column;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .locality-view #world-location-detail .world-enemy *,
+  .locality-view #world-current * {transition:none!important;animation:none!important;}
+}
