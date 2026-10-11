@@ -131,7 +131,7 @@ const VisualRenderer = (() => {
       rig.append(group);
     }
     function updateDebugAttribute() {
-      if (diagnostics.size && Equipment.testMode)
+      if (diagnostics.size && typeof Equipment !== "undefined" && Equipment.testMode)
         svg.setAttribute(
           "data-visual-debug",
           JSON.stringify([...diagnostics.values()]),
