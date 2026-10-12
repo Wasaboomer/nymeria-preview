@@ -16,5 +16,5 @@ module.exports = async function navigate(page, screen) {
   await press(page.locator('#tab-menu'));await press(page.locator('#menu-debug-link'));
   if(screen==='combat')await press(page.locator('[data-nav="combat"]'));return;
  }
- await press(page.locator('#tab-menu'));await press(page.locator('#tab-character'));await press(page.locator(`[data-nav="${screen}"]`));
+ await press(page.locator('#tab-menu'));await press(page.locator('#tab-character'));await press(page.locator(`#panel-character [data-nav="${screen}"]`));
 };

@@ -47,7 +47,7 @@ const url = process.env.NYMERIA_TEST_URL || 'http://127.0.0.1:8018';
         }
       });
       assert.ok(candidate,'A real compatible alternate piece exists');
-      await press(page,'[data-nav="equipment"]');
+      await press(page,'#panel-character [data-nav="equipment"]');
       await press(page,'[data-open-slot="'+candidate.slot+'"]');
       await press(page,'[data-item-id="'+candidate.id+'"]');
       await press(page,'#equip-item');
