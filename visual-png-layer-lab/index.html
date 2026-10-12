@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>NYMERIA · PNG Layer Lab</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0d1420;color:#f3eee2}
+*{box-sizing:border-box}body{margin:0;padding:16px 12px 32px;min-width:0}
+main{max-width:930px;margin:auto}header{margin-bottom:14px}h1{font-size:1.25rem;letter-spacing:.07em;margin:0 0 5px;color:#e8d6a7}
+h2{font-size:1rem;margin:0 0 10px;color:#e8d6a7}p{line-height:1.45;margin:6px 0 10px;color:#c6cbd3;font-size:.88rem}
+.tag{display:inline-block;font-size:.69rem;padding:3px 7px;border:1px solid #75694c;border-radius:30px;color:#decda8;margin-bottom:8px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,.85fr);gap:16px;align-items:start}
+.preview-panel,.controls-panel{border:1px solid #37445a;background:#161f2e;border-radius:13px;padding:12px;min-width:0}
+.stage{width:100%;max-width:420px;aspect-ratio:2/3;margin:0 auto;border-radius:8px;overflow:hidden;position:relative;background-color:#262e3a;background-image:linear-gradient(45deg,#343d4a 25%,transparent 25%),linear-gradient(-45deg,#343d4a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#343d4a 75%),linear-gradient(-45deg,transparent 75%,#343d4a 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+.stage svg{display:block;width:100%;height:100%}.stage svg image{pointer-events:none}
+#grid{pointer-events:none} .status{border-radius:8px;padding:9px 10px;background:#0d1522;color:#c7d6df;font-size:.78rem;margin-top:10px;overflow-wrap:anywhere;line-height:1.5}
+.status strong{color:#e8d6a7}.warn{color:#f6bba7}.good{color:#9bdab7}
+.control{margin:12px 0 15px}.control-title{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:.83rem;margin-bottom:6px}
+output{font-variant-numeric:tabular-nums;color:#e6c98a}input[type=range]{width:100%;accent-color:#cfab66;height:26px;touch-action:pan-y}
+.actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+button{background:#293a50;color:#f6ebd5;border:1px solid #67728a;border-radius:9px;padding:10px 12px;font:inherit;font-size:.84rem;cursor:pointer;min-height:42px}
+button.primary{background:#8b6934;border-color:#c4a368;color:white}
+button:focus-visible,input:focus-visible{outline:2px solid #e2b973;outline-offset:3px}
+.toggle{display:flex;align-items:center;gap:9px;font-size:.84rem;margin:10px 0;min-height:30px}.toggle input{accent-color:#cfab66;width:18px;height:18px}
+small{color:#aeb8c8;line-height:1.5;display:block}.readout{font: .73rem ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#0d1522;border-radius:8px;padding:9px;color:#b8d2d4;max-height:180px;overflow:auto}
+hr{border:0;border-top:1px solid #354054;margin:14px 0}
+@media(max-width:680px){.layout{grid-template-columns:minmax(0,1fr)}.stage{max-width:350px}.preview-panel,.controls-panel{padding:10px}body{padding:12px 10px 28px}}
+</style>
+</head>
+<body><main>
+<header><span class="tag">DEV · SOLO PROTOTIPO · NON PUBBLICATO</span><h1>NYMERIA / PNG Layer Lab</h1>
+<p>Prova di sovrapposizione raster indipendente. Il BODY qui usato è <strong>sperimentale</strong>: non sostituisce il Kaelith originale protetto.</p></header>
+<div class="layout">
+<section class="preview-panel" aria-label="Anteprima del personaggio">
+<h2>Anteprima statica</h2>
+<div class="stage">
+<svg id="composite" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1536" role="img" aria-label="BODY sperimentale con corazza PNG sovrapposta">
+<g id="rear"></g>
+<image id="body" x="0" y="0" width="1024" height="1536" preserveAspectRatio="none"></image>
+<g id="front"></g>
+<g id="grid" visibility="hidden" stroke="#e7e0cc" stroke-width="2" stroke-opacity=".35">
+<path d="M512 0V1536M0 384H1024M0 768H1024M0 1152H1024"/>
+<rect x="1" y="1" width="1022" height="1534" fill="none"/>
+</g>
+</svg></div>
+<div id="status" class="status" role="status" aria-live="polite">Controllo PNG in corso…</div>
+<small>Il corpo mantiene sempre le coordinate logiche 0,0 e la dimensione 1024 × 1536. La pagina adatta soltanto la visualizzazione allo schermo.</small>
+</section>
+<section class="controls-panel" aria-label="Controlli della corazza">
+<h2>Corazza · layer indipendente</h2>
+<label class="toggle"><input id="visible" type="checkbox" checked> Mostra corazza</label>
+<label class="toggle"><input id="front-toggle" type="checkbox" checked> Corazza davanti al BODY</label>
+<label class="toggle"><input id="grid-toggle" type="checkbox"> Griglia e assi</label>
+<div class="control"><div class="control-title"><label for="x">Spostamento X</label><output id="x-out"></output></div><input id="x" type="range" min="-500" max="500" step="1" value="0"></div>
+<div class="control"><div class="control-title"><label for="y">Spostamento Y</label><output id="y-out"></output></div><input id="y" type="range" min="-650" max="650" step="1" value="-330"></div>
+<div class="control"><div class="control-title"><label for="scale">Scala uniforme</label><output id="scale-out"></output></div><input id="scale" type="range" min="15" max="125" step="1" value="38"></div>
+<div class="control"><div class="control-title"><label for="opacity">Opacità corazza</label><output id="opacity-out"></output></div><input id="opacity" type="range" min="0" max="100" step="1" value="100"></div>
+<div class="actions"><button id="reset">Ripristina</button><button id="compare">BODY solo / equipaggiato</button><button id="copy" class="primary">Copia JSON</button></div>
+<div id="copy-feedback" role="status" aria-live="polite"><small>Le coordinate sono esportabili, non vengono salvate nel gioco.</small></div>
+<hr>
+<h2>Configurazione corrente</h2><pre id="json" class="readout"></pre>
+<hr>
+<h2>Limiti del test</h2>
+<small>La corazza include spallacci e protezioni dei fianchi: NON sono ancora slot indipendenti. Il prototipo non modifica l'SVG renderer, l'equipaggiamento, il salvataggio o il gameplay. Le sette razze richiederanno sagome e compatibilità dedicate.</small>
+</section>
+</div>
+</main>
+<script>
+"use strict";
+const ASSETS = {
+  body: "assets/body-experimental.png",
+  armor: "assets/armor-experimental.png"
+};
+const W=1024,H=1536, cx=W/2,cy=H/2;
+const defaults={x:0,y:-330,scale:38,opacity:100,visible:true,front:true,grid:false};
+const el=id=>document.getElementById(id);
+const ns="http://www.w3.org/2000/svg";
+let state={...defaults};
+const armor=document.createElementNS(ns,"image");
+armor.setAttribute("x","0");armor.setAttribute("y","0");
+armor.setAttribute("width",String(W));armor.setAttribute("height",String(H));
+armor.setAttribute("preserveAspectRatio","none");
+armor.setAttribute("href",ASSETS.armor);
+el("body").setAttribute("href",ASSETS.body);
+function config(){
+ return {canvas:{width:W,height:H},body:{asset:"body-experimental.png",x:0,y:0,scale:1,unchanged:true},layers:{
+  torso:{asset:"armor-experimental.png",x:state.x,y:state.y,scale:state.scale/100,opacity:state.opacity/100,visible:state.visible,zOrder:state.front?"front":"rear",containsCombinedShouldersAndHipPlates:true}
+ }};
+}
+function update(){
+ const target=el(state.front?"front":"rear");
+ if(armor.parentNode!==target)target.appendChild(armor);
+ const s=state.scale/100;
+ armor.setAttribute("transform",`translate(${state.x} ${state.y}) translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`);
+ armor.setAttribute("visibility",state.visible?"visible":"hidden");
+ armor.setAttribute("opacity",String(state.opacity/100));
+ el("grid").setAttribute("visibility",state.grid?"visible":"hidden");
+ for(const key of ["x","y","scale","opacity"]) {
+   el(key).value=state[key];
+   el(key+"-out").textContent=state[key]+(key==="x"||key==="y"?" px":"%");
+ }
+ el("visible").checked=state.visible;
+ el("front-toggle").checked=state.front;
+ el("grid-toggle").checked=state.grid;
+ el("json").textContent=JSON.stringify(config(),null,2);
+}
+for(const key of ["x","y","scale","opacity"])el(key).addEventListener("input",e=>{state[key]=Number(e.target.value);update()});
+for(const [id,key] of [["visible","visible"],["front-toggle","front"],["grid-toggle","grid"]])el(id).addEventListener("change",e=>{state[key]=e.target.checked;update()});
+el("reset").addEventListener("click",()=>{state={...defaults};update()});
+el("compare").addEventListener("click",()=>{state.visible=!state.visible;update()});
+el("copy").addEventListener("click",async()=>{
+ const value=JSON.stringify(config(),null,2);
+ try{
+   if(!navigator.clipboard?.writeText)throw Error("Clipboard API non disponibile");
+   await navigator.clipboard.writeText(value);
+   el("copy-feedback").textContent="Coordinate copiate negli appunti.";
+ }catch(e){
+   el("copy-feedback").textContent="Copia automatica non disponibile: seleziona il JSON qui sopra e copialo manualmente.";
+ }
+});
+function checkImage(name,src){
+ return new Promise(resolve=>{
+  const img=new Image();
+  img.onload=()=>{
+   const meta={name,loaded:true,width:img.naturalWidth,height:img.naturalHeight};
+   if(img.naturalWidth!==W||img.naturalHeight!==H)meta.problem="Dimensioni diverse dal canvas logico";
+   try{
+    const c=document.createElement("canvas");c.width=64;c.height=96;
+    const ctx=c.getContext("2d",{willReadFrequently:true});ctx.clearRect(0,0,64,96);ctx.drawImage(img,0,0,64,96);
+    const d=ctx.getImageData(0,0,64,96).data;
+    let zero=0,partial=0,opaque=0;
+    for(let i=3;i<d.length;i+=4){if(d[i]===0)zero++;else if(d[i]===255)opaque++;else partial++;}
+    meta.alpha={transparentSamplePixels:zero,partialSamplePixels:partial,opaqueSamplePixels:opaque};
+    if(zero===0)meta.problem=(meta.problem?meta.problem+"; ":"")+"Nessuna trasparenza rilevata nel campione";
+   }catch(e){meta.problem=(meta.problem?meta.problem+"; ":"")+"Analisi alpha non disponibile ("+e.message+")";}
+   resolve(meta);
+  };
+  img.onerror=()=>resolve({name,loaded:false,problem:"Caricamento non riuscito: "+src});
+  img.src=src;
+ });
+}
+Promise.all([checkImage("BODY",ASSETS.body),checkImage("Corazza",ASSETS.armor)]).then(rows=>{
+ const ok=rows.every(r=>r.loaded&&!r.problem);
+ el("status").innerHTML=`<strong>${ok?"PNG caricati; controlli pronti":"Problemi negli asset"}</strong><br>`+
+ rows.map(r=>`${r.name}: ${r.loaded?`${r.width} × ${r.height}; trasparenza campionata ${r.alpha?.transparentSamplePixels??"non verificabile"} px`:"non caricato"}${r.problem?` — ⚠ ${r.problem}`:""}`).join("<br>")+
+ `<br><span class="${ok?"good":"warn"}">${ok?"La qualità dell'allineamento richiede comunque verifica visiva.":"Controllare gli asset prima di valutare l'allineamento."}</span>`;
+});
+update();
+</script>
+</body></html>
