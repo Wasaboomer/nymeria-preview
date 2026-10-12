@@ -60,3 +60,30 @@
 #panel-menu .nav-badge { position:absolute; top:6px; right:6px; flex:none; background:#b29462; color:#101820; }
 #panel-menu > .hub-links { margin:0 4px; }
 #panel-menu #menu-debug-link { min-height:48px; }
+
+/* Menu A final polish. Shared navigation/viewport logic stays untouched. */
+body[data-screen="menu"] #topbar-context,
+body[data-screen="menu"] #context-title { display:none; }
+body[data-screen="menu"] .mobile-topbar { justify-content:flex-end; }
+body[data-screen="menu"] #navigation-locality {
+  min-height:48px; padding:8px 10px; font-size:14px;
+  background:transparent; border-color:#a98a514d; color:#d8c7a8;
+}
+#panel-menu.fixed-scroll-panel {
+  height:auto!important; max-height:calc(var(--fixed-content-height) + 4px);
+  min-height:0;
+}
+body[data-screen="menu"] .app::after { content:""; display:block; flex:1; order:90; min-height:0; }
+#panel-menu .menu-group { margin-bottom:9px; }
+#panel-menu .menu-group .hub-links { gap:7px; grid-auto-rows:1fr; }
+#panel-menu .menu-group button { min-height:72px; padding:7px 8px; gap:4px; }
+#panel-menu .menu-group:last-of-type { margin-bottom:0; }
+#panel-menu #menu-debug-link {
+  display:flex; align-items:center; justify-content:flex-start; gap:8px;
+  min-height:48px; padding:6px 8px; font-size:13px;
+  background:transparent; border:0; box-shadow:none; color:#b9c3cb;
+}
+#panel-menu #menu-debug-link[hidden] { display:none; }
+#panel-menu #menu-debug-link .nymeria-icon { width:17px; height:17px; }
+#panel-menu > .hub-links:has(#menu-debug-link[hidden]) { display:none; }
+#panel-menu > .hub-links:has(#menu-debug-link:not([hidden])) { margin-top:8px; }
