@@ -60,7 +60,7 @@
     <script src="locality-ui.js?v=locality-ux2" defer></script>
     <link rel="stylesheet" href="locality-ui.css?v=torre-v1-hero-restored3" />
     <script src="notification-system.js?v=sprint1-mobile-1" defer></script>
-    <script src="notification-ui.js?v=sprint282-1" defer></script>
+    <script src="notification-ui.js?v=title-policy-1" defer></script>
     <script src="world-discovery-ui.js?v=sprint1-mobile-1" defer></script>
     <script src="mobile-ui.js?v=sprint12-mobile-1" defer></script>
     <script src="visual-icons.js?v=sprint1-mobile-1" defer></script>
@@ -75,9 +75,9 @@
     <script src="modular-proof.js?v=1" defer></script>
     <link rel="stylesheet" href="fixed-screens.css?v=ux-phase1" />
     <script src="fixed-screens.js?v=sprint283-1" defer></script>
-    <link rel="stylesheet" href="fantasy-theme.css?v=sprint2-1" />
+    <link rel="stylesheet" href="fantasy-theme.css?v=title-policy-1" />
     <script src="fantasy-ui.js?v=sprint2-1" defer></script>
-    <link rel="stylesheet" href="interface-refinement.css?v=menu-phase1-1" />
+    <link rel="stylesheet" href="interface-refinement.css?v=menu-title-policy-1" />
     <script src="interface-refinement.js?v=sprint21-1" defer></script>
     <script src="native-bootstrap.js?v=sprint22-1" defer></script>
     <link rel="stylesheet" href="mobile-navigation-polish.css?v=sprint27-1" />
@@ -85,7 +85,6 @@
   <body>
     <main class="app">
       <header class="mobile-topbar">
-        <div class="brand">NYMERIA</div>
         <span id="topbar-context">Frontiera del Vespro</span><button id="current-quest-link" hidden>Missione</button>
       </header>
       <nav class="screen-tabs bottom-nav" role="tablist" aria-label="Navigazione principale">
@@ -96,19 +95,19 @@
       </nav>
       <div id="context-bar" class="context-bar" hidden><button id="navigation-locality" hidden>Località attuale →</button><button id="navigation-back">← Indietro</button><strong id="context-title"></strong></div>
       <section id="panel-menu" hidden aria-label="Menu">
-        <header class="menu-heading"><span class="menu-eyebrow">NYMERIA</span><h1>Le vie del Vespro</h1><p>Personaggio, attività e conoscenze.</p></header>
+        <header class="menu-heading"><h1>Menu</h1></header>
         <section class="menu-group" aria-labelledby="menu-group-0"><h2 id="menu-group-0">Personaggio</h2><div class="hub-links">
-          <button id="tab-character" data-nav="character"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 6Q8 2 12 2T16 6L15 10 12 12 9 10ZM5 22L6 16 10 13H14L18 16 19 22M9 17V22M15 17V22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Eroe</strong><small>Identità, statistiche e progressione.</small></span><span class="menu-chevron" aria-hidden="true">›</span></button>
-          <button data-nav="equipment"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3L3 7 6 12 8 10 6 22H18L16 10 18 12 21 7 17 3 12 7ZM12 10V18M9 13L12 16 15 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Equipaggiamento</strong><small>Consulta gli slot e confronta gli oggetti.</small></span><span class="menu-chevron" aria-hidden="true">›</span></button>
-          <button data-nav="class"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2L17 8 12 14 7 8ZM3 20L12 15 21 20M4 14L8 11M20 14L16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Classe / Strategia</strong><small>Specializzazione e priorità delle abilità.</small></span><span class="menu-chevron" aria-hidden="true">›</span></button>
+          <button id="tab-character" data-nav="character"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 6Q8 2 12 2T16 6L15 10 12 12 9 10ZM5 22L6 16 10 13H14L18 16 19 22M9 17V22M15 17V22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Eroe</strong></span></button>
+          <button data-nav="equipment"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3L3 7 6 12 8 10 6 22H18L16 10 18 12 21 7 17 3 12 7ZM12 10V18M9 13L12 16 15 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Equipaggiamento</strong></span></button>
+          <button data-nav="class"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2L17 8 12 14 7 8ZM3 20L12 15 21 20M4 14L8 11M20 14L16 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Classe / Strategia</strong></span></button>
         </div></section>
         <section class="menu-group" aria-labelledby="menu-group-1"><h2 id="menu-group-1">Attività</h2><div class="hub-links">
-          <button data-nav="professions"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10L8 3H17L22 10 18 21H6ZM3 10H22M8 3L10 10 12 21M17 3L15 10 12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Professioni</strong><small>Raccolta e creazione nei luoghi della Frontiera.</small></span><span class="menu-chevron" aria-hidden="true">›</span></button>
-          <button id="tab-expeditions" data-nav="expeditions"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19L7 5H17L20 19 12 22ZM7 5L12 11 17 5M12 11V18M9 15H15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Spedizioni</strong><small>Preparazione, viaggi e ricompense.</small></span><span id="badge-activities" class="nav-badge" hidden></span><span class="menu-chevron" aria-hidden="true">›</span></button>
+          <button data-nav="professions"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10L8 3H17L22 10 18 21H6ZM3 10H22M8 3L10 10 12 21M17 3L15 10 12 21" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Professioni</strong></span></button>
+          <button id="tab-expeditions" data-nav="expeditions"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19L7 5H17L20 19 12 22ZM7 5L12 11 17 5M12 11V18M9 15H15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Spedizioni</strong></span><span id="badge-activities" class="nav-badge" hidden></span></button>
         </div></section>
         <section class="menu-group" aria-labelledby="menu-group-2"><h2 id="menu-group-2">Conoscenze e Comunità</h2><div class="hub-links">
-          <button data-nav="discoveries"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2L15 8 22 11 15 15 12 22 9 15 2 11 9 8ZM12 7V15M8 11H16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Scoperte / Titoli</strong><small>Segreti e imprese registrati.</small></span><span class="menu-chevron" aria-hidden="true">›</span></button>
-          <button data-nav="guild"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 8L7 12 12 4 17 12 21 8 19 19H5ZM6 22H18M9 16H15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Gilda</strong><small>Gilda locale e progetti · membri simulati.</small></span><span class="menu-chevron" aria-hidden="true">›</span></button>
+          <button data-nav="discoveries"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2L15 8 22 11 15 15 12 22 9 15 2 11 9 8ZM12 7V15M8 11H16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Scoperte / Titoli</strong></span></button>
+          <button data-nav="guild"><span class="menu-symbol" aria-hidden="true"><svg class="nymeria-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 8L7 12 12 4 17 12 21 8 19 19H5ZM6 22H18M9 16H15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="menu-copy"><strong>Gilda</strong></span></button>
         </div></section>
         <div class="hub-links"><button id="menu-debug-link" data-nav="debug" hidden>DEBUG · Test Mode <span>→</span></button></div>
       </section>

@@ -11,9 +11,9 @@
 }
 body.nymeria-theme { background:radial-gradient(ellipse at 45% 5%,#314333,var(--ny-night) 70%); font-family:var(--ny-text); }
 .nymeria-theme .app { background:linear-gradient(135deg,#c3a76b05,transparent 45%),linear-gradient(0deg,#080f0dcc,transparent 80%); }
-.nymeria-theme .mobile-topbar { border-color:var(--ny-bronze); }
+.nymeria-theme .mobile-topbar { border-color:var(--ny-bronze); margin-bottom:3px; padding-bottom:3px; }
 .nymeria-theme .brand { font-family:var(--ny-display); color:var(--ny-gold); text-shadow:0 1px #000; letter-spacing:4px; }
-.nymeria-theme .mobile-topbar::before { content:'✧'; color:var(--ny-gold); font-size:22px; margin-right:6px; }
+.nymeria-theme .mobile-topbar::before { content:none; }
 .nymeria-theme #topbar-context { color:var(--ny-muted); font-size:12px; }
 .nymeria-theme .hint { color:var(--ny-muted); }
 .nymeria-theme h1, .nymeria-theme h2, .nymeria-theme h3 { font-family:var(--ny-display); color:var(--ny-parchment); }

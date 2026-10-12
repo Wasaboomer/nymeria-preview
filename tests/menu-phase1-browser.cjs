@@ -16,8 +16,15 @@ for(const width of [320,375,390,430]){
  assert.deepEqual(await p.locator('#panel-menu .menu-group h2').allTextContents(),['Personaggio','Attività','Conoscenze e Comunità']);
  assert.equal(await p.locator('#panel-menu .menu-group [data-nav]').count(),7);
  assert.ok(await p.locator('#menu-debug-link').isHidden());
+ assert.equal(await p.locator('#panel-menu .menu-copy small').count(),0);
+ assert.equal(await p.locator('#panel-menu .brand, #panel-menu .menu-eyebrow').count(),0);
+ assert.equal(await p.locator('#panel-menu h1').textContent(),'Menu');
  for(const height of [568,667,844]){
   await p.setViewportSize({width,height});await p.waitForTimeout(100);
+  for(const grid of await p.locator('#panel-menu .menu-group .hub-links').all()) {
+   const boxes=await grid.locator('button').evaluateAll(nodes=>nodes.slice(0,2).map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width}}));
+   assert.equal(boxes[0].y,boxes[1].y);assert.ok(boxes[1].x>boxes[0].x+boxes[0].width);
+  }
   for(const [dest,[screen,view]] of Object.entries(routes)){
    const control=p.locator(`#panel-menu [data-nav="${dest}"]`);
    await control.scrollIntoViewIfNeeded();
@@ -45,7 +52,7 @@ for(const width of [320,375,390,430]){
  assert.ok(await p.locator('#tab-menu').isDisabled());
  assert.ok(await p.locator('#navigation-back').isDisabled());
  assert.deepEqual(errors,[]);assert.deepEqual(await p.evaluate(()=>rejections),[]);
- await c.close();console.log(`PASS menu ${width}: 7 routes/3 heights, coordinate touch, 48px targets, scroll/focus/Back, storage/reload, combat guard, no errors/overflow`);
+ await c.close();console.log(`PASS menu ${width}: two-column grid, 7 routes/3 heights, coordinate touch, 48px targets, scroll/focus/Back, storage/reload, combat guard, no errors/overflow`);
 }
 const c=await b.newContext(),p=await c.newPage();await p.goto(url+'/?test=1');await p.locator('#tab-menu').click();assert.ok(await p.locator('#menu-debug-link').isVisible());await c.close();
 console.log('PASS debug remains Test Mode only');

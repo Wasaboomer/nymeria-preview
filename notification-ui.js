@@ -14,7 +14,7 @@ const NotificationUI = (() => {
   const escape = value => String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
   const gainLabels = { force: "Forza", agility: "Agilità", vigor: "Vigor", spirit: "Spirito", critical: "Critico", armor: "Armatura", speed: "Velocità" };
   function presentation(entry) {
-    const kind = kinds[entry.type] || { label: "NYMERIA", duration: 5000 };
+    const kind = kinds[entry.type] || { label: "Avviso", duration: 5000 };
     const p = entry.payload;
     let title = p.name || p.title || "", label = kind.label, details = [];
     if (entry.type === "levelUp") {

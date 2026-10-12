@@ -27,3 +27,9 @@
 - Pushes still run the complete existing regression suite. A preview deployment is only permitted after its successful full test gate and explicit user authorization; `[skip dev deploy]` prevents publishing.
 - A green functional test is not a substitute for reviewing visual screenshots against the frozen reference. Do not claim visual approval without such review.
 - If Pages deployment fails for infrastructure reasons, retry only its failed job rather than changing game code or rerunning a full suite.
+
+## Gameplay title visibility (approved 2026-10-12)
+- Never display the NYMERIA title or game logo in gameplay headers, including the main Menu, global topbar and notification headers. Do not replace it with a repetitive decorative title.
+- Keep useful section/place names, context and navigation controls. Compact headers to prioritize content; preserve functionality, safe areas and touch targets.
+- Branding is allowed only on launch/splash, installed-app icon/name, store pages, and Information/Credits/Acknowledgements. Do not alter those surfaces under a gameplay-header cleanup.
+- Apply this rule to all future gameplay screens; do not modify frozen artwork to erase branding without explicit authorization.
