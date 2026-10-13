@@ -1,7 +1,13 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright'),G=require('../progression-store'),P=require('../profession-system');
 const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8018';
+async function openMaterialsPage(page) {
+ // Material correctness depends on deferred scripts/singletons, not hidden battle artwork.
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>typeof ProgressionStore!=='undefined' && typeof ProfessionUI!=='undefined' && typeof WorldSystem!=='undefined' && typeof QuestSystem!=='undefined' && typeof MaterialCapacityAdmission!=='undefined' && typeof ProgressionStore.transact==='function' && typeof ProfessionUI.engine.gather==='function' && typeof WorldSystem.enter==='function' && typeof QuestSystem.claim==='function');
+}
 async function install(page) {
- for(const file of ['material-bag-contract','material-bag-store','material-capacity-admission'])await page.addScriptTag({url:`${url}/${file}.js`});
+ // Shared modules now load in the real runtime; do not redeclare their globals.
+ assert.equal(await page.evaluate(()=>typeof MaterialCapacityAdmission), 'object');
  await page.evaluate(()=>{
   window.capacityPadding=39;
   const storage={getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)};
@@ -19,9 +25,11 @@ async function install(page) {
 (async()=>{const browser=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{
  for(const width of [320,375,390,430]){
   const context=await browser.newContext({viewport:{width,height:844},isMobile:true,hasTouch:true}),p=await context.newPage(),errors=[];
+  let releaseIllustration=()=>{};
+  try {
   p.on('pageerror',e=>errors.push(e.message));
-  await p.addInitScript(({g,prof,gkey,pkey})=>{if(!localStorage.getItem(gkey))localStorage.setItem(gkey,JSON.stringify(g));if(!localStorage.getItem(pkey))localStorage.setItem(pkey,JSON.stringify(prof));window.rejections=[];addEventListener('unhandledrejection',e=>rejections.push(String(e.reason)));},{g:G.initial(),prof:{...P.empty(),materials:{'raw-iron':3}},gkey:G.KEY,pkey:P.KEY});
-  await p.goto(url);await install(p);
+  await context.addInitScript(({g,prof,gkey,pkey})=>{if(!localStorage.getItem(gkey))localStorage.setItem(gkey,JSON.stringify(g));if(!localStorage.getItem(pkey))localStorage.setItem(pkey,JSON.stringify(prof));window.rejections=[];addEventListener('unhandledrejection',e=>rejections.push(String(e.reason)));},{g:G.initial(),prof:{...P.empty(),materials:{'raw-iron':3}},gkey:G.KEY,pkey:P.KEY});
+  await openMaterialsPage(p);await install(p);
   assert.equal((await p.evaluate(()=>capacityProfession.gather('vesper-iron-vein'))).ok,true);
   const before=await p.evaluate(()=>localStorage.getItem(ProfessionEngine.KEY));assert.equal((await p.evaluate(()=>capacityProfession.craft('forge-iron'))).code,'capacity-exceeded');assert.equal(await p.evaluate(()=>localStorage.getItem(ProfessionEngine.KEY)),before);
   // Controlled fixture edit only, never a gameplay bypass or persisted capacity switch.
@@ -32,12 +40,22 @@ async function install(page) {
   assert.equal((await p.evaluate(()=>capacityQuest.claim('mq04'))).pending,true);const saved=await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY));
   await p.reload();await install(p);assert.equal(await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),saved);
   await p.evaluate(()=>window.capacityPadding=35);assert.equal((await p.evaluate(()=>capacityQuest.claim('mq04'))).ok,true);const paid=await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY));assert.equal((await p.evaluate(()=>capacityQuest.claim('mq04'))).ok,false);assert.equal(await p.evaluate(()=>localStorage.getItem(ProgressionStorage.KEY)),paid);
-  const second=await context.newPage();await second.goto(url);await install(second);
+  const second=await context.newPage();second.on('pageerror',e=>errors.push(e.message));
+  if(width===390){
+   // Regression: keep the unrelated hidden enemy illustration pending while all
+   // material checks execute. A wait for load would time out despite a ready engine.
+   const illustration=new Promise(resolve=>releaseIllustration=resolve);
+   await second.route('**/assets/enemies/sentinel.svg*',async route=>{await illustration;try{await route.continue()}catch(error){if(!second.isClosed())throw error}});
+  }
+  await openMaterialsPage(second);await install(second);
+  if(width===390)assert.equal(await second.evaluate(()=>document.readyState),'interactive','Material test must work before unrelated image finishes');
   assert.equal((await second.evaluate(()=>capacityProfession.gather('vesper-iron-vein'))).ok,false,'Second tab must not bypass common ownership');
   await p.evaluate(()=>window.dispatchEvent(new Event('pagehide')));
   await second.evaluate(()=>window.capacityPadding=30);assert.equal((await second.evaluate(()=>capacityProfession.gather('vesper-iron-vein'))).ok,true);
   assert.equal(await p.evaluate(()=>localStorage.getItem(MaterialBagStore.KEY)),null);
   assert.deepEqual(errors,[]);assert.deepEqual(await p.evaluate(()=>rejections),[]);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  await context.close();console.log(`PASS capacity ${width}: real engine/shared locks, gather/craft/final state, pending reload/retry, two-tab handoff, no activation/errors/overflow`);
+  assert.deepEqual(await second.evaluate(()=>rejections),[]);
+  releaseIllustration();console.log(`PASS capacity ${width}: real engine/shared locks, gather/craft/final state, pending reload/retry, two-tab handoff, no activation/errors/overflow`);
+  } finally {releaseIllustration();await context.close();}
  }
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

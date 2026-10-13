@@ -1,4 +1,4 @@
-/* Factory-only capacity simulation. Not imported by gameplay; no persisted enable flag. */
+/* Shared capacity admission factory. No persisted or user-accessible enable flag. */
 const MaterialCapacityAdmission = (() => {
   const node = typeof module !== 'undefined' && module.exports;
   const bag = node ? require('./material-bag-contract.js') : MaterialBagContract;

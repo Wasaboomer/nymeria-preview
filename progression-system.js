@@ -334,6 +334,7 @@ const ProgressionSystem =
   typeof window !== "undefined"
     ? ProgressionLifecycle.create({
         store: ProgressionStore,
+        rewardAdmission: MaterialBagRuntime.reward,
         equipment: Equipment,
         classes: ClassSystem,
         combatSettings: () => CombatUI.settings,

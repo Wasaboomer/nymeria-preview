@@ -81,9 +81,13 @@ const MaterialBagContract = (() => {
       balances[key] = sum;
     }
     const occupied = Object.values(balances).filter(amount => amount > 0).length;
-    if (occupied > before.capacity) return { ok: false, code: 'capacity-exceeded', retryable: true, capacity: before.capacity, required: occupied };
+    const introducesType = Object.entries(balances).some(([key, amount]) => amount > 0 && !(before.balances[key] > 0));
+    // Over-capacity holdings are preserved: existing stacks may grow or shrink.
+    // A recipe starting above capacity must not swap in a new identity, even if
+    // its final occupancy fits. Reduce holdings first in a separate operation.
+    if ((before.overCapacity && introducesType) || (!before.overCapacity && occupied > before.capacity)) return { ok: false, code: 'capacity-exceeded', retryable: true, capacity: before.capacity, required: Math.max(occupied, before.overCapacity ? before.occupied : 0) };
     return { ok: true, beforeOccupied: before.occupied, occupied, capacity: before.capacity,
-      available: before.capacity - occupied, balances };
+      available: Math.max(0, before.capacity - occupied), balances };
   }
   return freeze({ version: 1, catalog, limits, capacityFor, inspect, plan });
 })();

@@ -3,7 +3,7 @@ const Storage=require('../progression-store'),Data=require('../progression-data'
 const dismiss=require('./notifications-fixture.cjs'),{reach}=require('./fixed-navigation-fixture.cjs');
 const base=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8018';
 async function install(p) {
- await p.addScriptTag({url:base+'/material-bag-contract.js'});
+ assert.equal(await p.evaluate(()=>typeof MaterialBagContract),'object');
  await p.evaluate(()=>{
   window.rewardSpace=false;window.rewardNow=Date.now();
   const extras=Array.from({length:40},(_,i)=>({owner:'profession',id:`fixture-${i}`,key:`profession:fixture-${i}`}));

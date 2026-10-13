@@ -494,6 +494,7 @@ const ProgressionStore =
           getItem: (key) => localStorage.getItem(key),
           setItem: (key, value) => localStorage.setItem(key, value),
         },
+        materialAdmission: MaterialBagRuntime.progression,
         classDefinition: () => ClassSystem.selected(),
         exclusive: (run) => MaterialWriterCoordinator.run(() => MaterialWriterCoordinator.progression(run)),
       })

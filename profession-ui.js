@@ -5,7 +5,7 @@ const ProfessionUI = (() => {
     const refreshAndRun=()=>{ProgressionStore.refresh();return ProgressionStore.error?{ok:false,message:"World context unavailable. No profession changes applied."}:run()};
     return MaterialWriterCoordinator.progression(refreshAndRun);
   }));
-  const engine=ProfessionEngine.create({context,exclusive}), root=document.getElementById("profession-root"), status=document.getElementById("profession-status");
+  const engine=ProfessionEngine.create({context,exclusive,materialAdmission:MaterialBagRuntime.profession}), root=document.getElementById("profession-root"), status=document.getElementById("profession-status");
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const matName=id=>ProfessionData.materials.find(x=>x.id===id)?.name||id;
   let busy=false;

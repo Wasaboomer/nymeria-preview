@@ -1,6 +1,6 @@
 /* One participating browser writer per origin. No retries and no multi-record atomicity. */
 const MaterialWriterCoordinator = (() => {
-  let owned=false, release=null, pending=Promise.resolve(), epoch=0, suspended=false, executing=0;
+  let owned=false, release=null, pending=Promise.resolve(), epoch=0, suspended=false, executing=0, invoking=0;
   const failure=message=>({ok:false,message});
   const acquisitions=new Set();
   function suspend(){epoch++;suspended=true;owned=false;for(const controller of acquisitions)controller.abort();if(release)release();}
@@ -11,8 +11,12 @@ const MaterialWriterCoordinator = (() => {
   if(typeof document!=='undefined')document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='hidden')suspend();else suspended=false;
   });
-  async function invoke(operation) { executing++; try { return await operation(); } finally { executing--; } }
+  // A pending callback is not evidence that the current caller is recursive.
+  // Track only the synchronous invocation stack; unrelated tasks must queue.
+  function call(operation) { invoking++; try { return operation(); } finally { invoking--; } }
+  async function invoke(operation) { executing++; try { return await call(operation); } finally { executing--; } }
   function run(operation, queueTimeoutMs = 5000) {
+    if(invoking>0)return Promise.resolve({ok:false,code:'nested-coordination-rejected',message:'Acquisizione ricorsiva rifiutata: nessuna modifica applicata.'});
     const requestEpoch=epoch;
     let expired=false, started=false, resolveTimeout;
     const timedOut=new Promise(resolve=>resolveTimeout=resolve);
@@ -49,11 +53,11 @@ const MaterialWriterCoordinator = (() => {
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try { return await navigator.locks.request('nymeria-progression',{signal:controller.signal},()=>{
       if(suspended || requestEpoch!==epoch)return failure('Pagina sospesa: operazione annullata prima della scrittura.');
-      return operation();
+      return call(operation);
     }); }
     catch { return failure('Accesso al salvataggio scaduto o rifiutato: rileggi e riprova.'); }
     finally {clearTimeout(timer);acquisitions.delete(controller);}
   }
-  return {run,progression,isCoordinated:()=>owned && !suspended && executing > 0};
+  return {run,progression,isCoordinated:()=>owned && !suspended && executing > 0,isInvoking:()=>invoking>0};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=MaterialWriterCoordinator;

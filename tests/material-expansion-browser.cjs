@@ -1,7 +1,8 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright'),G=require('../progression-store'),P=require('../profession-system');
 const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8018';
 async function install(p){
- for(const file of ['material-bag-contract','material-bag-store','material-capacity-admission'])await p.addScriptTag({url:`${url}/${file}.js`});
+ // Shared modules now load in the real runtime; do not redeclare their globals.
+ assert.equal(await p.evaluate(()=>typeof MaterialCapacityAdmission), 'object');
  await p.evaluate(()=>{
   const storage={getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v)};
   window.expansionBag=MaterialBagStore.create({storage});

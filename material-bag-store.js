@@ -34,9 +34,9 @@ const MaterialBagStore = (() => {
       scope: 'common-material-writer',
       run(operation) {
         if (!common) return Promise.resolve({ok:false,code:'common-coordinator-unavailable'});
-        // Reject recursive acquisition; unrelated requests during an asynchronous
-        // callback also fail conservatively and can be retried explicitly.
-        if (common.isCoordinated()) return Promise.resolve({ok:false,code:'nested-coordination-rejected'});
+        // Reject actual synchronous recursion, not another pending operation.
+        // Older injected coordinators retain their conservative contract.
+        if (typeof common.isInvoking === 'function' ? common.isInvoking() : common.isCoordinated()) return Promise.resolve({ok:false,code:'nested-coordination-rejected'});
         return common.run(() => common.progression(operation));
       }
     });
