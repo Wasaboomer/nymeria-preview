@@ -1,0 +1,9 @@
+{
+  "name": "nymeria-colyseus-locality-lab",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22"},
+  "scripts": {"build": "node build.mjs", "start": "npm run build && node server.mjs", "test": "npm run build && node --test tests/lab.test.mjs"},
+  "dependencies": {"@colyseus/core": "0.18.18", "@colyseus/ws-transport": "0.18.4", "@colyseus/sdk": "0.18.5"},
+  "devDependencies": {"esbuild": "0.25.12", "playwright": "1.58.2"}
+}

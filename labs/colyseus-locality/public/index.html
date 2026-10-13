@@ -1,0 +1,7 @@
+<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laboratorio Colyseus · separato dal gioco</title>
+<style>body{font:16px system-ui;background:#111923;color:#eee;max-width:36rem;margin:auto;padding:1rem}button,input{font:inherit;padding:.7rem;min-height:48px}form{display:flex;gap:.5rem}input{min-width:0;flex:1}li{overflow-wrap:anywhere;margin:.5rem 0}button{margin:.3rem}#status{min-height:3rem}</style>
+<h1>Località testuale di prova</h1><p>Laboratorio isolato. Ospiti fittizi assegnati dal server; presenza reale. Nessun dato del gioco.</p>
+<button id="join">Entra</button><button id="leave" disabled>Esci</button><button id="drop" disabled>Prova disconnessione</button><button id="reconnect" disabled>Riconnetti</button>
+<p id="status" role="status">Non connesso</p><h2>Presenza</h2><ul id="people"></ul><h2>Chat locale</h2><ul id="chat" aria-live="polite"></ul>
+<form id="send"><input id="text" aria-label="Messaggio" maxlength="200" autocomplete="off"><button id="submit" disabled>Invia</button></form>
+<script type="module" src="/client.js"></script></html>
