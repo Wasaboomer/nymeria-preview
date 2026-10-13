@@ -1,9 +1,12 @@
-/* Functional provisional surface, confined to the Material Bag. */
+/* Provisional material grid. All styles confined to this surface. */
 #material-bag-view {color:var(--text,#e5ded1);padding:8px 0;min-width:0;}
 #material-bag-view h3,#material-bag-view h4 {color:var(--gold,#c9a86a);margin:12px 0 8px;}
 #material-bag-view p {overflow-wrap:anywhere;}
-#material-bag-view ul {list-style:none;padding:0;margin:0;}
-#material-bag-view li button {width:100%;color:inherit;text-align:left;border:0;border-radius:0;display:flex;align-items:center;gap:12px;justify-content:space-between;min-height:48px;padding:8px 10px;box-sizing:border-box;border-bottom:1px solid #75633c55;background:#101922;}
-#material-bag-view li span {min-width:0;overflow-wrap:anywhere;}
-#material-bag-view li strong {flex-shrink:0;font-variant-numeric:tabular-nums;}
-@media(max-width:350px){#material-bag-view li {flex-wrap:wrap;gap:4px 12px;}}
+#material-bag-view ul {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;list-style:none;padding:0;margin:0;}
+#material-bag-view li {min-width:0;}
+#material-bag-view li button {position:relative;width:100%;height:60px;min-width:0;min-height:48px;padding:5px 5px 20px;box-sizing:border-box;color:inherit;border:1px solid #75633c99;border-radius:5px;background:#101922;display:flex;align-items:center;justify-content:center;}
+#material-bag-view .bag-material-symbol {display:block;width:30px;height:30px;color:#c9b587;}
+#material-bag-view svg {display:block;width:100%;height:100%;}
+#material-bag-view .bag-material-name {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+#material-bag-view li strong {position:absolute;bottom:3px;right:3px;font-size:12px;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#material-bag-view button:focus-visible {outline:2px solid #e6c985;outline-offset:2px;}

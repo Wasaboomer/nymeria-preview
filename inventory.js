@@ -7,6 +7,18 @@ const InventoryUI = (() => {
     selectedStack = null,
     target = null;
   const dialog = document.querySelector("#item-dialog");
+  let bagReturn = null;
+  dialog.addEventListener("close",()=>{
+    const saved=bagReturn;bagReturn=null;if(!saved)return;
+    // The existing modal layout temporarily removes the panel scroll class.
+    // Restore only the Bag context after that layout has returned to the panel.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(filter!=="materials" || NymeriaNavigation.route.screen!=="inventory")return;
+      const panel=document.querySelector("#panel-inventory");
+      panel.querySelector(`[data-stack-key="${CSS.escape(saved.key)}"]`)?.focus({preventScroll:true});
+      panel.scrollTop=saved.top;
+    }));
+  });
   const rarityLabel = (item) =>
     `${["I", "II", "III", "IV", "V"][GearData.rarities.indexOf(item.rarity)]} · ${item.rarity}`;
   const rarityClass = (item) =>
@@ -91,19 +103,35 @@ const InventoryUI = (() => {
       supplyNames:typeof WorldData !== 'undefined' ? WorldData.supplyNames : {}});
   }
   const sourceLabel = source => ({progression:'Risorse del personaggio',profession:'Materiali delle Professioni',quest:'Raccolte delle missioni'}[source] || 'Altro');
+  const readMaterials=()=>MaterialBagView.read({progression:ProgressionStore,profession:ProfessionUI.engine,storage:{getItem:key=>localStorage.getItem(key)}});
   function stackDetail() {
     dialog.dataset.detailKind = "resource";
-    const row = catalog().find(r=>r.key===selectedStack);
+    const bag=bagReturn?readMaterials():null;
+    const row = bagReturn ? (bag.ok?bag.groups.flatMap(group=>group.rows).map(row=>({...row,source:row.owner})).find(row=>row.key===selectedStack):null) : catalog().find(r=>r.key===selectedStack);
+    if(bag && !bag.ok){document.querySelector("#detail-heading").textContent="Materiale non consultabile";document.querySelector("#detail-body").innerHTML=`<p role="alert">${escape(bag.message)}</p>`;return;}
     document.querySelector('#detail-heading').textContent = row?.name || 'Oggetto non più posseduto';
     document.querySelector('#detail-body').innerHTML = row ? `<p>${escape(sourceLabel(row.source))}</p><p>Quantità: <strong>${row.quantity}</strong></p><p class="hint">${row.source==='quest'?'Raccolta registrata dal sistema missioni. Consulta il Diario per gli obiettivi.':row.source==='profession'?'Materiale conservato nelle Professioni. Consulta le ricette disponibili per utilizzarlo.':'Risorsa conservata dal sistema di progressione.'}</p><p>Non equipaggiabile.</p>` : '<p>La quantità è cambiata: consulta la lista aggiornata.</p>';
   }
+  // Provisional material symbols: presentation only, not artwork or material data.
+  function materialSymbol(id) {
+    const paths={iron:'M5 16 11 8h12l4 8-6 7H9z M5 16h22 M11 8l3 8-5 7',
+      'raw-iron':'m5 22 3-12 10-5 9 10-5 12z M8 10l10 5 4 12 M18 5v10',
+      'forged-iron':'M4 12h24l-5 7H10z M12 19v6h10 M7 25h20',
+      fiber:'M7 26C24 18 8 9 25 5 M12 27C29 19 13 10 28 7 M4 22C20 14 5 8 21 4',
+      ether:'m16 3 10 13-10 13L6 16z M16 3v26 M6 16h20',
+      'wild-herbs':'M16 28V12 M16 20C6 20 4 11 5 7c10 0 11 6 11 13 M16 15C26 15 28 7 27 4c-10 0-11 5-11 11',
+      'weathered-map-fragment':'m5 6 8-2 6 4 8-2v20l-8 2-6-4-8 2z M13 4v20 M19 8v20 M9 15l13 4',
+      'frontier-brace':'M6 5h5v22H6z M22 5h5v22h-5z M11 11h11 M11 21h11'};
+    return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="${paths[id] || 'M6 6h20v20H6z M10 10h12v12H10z'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
   function renderMaterials() {
     const root=document.querySelector('#material-bag-view');
-    const view=MaterialBagView.read({progression:ProgressionStore,profession:ProfessionUI.engine,storage:{getItem:key=>localStorage.getItem(key)}});
+    const view=readMaterials();
     const number=value=>value.toLocaleString('it-IT');
+    const compact=value=>value.toLocaleString('it-IT',{notation:'compact',maximumFractionDigits:1});
     if(!view.ok){root.innerHTML=`<h3>Borsa dei materiali</h3><p role="alert">${escape(view.message)}</p>`;return;}
     const message=view.overCapacity?'Borsa oltre capacità. Nessun materiale viene rimosso.':view.occupied===view.capacity?'Borsa piena.':view.occupied===0?'La Borsa è vuota.':'Un tipo di materiale occupa uno slot, indipendentemente dalla quantità.';
-    root.innerHTML=`<h3>Borsa dei materiali</h3><p class="bag-occupancy"><strong>${view.occupied} / ${view.capacity} slot</strong> · ${view.expansions} ampliamenti registrati</p><p>${message}</p><p class="hint">Il limite di capacità non è ancora attivo.</p>`+view.groups.map(group=>`<section><h4>${group.owner==='progression'?'Progressione':'Professioni'}</h4><ul>${group.rows.map(row=>`<li data-material-key="${escape(row.key)}"><button data-stack-key="${escape(row.key)}"><span>${escape(row.name)}</span><strong aria-label="Quantità ${number(row.quantity)}">×${number(row.quantity)}</strong></button></li>`).join('')}</ul></section>`).join('');
+    root.innerHTML=`<h3>Borsa dei materiali</h3><p class="bag-occupancy"><strong>${view.occupied} / ${view.capacity} slot</strong> · ${view.expansions} ampliamenti registrati</p><p>${message}</p><p class="hint">Il limite di capacità non è ancora attivo.</p>`+view.groups.map(group=>`<section><h4>${group.owner==='progression'?'Progressione':'Professioni'}</h4><ul>${group.rows.map(row=>`<li data-material-key="${escape(row.key)}"><button data-stack-key="${escape(row.key)}" aria-label="${escape(row.name)}, quantità ${number(row.quantity)}" title="${escape(row.name)} · ${number(row.quantity)}"><span class="bag-material-symbol">${materialSymbol(row.id)}</span><span class="bag-material-name">${escape(row.name)}</span><strong aria-label="Quantità ${number(row.quantity)}">×${compact(row.quantity)}</strong></button></li>`).join('')}</ul></section>`).join('');
   }
   function renderInventory() {
     const materials=filter==="materials" && !slotFilter;
@@ -249,6 +277,7 @@ const InventoryUI = (() => {
     if (!b) return;
     if (b.dataset.openSlot) openSlot(b.dataset.openSlot);
     if (b.dataset.stackKey) {
+      if(b.closest("#material-bag-view"))bagReturn={key:b.dataset.stackKey,top:document.querySelector("#panel-inventory").scrollTop};
       selectedStack = b.dataset.stackKey;
       stackDetail(); dialog.showModal(); dialog.scrollTop=0;
     }
