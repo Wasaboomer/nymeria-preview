@@ -53,7 +53,7 @@
     <script src="character.js?v=sprint1-mobile-1" defer></script>
     <script src="inventory-catalog.js?v=sprint21-1" defer></script>
     <script src="material-bag-view.js?v=bag-view-1" defer></script>
-    <script src="inventory.js?v=bag-grid-1" defer></script>
+    <script src="inventory.js?v=inventory4c-1" defer></script>
     <script src="app.js?v=sprint1-mobile-1" defer></script>
     <script src="combat-engine.js?v=sprint29dc-1" defer></script>
     <script src="combat-ui.js?v=sprint29dc-1" defer></script>
@@ -82,14 +82,14 @@
     <script src="kaelith-dev.js?v=1" defer></script>
     <script src="modular-proof.js?v=1" defer></script>
     <link rel="stylesheet" href="fixed-screens.css?v=ux-phase1" />
-    <script src="fixed-screens.js?v=sprint283-1" defer></script>
+    <script src="fixed-screens.js?v=inventory4c-1" defer></script>
     <link rel="stylesheet" href="fantasy-theme.css?v=title-policy-1" />
     <script src="fantasy-ui.js?v=sprint2-1" defer></script>
     <link rel="stylesheet" href="interface-refinement.css?v=menu-title-policy-1" />
     <script src="interface-refinement.js?v=sprint21-1" defer></script>
     <script src="native-bootstrap.js?v=sprint22-1" defer></script>
     <link rel="stylesheet" href="mobile-navigation-polish.css?v=sprint27-1" />
-      <link rel="stylesheet" href="material-bag-view.css?v=2" />
+      <link rel="stylesheet" href="material-bag-view.css?v=3" />
   </head>
   <body>
     <main class="app">
@@ -292,25 +292,31 @@
           aria-label="Risorse"
         ></div>
         <p id="inventory-count" class="hint"></p>
-        <nav class="inventory-filters" aria-label="Filtri inventario">
-          <button data-filter="all" aria-pressed="true">Tutti</button
-          ><button data-filter="equipment" aria-pressed="false">Equipaggiamento</button
-          ><button data-filter="consumables" aria-pressed="false">Consumabili</button
-          ><button data-filter="materials" aria-pressed="false">Materiali</button
-          ><button data-filter="quest" aria-pressed="false">Oggetti missione</button
-          ><button data-filter="other" aria-pressed="false">Altro</button
-          ><button data-filter="weapons" aria-pressed="false">Armi</button
-          ><button data-filter="armor" aria-pressed="false">Armature</button
-          ><button data-filter="accessories" aria-pressed="false">
-            Accessori
-          </button>
-        </nav>
+        <div class="inventory-categories">
+          <label for="inventory-category">Categoria</label>
+          <select id="inventory-category">
+            <option value="all" data-filter="all">Tutti gli oggetti</option>
+            <option value="equipment" data-filter="equipment">Equipaggiamento</option>
+            <option value="consumables" data-filter="consumables">Consumabili</option>
+            <option value="materials" data-filter="materials">Materiali</option>
+            <option value="quest" data-filter="quest">Oggetti missione</option>
+            <option value="other" data-filter="other">Altro</option>
+          </select>
+          <label id="inventory-subcategory-label" hidden>Tipo di equipaggiamento
+            <select id="inventory-subcategory">
+              <option value="equipment">Tutto l’equipaggiamento</option>
+              <option value="weapons" data-filter="weapons">Armi</option>
+              <option value="armor" data-filter="armor">Armature</option>
+              <option value="accessories" data-filter="accessories">Accessori</option>
+            </select>
+          </label>
+        </div>
         <div class="inventory-toolbar">
           <span id="slot-filter"></span
           ><label
             >Ordina per
             <select id="inventory-sort">
-              <option value="itemLevel">Item Level</option>
+              <option value="itemLevel">Livello oggetto</option>
               <option value="rarity">Rarità</option>
             </select></label
           >

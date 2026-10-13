@@ -20,7 +20,7 @@ const url=process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8000';
   await p.locator('#tab-menu').tap();await p.locator('#tab-character').tap();await press(p,'#panel-character [data-nav="equipment"]');
   await p.locator('#tab-menu').tap();await press(p,'#tab-expeditions');assert.equal(await p.locator('#tab-menu').getAttribute('aria-selected'),'true');await p.locator('#navigation-back').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.screen),'menu');await press(p,'[data-nav="professions"]');
   await p.locator('#tab-inventory').tap();await p.waitForTimeout(150);
-  assert.equal(await p.locator('[data-filter="weapons"]').getAttribute('aria-pressed'),'true');
+  assert.equal(await p.locator('[data-filter="weapons"]').getAttribute('aria-selected'),'true');
   assert.equal(await p.locator('#panel-inventory').evaluate(n=>n.scrollTop),scroll);
   await p.locator('#tab-menu').tap();assert.equal(await p.evaluate(()=>NymeriaNavigation.route.screen),'menu');
   await p.locator('#tab-character').tap();await press(p,'#panel-character [data-nav="equipment"]');assert.equal(await p.evaluate(()=>NymeriaNavigation.route.screen),'equipment');

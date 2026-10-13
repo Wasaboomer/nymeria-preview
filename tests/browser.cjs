@@ -42,7 +42,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
       const open = async (id) => {
         await close();
         await screen("inventory");
-        await page.locator('[data-filter="all"]').tap();
+        await require('./fixed-navigation-fixture.cjs').press(page,'[data-filter="all"]');
         await page.locator(`[data-item-id="${id}"]`).tap();
         assert.ok(
           await page
@@ -266,7 +266,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
         ],
         ["accessories", ["necklace", "earring", "bracelet", "ring"]],
       ]) {
-        await page.locator(`[data-filter="${filter}"]`).tap();
+        await require('./fixed-navigation-fixture.cjs').press(page,`[data-filter="${filter}"]`);
         const ids = await page
           .locator(".inventory-item")
           .evaluateAll((rows) => rows.map((x) => x.dataset.itemId));
@@ -275,7 +275,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
           .map((x) => x.id);
         assert.deepEqual([...ids].sort(), expected.sort());
       }
-      await page.locator('[data-filter="all"]').tap();
+      await require('./fixed-navigation-fixture.cjs').press(page,'[data-filter="all"]');
       for (const order of ["rarity", "itemLevel"]) {
         await page.locator("#inventory-sort").selectOption(order);
         const ids = await page

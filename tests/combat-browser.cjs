@@ -36,7 +36,7 @@ const baseURL = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
         );
       async function equip(id) {
         await navigate(page, "inventory");
-        await page.locator('[data-filter="all"]').tap();
+        await require('./fixed-navigation-fixture.cjs').press(page,'[data-filter="all"]');
         await page.locator(`[data-item-id="${id}"]`).tap();
         if (!(await page.locator("#equip-item").isDisabled()))
           await page.locator("#equip-item").tap();

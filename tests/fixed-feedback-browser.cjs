@@ -10,7 +10,7 @@ const {press}=require('./fixed-navigation-fixture.cjs');
   assert.ok(await p.locator('#character-creator').isHidden());assert.ok(await p.locator('#creator-debug').isHidden());
   await p.evaluate(()=>NymeriaNavigation.open('inventory'));await p.waitForTimeout(100);
   const saved=await p.evaluate(()=>JSON.stringify({...localStorage}));
-  for(const filter of ['weapons','armor','accessories','all']){await press(p,'[data-filter="'+filter+'"]');assert.equal(await p.locator('[data-filter="'+filter+'"]').getAttribute('aria-pressed'),'true');}
+  for(const filter of ['weapons','armor','accessories','all']){await press(p,'[data-filter="'+filter+'"]');assert.equal(await p.locator('[data-filter="'+filter+'"]').getAttribute('aria-selected'),'true');}
   assert.equal(await p.evaluate(()=>JSON.stringify({...localStorage})),saved);
   for(const height of [508,568,667,844,375]){
    await p.setViewportSize({width,height});await p.waitForTimeout(100);

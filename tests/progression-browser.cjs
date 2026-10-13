@@ -53,7 +53,7 @@ const frozen = new Date("2026-10-06T12:00:00Z");
       }
       async function equip(id) {
         await tab("inventory");
-        await page.locator('[data-filter="all"]').tap();
+        await require('./fixed-navigation-fixture.cjs').press(page,'[data-filter="all"]');
         await page.locator(`[data-item-id="${id}"]`).tap();
         await overflow();
         if (!(await page.locator("#equip-item").isDisabled()))

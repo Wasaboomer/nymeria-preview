@@ -40,7 +40,7 @@ const base = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
       };
       const equip = async (id) => {
         await tab("inventory");
-        await page.locator('[data-filter="all"]').tap();
+        await require('./fixed-navigation-fixture.cjs').press(page,'[data-filter="all"]');
         await page.locator(`[data-item-id="${id}"]`).tap();
         await overflow();
         assert.ok(
@@ -108,7 +108,7 @@ const base = process.env.NYMERIA_TEST_URL || "http://127.0.0.1:8000";
         }
         for (const id of denied) {
           await tab("inventory");
-          await page.locator('[data-filter="all"]').tap();
+          await require('./fixed-navigation-fixture.cjs').press(page,'[data-filter="all"]');
           const card = page.locator(`[data-item-id="${id}"]`);
           assert.match(await card.innerText(), /Non utilizzabile/);
           assert.doesNotMatch(

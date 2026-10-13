@@ -10,3 +10,25 @@
 #material-bag-view .bag-material-name {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
 #material-bag-view li strong {position:absolute;bottom:3px;right:3px;font-size:12px;line-height:16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
 #material-bag-view button:focus-visible {outline:2px solid #e6c985;outline-offset:2px;}
+/* Inventory-only category hierarchy; no changes to the four main destinations. */
+#panel-inventory .inventory-categories {display:grid;gap:6px;margin:8px 0 12px;}
+#panel-inventory .inventory-categories label {font-size:14px;color:var(--gold,#c9a86a);}
+#panel-inventory .inventory-categories select {width:100%;min-height:48px;box-sizing:border-box;max-width:100%;font-size:16px;}
+#panel-inventory .inventory-categories [hidden] {display:none;}
+/* Resource details share the existing dialog, without equipment's full-height layout. */
+body #item-dialog[data-detail-kind="resource"] {height:auto;min-height:0;max-height:calc(var(--fixed-vh,100dvh) - 32px);top:calc(var(--fixed-top,0px) + var(--fixed-vh,100dvh) - max(16px,env(safe-area-inset-bottom)));transform:translateY(-100%);margin:0 auto;overflow-y:auto;overflow-x:hidden;touch-action:pan-y pinch-zoom;max-width:420px;}
+body #item-dialog[data-detail-kind="resource"][open] {display:block;}
+body #item-dialog[data-detail-kind="resource"] #detail-body {height:auto!important;min-height:0;overflow:visible;}
+body #item-dialog[data-detail-kind="resource"] .detail-header {display:flex;gap:8px;align-items:flex-start;}
+body #item-dialog[data-detail-kind="resource"] #detail-heading {min-width:0;overflow-wrap:anywhere;font-size:20px;margin:0;flex:1;}
+body #item-dialog[data-detail-kind="resource"] #close-detail {min-width:48px;min-height:48px;flex:none;}
+body #item-dialog[data-detail-kind="resource"] .bag-material-symbol {display:block;color:#c9b587;width:40px;height:40px;flex:none;}
+body #item-dialog[data-detail-kind="resource"] svg {width:100%;height:100%;}
+body #item-dialog[data-detail-kind="resource"] .resource-detail-summary {display:flex;gap:12px;align-items:center;margin:12px 0;}
+body #item-dialog[data-detail-kind="resource"] p {overflow-wrap:anywhere;}
+body #item-dialog[data-detail-kind="resource"] .detail-header {position:sticky;top:0;background:#172830;z-index:1;}
+/* One visible Inventory heading; the existing context target remains accessible. */
+body[data-screen="inventory"] #topbar-context {display:none;}
+body[data-screen="inventory"] .mobile-topbar {justify-content:flex-end;}
+body[data-screen="inventory"] #context-title {font:20px/1.3 Georgia,serif;color:var(--ink,#e7e6d9);}
+#panel-inventory > .section-title h2 {display:none;}

@@ -2,6 +2,15 @@
 async function press(page,selector){
  const target=page.locator(selector);
  if(await target.count()!==1)throw Error('Expected one control: '+selector);
+ // Inventory categories are native selects; use their actual change events.
+ if(await target.evaluate(el=>el.tagName==='OPTION')){
+  const value=await target.getAttribute('value');
+  if(['weapons','armor','accessories'].includes(value)){
+   await page.locator('#inventory-category').selectOption('equipment');
+   await page.locator('#inventory-subcategory').selectOption(value);
+  }else await page.locator('#inventory-category').selectOption(value);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));return;
+ }
  const closed=target.locator('xpath=ancestor::details[not(@open)][1]');
  if(await closed.count()) {
   const summary=closed.locator(':scope > summary');
