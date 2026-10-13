@@ -347,7 +347,7 @@ const ProgressionStorage = (() => {
     quests.reconcile(state);
     return state;
   }
-  function create({ storage, exclusive = (run) => run(), classDefinition = () => {
+  function create({ storage, exclusive = (run) => run(), materialAdmission = null, classDefinition = () => {
     // Prefer the additive selection store; retain legacy fallback for older saves.
     try {
       const saved = JSON.parse(storage.getItem("nymeria.classes.v2"));
@@ -437,6 +437,12 @@ const ProgressionStorage = (() => {
           .filter((a) => a.requiredLevel <= next.level)
           .map((a) => a.id).concat(worldUnlocks);
         quests.reconcile(next);
+        if (materialAdmission !== null) {
+          let admission;
+          try { admission = materialAdmission(copy(committedBefore), copy(next)); } catch { admission={ok:false}; }
+          if (admission && typeof admission.then === "function") { Promise.resolve(admission).catch(()=>{}); admission={ok:false}; }
+          if (admission?.ok !== true || typeof admission?.then === "function") return {ok:false,code:admission?.code || "capacity-check-unavailable",message:admission?.message || "Controllo Borsa non disponibile: nessuna modifica applicata."};
+        }
         try {
           storage.setItem(KEY, JSON.stringify(next));
         } catch {
@@ -457,6 +463,7 @@ const ProgressionStorage = (() => {
       });
     }
     return {
+      readSnapshot() { return read() ? {ok:true,state:copy(state)} : {ok:false,message:error}; },
       get state() {
         return copy(state);
       },

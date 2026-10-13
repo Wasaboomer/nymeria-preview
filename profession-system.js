@@ -41,7 +41,7 @@ const ProfessionEngine = (() => {
     }
     return s;
   }
-  function create({ storage = { getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) }, context = () => null, exclusive = run => run() } = {}) {
+  function create({ storage = { getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) }, context = () => null, exclusive = run => run(), materialAdmission = null } = {}) {
     let state = empty(), storageIssue = false, recovered = false, pending = Promise.resolve(), recordStatus = "absent";
     const listeners = new Set();
     function emit() { for (const fn of listeners) { try { fn(copy(state)); } catch {} } }
@@ -69,6 +69,12 @@ const ProfessionEngine = (() => {
         if (!place || !place.accessible || place.activeEncounter) return { ok: false, message: "Reach an accessible gathering site and finish the encounter first." };
         const next = copy(state), result = change(next, place);
         if (!result.ok) return result;
+        if (materialAdmission !== null) {
+          let admission;
+          try { admission = materialAdmission(copy(state), copy(next)); } catch { admission={ok:false}; }
+          if (admission && typeof admission.then === "function") { Promise.resolve(admission).catch(()=>{}); admission={ok:false}; }
+          if (admission?.ok !== true || typeof admission?.then === "function") return {ok:false,code:admission?.code || "capacity-check-unavailable",message:admission?.message || "Controllo Borsa non disponibile: nessuna modifica applicata."};
+        }
         try { storage.setItem(KEY, JSON.stringify(next)); }
         catch { storageIssue = true; emit(); return { ok: false, message: "Profession save unavailable. No changes applied." }; }
         state = next; storageIssue = false; recovered = false; emit(); return result;
@@ -121,7 +127,7 @@ const ProfessionEngine = (() => {
       return result.ok ? copy(result.state.deliveries[questId] || null) : null;
     }
     load();
-    return { KEY, threshold, load, gather, craft, handover, deliveryReceipt, get state() { return copy(state); }, get recordStatus() { return recordStatus; }, get storageIssue() { return storageIssue; }, get recovered() { return recovered; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
+    return { readSnapshot() { const r=read(); return r.ok ? {ok:true,state:copy(r.state)} : r; }, KEY, threshold, load, gather, craft, handover, deliveryReceipt, get state() { return copy(state); }, get recordStatus() { return recordStatus; }, get storageIssue() { return storageIssue; }, get recovered() { return recovered; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
   }
   return { KEY, MAX_MATERIAL, empty, normalize, growth, threshold, create };
 })();

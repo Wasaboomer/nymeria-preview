@@ -1,6 +1,6 @@
 /* One participating browser writer per origin. No retries and no multi-record atomicity. */
 const MaterialWriterCoordinator = (() => {
-  let owned=false, release=null, pending=Promise.resolve(), epoch=0, suspended=false;
+  let owned=false, release=null, pending=Promise.resolve(), epoch=0, suspended=false, executing=0;
   const failure=message=>({ok:false,message});
   const acquisitions=new Set();
   function suspend(){epoch++;suspended=true;owned=false;for(const controller of acquisitions)controller.abort();if(release)release();}
@@ -11,6 +11,7 @@ const MaterialWriterCoordinator = (() => {
   if(typeof document!=='undefined')document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='hidden')suspend();else suspended=false;
   });
+  async function invoke(operation) { executing++; try { return await operation(); } finally { executing--; } }
   function run(operation, queueTimeoutMs = 5000) {
     const requestEpoch=epoch;
     let expired=false, started=false, resolveTimeout;
@@ -23,14 +24,14 @@ const MaterialWriterCoordinator = (() => {
       if(suspended || requestEpoch!==epoch || (typeof document!=='undefined' && document.visibilityState==='hidden'))return failure('Pagina sospesa: richiesta annullata, nessuna mutazione avviata.');
       if(expired)return failure('Richiesta scaduta: nessuna mutazione avviata.');
       if(typeof navigator==='undefined'||!navigator.locks)return failure('Scritture sospese: sincronizzazione sicura fra schede non disponibile.');
-      if(owned)return operation();
+      if(owned)return invoke(operation);
       return new Promise(resolve=>{
         navigator.locks.request('nymeria-material-writer',{ifAvailable:true},async lock=>{
           if(!lock){resolve(failure('Materiali gestiti in un’altra scheda: chiudila o mettila in background e riprova.'));return;}
           owned=true;const lifetime=new Promise(done=>release=done);
           try {
             await new Promise(done=>setTimeout(done,0));
-            resolve(owned&&!suspended&&requestEpoch===epoch?await operation():failure('Scheda sospesa: nessuna operazione applicata.'));
+            resolve(owned&&!suspended&&requestEpoch===epoch?await invoke(operation):failure('Scheda sospesa: nessuna operazione applicata.'));
             await lifetime;
           } catch {resolve(failure('Operazione non confermata: rileggi lo stato prima di riprovare.'));}
           finally {owned=false;release=null;}
@@ -53,6 +54,6 @@ const MaterialWriterCoordinator = (() => {
     catch { return failure('Accesso al salvataggio scaduto o rifiutato: rileggi e riprova.'); }
     finally {clearTimeout(timer);acquisitions.delete(controller);}
   }
-  return {run,progression};
+  return {run,progression,isCoordinated:()=>owned && !suspended && executing > 0};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=MaterialWriterCoordinator;
