@@ -1,4 +1,4 @@
-/* Phase 2 infrastructure only. No gameplay imports, implicit initialization or quantity writes. */
+/* Inactive metadata infrastructure. Browser mutations use the common material writer. */
 const MaterialBagStore = (() => {
   const contract = typeof module !== 'undefined' && module.exports
     ? require('./material-bag-contract.js') : MaterialBagContract;
@@ -27,6 +27,24 @@ const MaterialBagStore = (() => {
     });
   }
   const sharedCoordinator = createCoordinator();
+  // No second metadata lock. Read/update/write takes place under the same lease
+  // and progression lock used by material operations. Loading remains inactive.
+  function withMaterialWriter(common) {
+    return Object.freeze({
+      scope: 'common-material-writer',
+      run(operation) {
+        if (!common) return Promise.resolve({ok:false,code:'common-coordinator-unavailable'});
+        // Reject recursive acquisition; unrelated requests during an asynchronous
+        // callback also fail conservatively and can be retried explicitly.
+        if (common.isCoordinated()) return Promise.resolve({ok:false,code:'nested-coordination-rejected'});
+        return common.run(() => common.progression(operation));
+      }
+    });
+  }
+  const browserCoordinator = Object.freeze({
+    scope: 'common-material-writer',
+    run: operation => withMaterialWriter(typeof MaterialWriterCoordinator === 'undefined' ? null : MaterialWriterCoordinator).run(operation)
+  });
   function decode(source) {
     if (source === null) return { ok: true, state: initial(), missing: true, migrate: false };
     let raw;
@@ -46,7 +64,7 @@ const MaterialBagStore = (() => {
     return { ok: true, state, missing: false,
       migrate: raw.version === undefined || raw.baseCapacity === undefined || raw.expansionIds === undefined };
   }
-  function create({ storage, coordinator = sharedCoordinator } = {}) {
+  function create({ storage, coordinator = typeof window === 'undefined' ? sharedCoordinator : browserCoordinator } = {}) {
     // Access is explicit, including initialization. No localStorage getter at module load.
     function read() {
       try {
@@ -82,6 +100,6 @@ const MaterialBagStore = (() => {
     }
     return Object.freeze({ read, initialize, grantExpansion, coordinationScope: coordinator.scope });
   }
-  return Object.freeze({ KEY, LOCK, initial, decode, createCoordinator, create });
+  return Object.freeze({ KEY, LOCK, initial, decode, createCoordinator, withMaterialWriter, create });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = MaterialBagStore;
