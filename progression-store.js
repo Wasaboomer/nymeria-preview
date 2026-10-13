@@ -25,6 +25,7 @@ const ProgressionStorage = (() => {
     ? require("./travel-system.js") : TravelEngine;
   const identity = typeof module !== "undefined" && module.exports
     ? require("./character-identity-data.js") : CharacterIdentityData;
+  const safety = typeof module !== "undefined" && module.exports ? require("./save-record-safety.js") : SaveRecordSafety;
   const KEY = "nymeria.progression.v1";
   const copy = (value) => JSON.parse(JSON.stringify(value));
   function initial() {
@@ -360,7 +361,7 @@ const ProgressionStorage = (() => {
   } }) {
     let state = initial(),
       error = "",
-      unsupported = false;
+      unsupported = false, recordStatus = "absent";
     const listeners = new Set(), eventListeners = new Set();
     // UI failures must never turn a persisted operation into an apparent failed claim.
     function publishEvents(batch) {
@@ -373,21 +374,45 @@ const ProgressionStorage = (() => {
       unsupported = false;
       try {
         const saved = storage.getItem(KEY);
-        let raw = null;
-        try {
-          raw = saved ? JSON.parse(saved) : null;
-        } catch {
-          /* Recover only this corrupt key, never touch other systems. */
+        const inspected = safety.classify(saved, {versions:[data.schemaVersion], normalize,
+          unsupported:raw=>quests.unsupported(raw.frontier)||travel.unsupported(raw.travel)||raw.characterIdentity?.version>1,
+          quantityPaths:[['materials'],['crowns'],['totalXP']],
+          allowChange:(path,before,after)=>{
+            if (/^record\.frontier\.quests\.[^.]+\.status$/.test(path))
+              return (['locked','available'].includes(before)&&['locked','available'].includes(after)) || (before==='active'&&after==='completed');
+            if(path==='record.pendingExpeditionResult.rewards.lootIds') {
+              const report=JSON.parse(saved).pendingExpeditionResult;
+              if(!report.lootPolicy && validReport(report)) {
+                const migrated=personal.migrateReport(report).rewards.lootIds;
+                return before.length===migrated.length && JSON.stringify(after)===JSON.stringify(migrated);
+              }
+            }
+            return false;
+          }});
+        recordStatus=inspected.kind;
+        if (!inspected.ok) { unsupported=true; error=inspected.message; return false; }
+        const raw = saved === null ? null : JSON.parse(saved);
+        if (quests.unsupported(raw?.frontier) || travel.unsupported(raw?.travel) || raw?.characterIdentity?.version > 1) {
+          recordStatus="unsupported";unsupported=true;error="Versione del salvataggio non supportata.";return false;
         }
-        if (raw?.version > data.schemaVersion || quests.unsupported(raw?.frontier) || travel.unsupported(raw?.travel) || raw?.characterIdentity?.version > 1) {
-          unsupported = true;
-          error = "Versione del salvataggio progressione non supportata.";
-          return false;
+        const catalog = typeof module !== "undefined" && module.exports ? require("./equipment-data.js") : GearData;
+        const world = typeof module !== "undefined" && module.exports ? require("./world-data.js") : WorldData;
+        const knownItem = id => catalog.items.some(item => item.id === id);
+        function unknownRewards(value) {
+          if (!value || typeof value !== 'object') return false;
+          if (value.materials && Object.keys(value.materials).some(id => !Object.prototype.hasOwnProperty.call(data.materialNames,id))) return true;
+          if (Array.isArray(value.lootIds) && value.lootIds.some(id => !knownItem(id))) return true;
+          return Object.values(value).some(unknownRewards);
         }
-        state = normalize(raw);
+        if (unknownRewards(raw) || raw?.ownedLootIds?.some(id => !knownItem(id)) ||
+            raw?.unlockedContent?.some(id => typeof id==='string' && id.startsWith('world:') && !world.location(id.slice(6)))) {
+          recordStatus="unrecognized";unsupported=true;error="Oggetti o materiali salvati non riconosciuti: dati conservati.";return false;
+        }
+        state = inspected.state;
         error = "";
         return true;
       } catch {
+        recordStatus="storage-unavailable";
         error =
           "Salvataggio locale non disponibile: le ricompense richiedono persistenza.";
         return false;
@@ -395,7 +420,7 @@ const ProgressionStorage = (() => {
     }
     read();
     function notify() {
-      listeners.forEach((fn) => fn());
+      listeners.forEach((fn) => { try { fn(); } catch { /* Persisted state is independent of feedback. */ } });
     }
     async function transact(mutator) {
       return exclusive(() => {
@@ -438,6 +463,7 @@ const ProgressionStorage = (() => {
       get error() {
         return error;
       },
+      get recordStatus() { return recordStatus; },
       transact,
       refresh() {
         read();
@@ -462,9 +488,6 @@ const ProgressionStore =
           setItem: (key, value) => localStorage.setItem(key, value),
         },
         classDefinition: () => ClassSystem.selected(),
-        exclusive: (run) =>
-          navigator.locks
-            ? navigator.locks.request("nymeria-progression", run)
-            : run(),
+        exclusive: (run) => MaterialWriterCoordinator.run(() => MaterialWriterCoordinator.progression(run)),
       })
     : null;

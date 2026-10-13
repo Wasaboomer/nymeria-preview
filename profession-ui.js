@@ -1,10 +1,10 @@
 /* M7.3 mobile profession vertical slice. Presentation only; engine owns durable changes. */
 const ProfessionUI = (() => {
   const context=()=>{const s=ProgressionStore.state, location=s.frontier.location, place=WorldData.location(location);return {location,quests:Object.fromEntries(Object.entries(s.frontier.quests).map(([id,q])=>[id,q.status])),activeEncounter:!!s.frontier.activeEncounter,traveling:!!s.travel?.active||s.travel?.recoveryRequired,accessible:!ProgressionStore.error&&!!place&&(place.discoveryType?WorldDiscovery.accessible(location):s.unlockedContent.includes('world:'+location))}};
-  const exclusive=run=>ProfessionTabWriter.exclusive(()=>{
+  const exclusive=run=>MaterialWriterCoordinator.run(()=>ProfessionTabWriter.exclusive(()=>{
     const refreshAndRun=()=>{ProgressionStore.refresh();return ProgressionStore.error?{ok:false,message:"World context unavailable. No profession changes applied."}:run()};
-    return navigator.locks?navigator.locks.request("nymeria-progression",refreshAndRun):refreshAndRun();
-  });
+    return MaterialWriterCoordinator.progression(refreshAndRun);
+  }));
   const engine=ProfessionEngine.create({context,exclusive}), root=document.getElementById("profession-root"), status=document.getElementById("profession-status");
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const matName=id=>ProfessionData.materials.find(x=>x.id===id)?.name||id;
@@ -41,7 +41,7 @@ const ProfessionUI = (() => {
     <h3>Materiali delle Professioni</h3><div class="profession-materials">${ProfessionData.materials.map(m=>`<span><strong>${s.materials[m.id]||0}</strong><small>${esc(m.name)}</small></span>`).join('')}</div>
     ${s.discoveries.includes('vesper-fragment-chart')?'<p class="profession-discovery"><strong>Carta del Vespro composta</strong><br><small>Scoperta registrata. In questa versione non apre nuovi luoghi.</small></p>':''}`;
     root.setAttribute('aria-busy',String(busy));
-    if(engine.storageIssue)status.textContent='Salvataggio delle Professioni non disponibile. Nessuna modifica applicata.';
+    if(engine.storageIssue)status.textContent='Salvataggio delle Professioni non disponibile o non leggibile. Dati conservati: riapri la schermata e riprova.';
     else if(engine.recovered)status.textContent='Salvataggio delle Professioni recuperato; dati disponibili conservati.';
   }
   root?.addEventListener("click",async e=>{
@@ -61,7 +61,7 @@ const ProfessionUI = (() => {
     }
     if(!gather&&!craft)return;
     busy=true;render();
-    try { const r=await (gather?engine.gather(gather):engine.craft(craft));render();status.textContent=r.ok?(r.material?`Raccolti ${r.amount} ${matName(r.material)}.`:"Creazione completata."):"Operazione non applicata: verifica i requisiti indicati e riprova."; }
+    try { const r=await (gather?engine.gather(gather):engine.craft(craft));busy=false;render();status.textContent=r.ok?(r.material?`Raccolti ${r.amount} ${matName(r.material)}.`:"Creazione completata."):(r.message && /^(Scritture|Materiali gestiti|Professioni gestite|Pagina|Scheda|Richiesta|Operazione|Accesso|Sincronizzazione|Salvataggio|Versione)/.test(r.message) ? r.message : "Operazione non applicata: verifica i requisiti indicati e riprova."); }
     catch {status.textContent="Operazione non disponibile. Nessuna modifica applicata.";}
     finally{busy=false;render();}
   });

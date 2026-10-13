@@ -3,6 +3,7 @@ const WorldUI = (() => {
   const node = id => document.getElementById(id), escape = QuestUI.escape;
   let view = "places", talked = null, talkedLocation = null, busy = false, engine = null, ticketId = null;
   let messageTimer = null, frameId = null, renderingAt = 0, settling = false;
+  let actionCompletion = Promise.resolve(), settlement = null;
   let estimateKey = "", estimates = {};
   let clockKey = "", recovering = false, presentationSuspended = false;
   let damageTicket = null, lastDamage = {dealt:0,taken:0};
@@ -72,8 +73,11 @@ const WorldUI = (() => {
   async function action(work) {
     if (busy) return;
     const previous = ProgressionStore.state.frontier.quests;
-    busy = true; render();
+    let completeAction;
+    actionCompletion = new Promise(resolve => { completeAction = resolve; });
+    busy = true;
     try {
+      render();
       const result = await work();
       const feedback = [];
       if (result?.ok) for (const quest of QuestData.quests) {
@@ -100,7 +104,10 @@ const WorldUI = (() => {
     } catch (error) {
       node("world-message").textContent = `Operazione non applicata: ${error.message}`;
       return { ok: false };
-    } finally { busy = false; render(); }
+    } finally {
+      busy = false;
+      try { render(); } finally { completeAction(); }
+    }
   }
   const discovery = id => typeof WorldDiscovery !== "undefined" && WorldDiscovery?.accessible(id);
   function render() {
@@ -373,13 +380,25 @@ const WorldUI = (() => {
     }).join("") || '<li class="hint">Incontro salvato. Riprendi quando vuoi.</li>';
     document.dispatchEvent(new Event("nymeria:world-battle-render"));
   }
-  async function settle() {
-    if (settling || !ticketId) return;
-    stopClock(); settling = true; renderBattle();
-    await action(() => WorldSystem.finishEncounter(ticketId, {respectPause:true}));
-    settling = false;
-    if (!ProgressionStore.state.frontier.activeEncounter) { engine = null; ticketId = null; }
-    render();
+  function settle() {
+    // Every caller awaits the same durable close, including a close requested
+    // while the encounter-start UI action is still completing.
+    if (settlement) return settlement;
+    if (!ticketId) return Promise.resolve();
+    const id = ticketId;
+    stopClock(); settling = true;
+    settlement = (async () => {
+      try {
+        await actionCompletion;
+        renderBattle();
+        return await action(() => WorldSystem.finishEncounter(id, {respectPause:true}));
+      } finally {
+        settling = false; settlement = null;
+        if (!ProgressionStore.state.frontier.activeEncounter) { engine = null; ticketId = null; }
+        render();
+      }
+    })();
+    return settlement;
   }
   function frame(time) {
     frameId = null;

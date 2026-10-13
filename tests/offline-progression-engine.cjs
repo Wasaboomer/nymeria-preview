@@ -71,7 +71,7 @@ async function start(options) {
     const {f,ticket}=await start();
     let raw=JSON.parse(f.memory.get(Storage.KEY));raw.frontier.activeEncounter.clock.speed=999;
     f.memory.set(Storage.KEY,JSON.stringify(raw));const corrupt=fixture({memory:f.memory,clock:f.clock});
-    await corrupt.world.refresh();assert.ok(corrupt.store.state.frontier.activeEncounter);assert.equal(corrupt.world.elapsed(),0);
+    const corruptBytes=f.memory.get(Storage.KEY);assert.equal((await corrupt.world.refresh()).ok,false);assert.ok(corrupt.store.error);assert.equal(f.memory.get(Storage.KEY),corruptBytes,'Invalid clock data is retained rather than normalized away');
     raw.frontier.activeEncounter.clock.version=2;f.memory.set(Storage.KEY,JSON.stringify(raw));
     const future=fixture({memory:f.memory,clock:f.clock});
     assert.equal((await future.world.resumeEncounter(ticket.id)).ok,false);

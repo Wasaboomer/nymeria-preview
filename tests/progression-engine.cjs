@@ -471,7 +471,7 @@ async function check(name, test) {
     },
   );
   await check(
-    "M4 saves migrate without losing class/build/gear; malformed progression recovers safely",
+    "M4 saves remain compatible; malformed progression blocks writes without overwriting data",
     async () => {
       const f = fixture();
       f.kit("warden", "command");
@@ -499,15 +499,12 @@ async function check(name, test) {
       };
       f.memory.set(Storage.KEY, JSON.stringify(raw));
       const recovered = fixture({ memory: f.memory });
-      assert.equal(recovered.store.state.level, 4);
-      assert.equal(recovered.store.state.currentXP, 340);
-      assert.equal(recovered.store.state.activeExpedition, null);
-      assert.equal(recovered.store.state.pendingExpeditionResult, null);
-      assert.deepEqual(recovered.store.state.materials, {
-        iron: 0,
-        fiber: 0,
-        ether: 3,
-      });
+      assert.ok(recovered.store.error);
+      const originalBytes = f.memory.get(Storage.KEY);
+      const rejected = await recovered.store.transact(state => {state.crowns++;return {ok:true};});
+      assert.equal(rejected.ok,false);
+      assert.equal(f.memory.get(Storage.KEY),originalBytes);
+
     },
   );
   await check(

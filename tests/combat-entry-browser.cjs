@@ -13,16 +13,18 @@ fixture.frontier.quests.mq01.status=fixture.frontier.quests.mq02.status='claimed
   const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));p.on('response',r=>{if(r.status()>=400)errors.push(r.status()+' '+r.url());});
   await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8026');
   await p.evaluate(()=>{ClassSystem.selectClass('hunter');for(const [slot,id]of Object.entries({mainHand:'bow',support:'quiver',torso:'torso-chain',legs:'legs-chain',boots:'boots-chain'}))Equipment.equip(id,slot);
-   window.touchTrace=[];['touchstart','click'].forEach(type=>document.addEventListener(type,e=>touchTrace.push({type,enemy:e.target.closest('[data-world-fight]')?.dataset.worldFight}),true));
-   const message=document.getElementById('world-message');window.feedbackAt=0;
-   new MutationObserver(()=>{if(message.textContent)feedbackAt=performance.now();}).observe(message,{childList:true,characterData:true,subtree:true});
+   window.touchTrace=[];['touchstart','click'].forEach(type=>document.addEventListener(type,e=>{const enemy=e.target.closest('[data-world-fight]')?.dataset.worldFight;if(type==='touchstart'&&enemy==='corrupt-hound')window.entryTouchStarted=true;touchTrace.push({type,at:performance.now(),enemy});},true));
+   const message=document.getElementById('world-message');window.feedbackAt=0;window.entryExpiredAt=0;window.entryTouchStarted=false;
+   new MutationObserver(()=>{if(message.textContent){feedbackAt=performance.now();if(!entryTouchStarted)entryExpiredAt=0;}else if(feedbackAt&&!entryExpiredAt)entryExpiredAt=performance.now();}).observe(message,{childList:true,characterData:true,subtree:true});
   });
   await press(p,'#world-location-detail [data-world-explore="cold-lantern"]');
   if(source==='quest')await press(p,'#world-tracked [data-quest-open="mq03"]');
   const target=p.locator((source==='quest'?'#quest-detail':'#panel-world')+' [data-world-fight="corrupt-hound"]');
   await target.scrollIntoViewIfNeeded();
-  await p.waitForFunction(()=>feedbackAt>0&&performance.now()>=feedbackAt+3250);
   const rect=await target.boundingBox(),point={x:rect.x+rect.width/2,y:rect.y+rect.height/2};
+  // Start the real gesture earlier; keep the actual 3500ms expiry and hold across it.
+  // The old 250ms window included multiple protocol round trips and was host-speed dependent.
+  await p.waitForFunction(()=>feedbackAt>0&&performance.now()>=feedbackAt+2500);
   const before=await p.evaluate(point=>({route:NymeriaNavigation.route,hit:document.elementFromPoint(point.x,point.y)?.closest('[data-world-fight]')?.dataset.worldFight,message:document.getElementById('world-message').textContent}),point);
   assert.equal(before.hit,'corrupt-hound');assert.ok(before.message,'Touch must begin before the real 3500ms expiry');
   const cd=await context.newCDPSession(p);await cd.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point]});
@@ -32,6 +34,8 @@ fixture.frontier.quests.mq01.status=fixture.frontier.quests.mq02.status='claimed
   await cd.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await cd.detach();
   await p.waitForFunction(()=>NymeriaNavigation.route.view==='battle'&&ProgressionStore.state.frontier.activeEncounter?.enemyId==='corrupt-hound');
   assert.deepEqual(await p.evaluate(()=>touchTrace.filter(e=>e.enemy==='corrupt-hound').map(e=>e.type)),['touchstart','click']);
+  const span=await p.evaluate(()=>({events:touchTrace.filter(e=>e.enemy==='corrupt-hound'),expiredAt:entryExpiredAt}));
+  assert.ok(span.events[0].at<span.expiredAt&&span.events[1].at>=span.expiredAt,'Physical touch must straddle the actual feedback expiry');
   assert.ok(await p.locator('#world-battle').isVisible());
   await p.waitForFunction(()=>document.getElementById('panel-world').dataset.fixedMode==='combat');
   assert.ok(await p.locator('#world-battle-pause').isVisible(),'Combat is usable, not merely present in the DOM');

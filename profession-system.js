@@ -1,6 +1,7 @@
 /* Isolated profession ledger. All costs, outputs, XP and discoveries commit together. */
 const ProfessionEngine = (() => {
   const data = typeof module !== "undefined" && module.exports ? require("./profession-data.js") : ProfessionData;
+  const safety = typeof module !== "undefined" && module.exports ? require("./save-record-safety.js") : SaveRecordSafety;
   const KEY = "nymeria.professions.v1", MAX_MATERIAL = 1e6;
   const copy = v => JSON.parse(JSON.stringify(v));
   const object = v => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -41,17 +42,17 @@ const ProfessionEngine = (() => {
     return s;
   }
   function create({ storage = { getItem: k => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) }, context = () => null, exclusive = run => run() } = {}) {
-    let state = empty(), storageIssue = false, recovered = false, pending = Promise.resolve();
+    let state = empty(), storageIssue = false, recovered = false, pending = Promise.resolve(), recordStatus = "absent";
     const listeners = new Set();
     function emit() { for (const fn of listeners) { try { fn(copy(state)); } catch {} } }
     function read() {
       try {
-        const source = storage.getItem(KEY); let raw = null;
-        try { raw = JSON.parse(source || "null"); } catch { return { ok: true, state: empty(), recovered: true }; }
-        if (object(raw) && raw.version !== undefined && ![1, data.schemaVersion].includes(raw.version)) return { ok: false, message: "Unsupported profession save version. No data overwritten." };
-        const normalized = normalize(raw);
-        return { ok: true, state: normalized, recovered: source !== null && canonical(normalized) !== canonical(raw) };
-      } catch { return { ok: false, message: "Profession storage unavailable. No changes applied." }; }
+        const source = storage.getItem(KEY);
+        const inspected = safety.classify(source, {versions:[undefined,1,data.schemaVersion], normalize, quantityPaths:[['materials']]});
+        recordStatus=inspected.kind;
+        if(!inspected.ok)return {ok:false,message:inspected.message};
+        return {ok:true,state:inspected.state,recovered:false};
+      } catch { recordStatus="storage-unavailable"; return { ok: false, message: "Profession storage unavailable. No changes applied." }; }
     }
     function load() {
       const r = read(); storageIssue = !r.ok;
@@ -120,27 +121,31 @@ const ProfessionEngine = (() => {
       return result.ok ? copy(result.state.deliveries[questId] || null) : null;
     }
     load();
-    return { KEY, threshold, load, gather, craft, handover, deliveryReceipt, get state() { return copy(state); }, get storageIssue() { return storageIssue; }, get recovered() { return recovered; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
+    return { KEY, threshold, load, gather, craft, handover, deliveryReceipt, get state() { return copy(state); }, get recordStatus() { return recordStatus; }, get storageIssue() { return storageIssue; }, get recovered() { return recovered; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
   }
   return { KEY, MAX_MATERIAL, empty, normalize, growth, threshold, create };
 })();
 /* Lifetime lease avoids stale localStorage caches between separate renderer processes. */
 const ProfessionTabWriter = (() => {
   let owned = false, release = null;
-  if (typeof window !== "undefined") window.addEventListener("pagehide", () => { owned = false; if (release) release(); });
+  function suspend() { owned = false; if (release) release(); }
+  if (typeof window !== "undefined") window.addEventListener("pagehide", suspend);
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") suspend();
+  });
   function exclusive(run) {
-    if (!navigator.locks) return run();
+    if (!navigator.locks) return Promise.resolve({ok:false,message:"Sincronizzazione sicura non disponibile: scritture bloccate."});
     if (owned) return run();
     return new Promise(resolve => {
       navigator.locks.request("nymeria-profession-writer", { ifAvailable: true }, async lock => {
-        if (!lock) { resolve({ ok: false, message: "Professions are being edited in another tab. Close it and retry." }); return; }
+        if (!lock) { resolve({ ok: false, message: "Professioni gestite in un’altra scheda: chiudila o mettila in background e riprova." }); return; }
         owned = true; const lifetime = new Promise(done => release = done);
         try {
           await new Promise(done => setTimeout(done, 0));
-          if (!owned) { resolve({ ok: false, message: "Tab suspended. No changes applied." }); return; }
+          if (!owned) { resolve({ ok: false, message: "Scheda sospesa: nessuna modifica applicata." }); return; }
           resolve(await run()); await lifetime;
         } finally { owned = false; release = null; }
-      }).catch(() => resolve({ ok: false, message: "Exclusive profession access unavailable." }));
+      }).catch(() => resolve({ ok: false, message: "Accesso esclusivo alle professioni non disponibile." }));
     });
   }
   return { exclusive };

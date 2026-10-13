@@ -75,6 +75,8 @@ const Equipment = (() => {
     return cls ? ArmorRules.reason(item, cls) : null;
   }
   function sync(model) {
+    const progressionReadable = typeof ProgressionStore === 'undefined' || !ProgressionStore || !ProgressionStore.error;
+    if (progressionReadable) {
     const progression = progressionState();
     model.character.level = progression.level;
     const owned = new Set(progression.ownedLootIds);
@@ -87,6 +89,7 @@ const Equipment = (() => {
         itemById[id]?.expeditionOnly
       )
         model.inventory.push(clone(itemById[id]));
+    }
     for (const entry of Object.values(model.equipment)) {
       const item = model.inventory.find((i) => i.id === entry.equippedItem);
       if (item && armorError(item)) {
@@ -250,6 +253,9 @@ const Equipment = (() => {
         model.character[key] = raw.character[key];
   }
   function persist(model) {
+    if (typeof ProgressionStore !== 'undefined' && ProgressionStore?.error) {
+      storageIssue = true; return false;
+    }
     try {
       reconcileCreatedAppearance(model);
       localStorage.setItem(SAVE_KEY, JSON.stringify(model));
