@@ -130,7 +130,10 @@ const QuestEngine = (() => {
     async function deliver(id) {
       const quest = data.get(id), profession = professions();
       const objective = quest?.objectives.find(o => o.type === 'professionDelivery');
-      if (!objective || !profession || store.state.frontier.quests[id]?.status !== 'active')
+      // Never reserve materials using a cached quest from an unreadable save.
+      const current = store.readSnapshot();
+      if (!current.ok) return current;
+      if (!objective || !profession || current.state.frontier.quests[id]?.status !== 'active')
         return {ok:false, message:'Consegna non disponibile o già effettuata.'};
       // Reserve the material with a durable receipt first; retries never consume it again.
       const reserved = await profession.handover(id);

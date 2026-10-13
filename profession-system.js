@@ -69,6 +69,11 @@ const ProfessionEngine = (() => {
         if (!place || !place.accessible || place.activeEncounter) return { ok: false, message: "Reach an accessible gathering site and finish the encounter first." };
         const next = copy(state), result = change(next, place);
         if (!result.ok) return result;
+        // A durable delivery receipt needs no second profession write on recovery.
+        // Do not bypass admission or persistence if a mutator actually changed data.
+        if (result.unchanged && canonical(next) === canonical(state)) {
+          storageIssue = false; emit(); return result;
+        }
         if (materialAdmission !== null) {
           let admission;
           try { admission = materialAdmission(copy(state), copy(next)); } catch { admission={ok:false}; }
