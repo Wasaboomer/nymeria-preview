@@ -52,7 +52,8 @@
     <script src="visual-renderer.js?v=sprint1-mobile-1" defer></script>
     <script src="character.js?v=sprint1-mobile-1" defer></script>
     <script src="inventory-catalog.js?v=sprint21-1" defer></script>
-    <script src="inventory.js?v=sprint284-1" defer></script>
+    <script src="material-bag-view.js?v=bag-view-1" defer></script>
+    <script src="inventory.js?v=bag-view-1" defer></script>
     <script src="app.js?v=sprint1-mobile-1" defer></script>
     <script src="combat-engine.js?v=sprint29dc-1" defer></script>
     <script src="combat-ui.js?v=sprint29dc-1" defer></script>
@@ -88,6 +89,7 @@
     <script src="interface-refinement.js?v=sprint21-1" defer></script>
     <script src="native-bootstrap.js?v=sprint22-1" defer></script>
     <link rel="stylesheet" href="mobile-navigation-polish.css?v=sprint27-1" />
+      <link rel="stylesheet" href="material-bag-view.css?v=1" />
   </head>
   <body>
     <main class="app">
@@ -294,7 +296,7 @@
           <button data-filter="all" aria-pressed="true">Tutti</button
           ><button data-filter="equipment" aria-pressed="false">Equipaggiamento</button
           ><button data-filter="consumables" aria-pressed="false">Consumabili</button
-          ><button data-filter="materials" aria-pressed="false">Materiali e risorse</button
+          ><button data-filter="materials" aria-pressed="false">Materiali</button
           ><button data-filter="quest" aria-pressed="false">Oggetti missione</button
           ><button data-filter="other" aria-pressed="false">Altro</button
           ><button data-filter="weapons" aria-pressed="false">Armi</button
@@ -315,6 +317,7 @@
         </div>
         <div id="inventory-grid"></div>
         <div id="inventory-stacks"></div>
+        <section id="material-bag-view" aria-label="Borsa dei materiali" hidden></section>
       </section>
       <section
         id="panel-combat"

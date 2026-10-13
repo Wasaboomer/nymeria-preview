@@ -1,0 +1,9 @@
+/* Functional provisional surface, confined to the Material Bag. */
+#material-bag-view {color:var(--text,#e5ded1);padding:8px 0;min-width:0;}
+#material-bag-view h3,#material-bag-view h4 {color:var(--gold,#c9a86a);margin:12px 0 8px;}
+#material-bag-view p {overflow-wrap:anywhere;}
+#material-bag-view ul {list-style:none;padding:0;margin:0;}
+#material-bag-view li button {width:100%;color:inherit;text-align:left;border:0;border-radius:0;display:flex;align-items:center;gap:12px;justify-content:space-between;min-height:48px;padding:8px 10px;box-sizing:border-box;border-bottom:1px solid #75633c55;background:#101922;}
+#material-bag-view li span {min-width:0;overflow-wrap:anywhere;}
+#material-bag-view li strong {flex-shrink:0;font-variant-numeric:tabular-nums;}
+@media(max-width:350px){#material-bag-view li {flex-wrap:wrap;gap:4px 12px;}}

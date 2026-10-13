@@ -1,0 +1,29 @@
+const assert=require('node:assert/strict'),{chromium}=require('playwright'),G=require('../progression-store'),P=require('../profession-system');
+(async()=>{const b=await chromium.launch({executablePath:process.env.NYMERIA_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});try{for(const width of [320,375,390,430]){
+ const c=await b.newContext({viewport:{width,height:667},isMobile:true,hasTouch:true});try{const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ // Browser-only projection fixture for full/overfull: the real catalog has eight types.
+ await p.route('**/material-bag-view.js*',async route=>{const response=await route.fetch();const source=(await response.text()).replace('Object.freeze({project,read})','Object.freeze({project,read:args=>globalThis.bagViewFixture || read(args)})');await route.fulfill({response,body:source});});
+ await c.addInitScript(({g,prof,gkey,pkey})=>{if(!localStorage.getItem(gkey))localStorage.setItem(gkey,JSON.stringify(g));if(!localStorage.getItem(pkey))localStorage.setItem(pkey,JSON.stringify(prof));},{g:{...G.initial(),materials:{iron:999999,fiber:0,ether:2}},prof:{...P.empty(),materials:{'raw-iron':1000000,'forged-iron':2}},gkey:G.KEY,pkey:P.KEY});
+ const open=async()=>{await p.goto(process.env.NYMERIA_TEST_URL||'http://127.0.0.1:8018',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>typeof InventoryUI!=='undefined'&&typeof ProfessionUI!=='undefined');await p.evaluate(()=>NymeriaNavigation.open('inventory'));};
+ await open();await p.evaluate(()=>{window.bagWrites=[];const set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){bagWrites.push(k);return set.call(this,k,v)}});
+ const tab=p.locator('[data-filter="materials"]');await tab.scrollIntoViewIfNeeded();const box=await tab.boundingBox();await p.touchscreen.tap(box.x+box.width/2,box.y+box.height/2);
+ const root=p.locator('#material-bag-view');await root.waitFor({state:'visible'});assert.match(await root.innerText(),/4 \/ 40 slot/);assert.equal(await root.locator('li').count(),4);assert.match(await root.innerText(),/Ferro del Vespro/);assert.match(await root.innerText(),/Ferro grezzo/);assert.deepEqual(await p.evaluate(()=>bagWrites),[]);
+ const material=p.locator('#material-bag-view [data-stack-key="progression:iron"]');await material.scrollIntoViewIfNeeded();const mb=await material.boundingBox();assert.ok(mb.height>=48);await p.touchscreen.tap(mb.x+mb.width/2,mb.y+mb.height/2);assert.match(await p.locator('#detail-body').innerText(),/Quantità: 999999/);await p.locator('#close-detail').tap();assert.equal(await root.isVisible(),true);assert.deepEqual(await p.evaluate(()=>bagWrites),[]);
+ for(const n of [1,6]){await p.evaluate(n=>{localStorage.setItem(MaterialBagStore.KEY,JSON.stringify({version:1,baseCapacity:40,expansionIds:Array.from({length:n},(_,i)=>`test:${i}`)}));InventoryUI.render();},n);assert.match(await root.innerText(),new RegExp(`4 / ${40+n*10} slot`));}
+ await p.evaluate(()=>{localStorage.setItem(ProgressionStorage.KEY,'{');InventoryUI.render();});assert.match(await root.innerText(),/non consultabile/);assert.equal(await root.locator('li').count(),0);
+ await p.evaluate(g=>{localStorage.setItem(ProgressionStorage.KEY,JSON.stringify(g));InventoryUI.render();},G.initial());assert.match(await root.innerText(),/2 \/ 100 slot/);
+ await open();await p.locator('[data-filter="materials"]').click();assert.match(await root.innerText(),/2 \/ 100 slot/);
+ await p.evaluate(({g,prof})=>{g.frontier.location='broken-path';g.unlockedContent.push('world:broken-path');localStorage.setItem(ProgressionStorage.KEY,JSON.stringify(g));localStorage.setItem(ProfessionEngine.KEY,JSON.stringify({...prof,materials:{'raw-iron':3}}));InventoryUI.render();},{g:G.initial(),prof:P.empty()});
+ assert.equal((await p.evaluate(()=>ProfessionUI.engine.gather('vesper-iron-vein'))).ok,true);
+ assert.match(await root.locator('[data-material-key="profession:raw-iron"]').innerText(),/×5/);
+ assert.equal((await p.evaluate(()=>ProfessionUI.engine.craft('forge-iron'))).ok,true);
+ assert.match(await root.locator('[data-material-key="profession:raw-iron"]').innerText(),/×2/);
+ assert.match(await root.locator('[data-material-key="profession:forged-iron"]').innerText(),/×1/);
+ await p.evaluate(({g,prof})=>{localStorage.setItem(ProgressionStorage.KEY,JSON.stringify(g));localStorage.setItem(ProfessionEngine.KEY,JSON.stringify(prof));InventoryUI.render();},{g:G.initial(),prof:P.empty()});assert.match(await root.innerText(),/La Borsa è vuota/);
+
+ for(const n of [39,40,41]){await p.evaluate(n=>{const entries=Array.from({length:n},(_,i)=>({owner:'profession',id:`fixture-${i}`,key:`profession:fixture-${i}`,name:`Materiale di test ${i}`}));window.bagViewFixture=MaterialBagView.project({progression:{ok:true,state:{materials:{}}},profession:{ok:true,state:{materials:Object.fromEntries(entries.map(row=>[row.id,1]))}},bag:{ok:true,state:{expansionIds:[]}}},entries);InventoryUI.render();},n);assert.match(await root.innerText(),new RegExp(`${n} / 40 slot`));if(n===40)assert.match(await root.innerText(),/Borsa piena/);if(n===41)assert.match(await root.innerText(),/Borsa oltre capacità/);}
+ await p.evaluate(()=>{delete window.bagViewFixture;InventoryUI.render();});
+ assert.equal(await p.evaluate(()=>MaterialBagRuntime.enforced),false);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ await p.locator('[data-filter="equipment"]').click();assert.equal(await root.isVisible(),false);await p.evaluate(()=>NymeriaNavigation.back());assert.deepEqual(errors,[]);
+ console.log(`PASS Bag mobile ${width}: coordinate touch, distinct sources, quantities, metadata, unsafe save/recovery/reload, zero consult writes, inventory/back/no overflow`);
+ }finally{await c.close();}}}finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1});

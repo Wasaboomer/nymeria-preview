@@ -97,7 +97,23 @@ const InventoryUI = (() => {
     document.querySelector('#detail-heading').textContent = row?.name || 'Oggetto non più posseduto';
     document.querySelector('#detail-body').innerHTML = row ? `<p>${escape(sourceLabel(row.source))}</p><p>Quantità: <strong>${row.quantity}</strong></p><p class="hint">${row.source==='quest'?'Raccolta registrata dal sistema missioni. Consulta il Diario per gli obiettivi.':row.source==='profession'?'Materiale conservato nelle Professioni. Consulta le ricette disponibili per utilizzarlo.':'Risorsa conservata dal sistema di progressione.'}</p><p>Non equipaggiabile.</p>` : '<p>La quantità è cambiata: consulta la lista aggiornata.</p>';
   }
+  function renderMaterials() {
+    const root=document.querySelector('#material-bag-view');
+    const view=MaterialBagView.read({progression:ProgressionStore,profession:ProfessionUI.engine,storage:{getItem:key=>localStorage.getItem(key)}});
+    const number=value=>value.toLocaleString('it-IT');
+    if(!view.ok){root.innerHTML=`<h3>Borsa dei materiali</h3><p role="alert">${escape(view.message)}</p>`;return;}
+    const message=view.overCapacity?'Borsa oltre capacità. Nessun materiale viene rimosso.':view.occupied===view.capacity?'Borsa piena.':view.occupied===0?'La Borsa è vuota.':'Un tipo di materiale occupa uno slot, indipendentemente dalla quantità.';
+    root.innerHTML=`<h3>Borsa dei materiali</h3><p class="bag-occupancy"><strong>${view.occupied} / ${view.capacity} slot</strong> · ${view.expansions} ampliamenti registrati</p><p>${message}</p><p class="hint">Il limite di capacità non è ancora attivo.</p>`+view.groups.map(group=>`<section><h4>${group.owner==='progression'?'Progressione':'Professioni'}</h4><ul>${group.rows.map(row=>`<li data-material-key="${escape(row.key)}"><button data-stack-key="${escape(row.key)}"><span>${escape(row.name)}</span><strong aria-label="Quantità ${number(row.quantity)}">×${number(row.quantity)}</strong></button></li>`).join('')}</ul></section>`).join('');
+  }
   function renderInventory() {
+    const materials=filter==="materials" && !slotFilter;
+    document.querySelector("#material-bag-view").hidden=!materials;
+    document.querySelector("#inventory-grid").hidden=materials;
+    document.querySelector("#inventory-stacks").hidden=materials;
+    document.querySelector(".inventory-toolbar").hidden=materials;
+    document.querySelector("#inventory-count").hidden=materials;
+    document.querySelectorAll("[data-filter]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.filter===filter)));
+    if(materials){document.querySelector("#inventory-grid").innerHTML="";document.querySelector("#inventory-stacks").innerHTML="";renderMaterials();return;}
     const rows = visibleItems(),
       owned = Equipment.state.inventory;
     document.querySelector("#inventory-count").textContent =
@@ -290,6 +306,8 @@ const InventoryUI = (() => {
     if (nextSlot !== slotFilter) { slotFilter = nextSlot; filter = "all"; }
     renderInventory();
   });
+  window.addEventListener('storage',()=>{if(filter==='materials')renderInventory();});
+  window.addEventListener('pageshow',()=>{if(filter==='materials')renderInventory();});
   ClassSystem.subscribe(render);
   document.addEventListener('DOMContentLoaded', () => {
     const refreshCollections = () => { renderInventory(); if (dialog.open && selectedStack) stackDetail(); };
