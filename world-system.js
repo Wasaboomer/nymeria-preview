@@ -6,6 +6,7 @@ const WorldEngine = (() => {
   const combat = node ? require("./combat-engine.js") : CombatEngine;
   const progressionData = node ? require("./progression-data.js") : ProgressionData;
   const clock = node ? require("./activity-clock.js") : ActivityClock;
+  const delivery = node ? require('./reward-delivery.js') : RewardDelivery;
   const copy = x => JSON.parse(JSON.stringify(x));
   function simulate(ticket, captureLog = false) {
     const engine = combat.create({ ...ticket.snapshot, enemyTemplate: ticket.template, seed: ticket.seed, captureLog });
@@ -60,6 +61,8 @@ const WorldEngine = (() => {
     }
     function startEncounter(enemyId, options = {}) {
       return store.transact(state => {
+        if (state.frontier.lastEncounter?.rewardStatus === 'pending')
+          return {ok:false,message:'Riscuoti la ricompensa conservata dell’incontro precedente prima di iniziarne un altro.'};
         const location = data.location(state.frontier.location), enemy = data.enemy(enemyId);
         if (!enemy || !location.enemies.includes(enemyId) || !unlocked(state, location.id)) return { ok: false, message: "Incontro non disponibile in questo luogo." };
         if (!available(state)) return { ok: false, message: "Hai già un incontro in corso." };
@@ -109,11 +112,14 @@ const WorldEngine = (() => {
       });
     }
     function settleTicket(state, ticket) {
+      const completedAt = now();
+      if (!clock.validTime(completedAt)) return {ok:false,message:'Orologio locale non valido: incontro e ricompensa conservati.'};
       const engine = simulate(ticket);
       const outcome = engine.result?.outcome || "defeat";
       const victory = outcome === "victory";
       const rewards = victory ? copy(ticket.template.rewards) : { xp: 0, crowns: 0 };
       const progress = progression.grantRewards(state, rewards);
+      if (progress.ok === false && !progress.pending) return progress;
       if (victory) {
         events.dispatch(state, { type: "kill", target: ticket.enemyId });
         if (ticket.template.kind !== "normal") events.dispatch(state, { type: "defeatBoss", target: ticket.enemyId });
@@ -124,11 +130,30 @@ const WorldEngine = (() => {
         id: ticket.id, enemyId: ticket.enemyId, enemyName: ticket.template.name, location: ticket.location,
         outcome, rewards, drops: victory ? ticket.template.drops : [],
         result: engine.result, className: ticket.snapshot.profile.className,
-        awardedAt: now(), ...progress,
+        ...(progress.pending ? {deliveryVersion:1,rewardStatus:'pending',completedAt}
+          : {awardedAt:completedAt,...progress}),
       };
       state.frontier.lastEncounter = receipt;
       state.frontier.activeEncounter = null;
-      return { ok: true, receipt: copy(receipt), message: victory ? "Vittoria · ricompense salvate" : "Sconfitta · ritorno a Veyra. Nessuna perdita, nessuna ricompensa." };
+      return progress.pending ? {...delivery.pending(ticket.id,progress.code),receipt:copy(receipt)}
+        : { ok: true, receipt: copy(receipt), message: victory ? "Vittoria · ricompense salvate" : "Sconfitta · ritorno a Veyra. Nessuna perdita, nessuna ricompensa." };
+    }
+    function claimReceipt(state, receipt) {
+      if (receipt.rewardStatus !== 'pending') return {ok:true,unchanged:true,receipt:copy(receipt)};
+      const awardedAt = now();
+      if (!clock.validTime(awardedAt)) return {ok:false,message:'Orologio locale non valido: ricompensa conservata.'};
+      const progress = progression.grantRewards(state, receipt.rewards);
+      if (progress.ok === false) return progress.pending
+        ? {...delivery.pending(receipt.id,progress.code),unchanged:true,receipt:copy(receipt)} : progress;
+      Object.assign(receipt,progress,{rewardStatus:'delivered',awardedAt});
+      return {ok:true,rewardStatus:'delivered',receipt:copy(receipt),message:'Ricompense riscosse. Risultato dell’incontro conservato.'};
+    }
+    function claimEncounter(id) {
+      return store.transact(state => {
+        const receipt = state.frontier.lastEncounter;
+        if (!receipt || receipt.id !== id) return {ok:false,message:'Ricompensa non disponibile.'};
+        return claimReceipt(state, receipt);
+      });
     }
     function isComplete(ticket, at) {
       const seconds = clock.elapsed(ticket.clock, at) / 1000;
@@ -139,7 +164,7 @@ const WorldEngine = (() => {
     function finishEncounter(id, {respectPause = false} = {}) {
       return store.transact(state => {
         if (state.frontier.lastEncounter?.id === id && !state.frontier.activeEncounter)
-          return { ok: true, unchanged: true, receipt: copy(state.frontier.lastEncounter) };
+          return claimReceipt(state,state.frontier.lastEncounter);
         const ticket = state.frontier.activeEncounter;
         if (!ticket || ticket.id !== id) return { ok: false, message: "Incontro già concluso o non disponibile." };
         if (respectPause && ticket.clock?.running === false)
@@ -164,7 +189,7 @@ const WorldEngine = (() => {
         return { ok: true, message: "DEBUG · salvataggio locale aggiornato" };
       });
     }
-    return { enter, talk, explore, startEncounter, finishEncounter, refresh, elapsed,
+    return { enter, talk, explore, startEncounter, finishEncounter, claimEncounter, refresh, elapsed,
       pauseEncounter: id => changeClock(id, false),
       resumeEncounter: (id, speed) => changeClock(id, true, speed), abandonEncounter, debug, testMode,
       get state() { return store.state.frontier; },

@@ -5,6 +5,7 @@ const QuestEngine = (() => {
   const world = node ? require("./world-data.js") : WorldData;
   const events = node ? require("./quest-events.js") : QuestEvents;
   const clock = node ? require("./activity-clock.js") : ActivityClock;
+  const delivery = node ? require("./reward-delivery.js") : RewardDelivery;
   const copy = (x) => JSON.parse(JSON.stringify(x));
   const statuses = ["locked", "available", "active", "completed", "claimed"];
   function normalize(raw = {}) {
@@ -17,6 +18,8 @@ const QuestEngine = (() => {
     for (const quest of data.quests) {
       const old = raw?.quests?.[quest.id];
       frontier.quests[quest.id] = {
+        ...(old?.status === 'completed' && delivery.validQuestPending(old?.pendingReward,quest.id)
+          ? {pendingReward:copy(old.pendingReward)} : {}),
         ...(old?.lootPolicy?.kind === "personalLoot" ? { lootPolicy: copy(old.lootPolicy) } : {}),
         status: statuses.includes(old?.status) ? old.status : "locked",
         progress: quest.objectives.map((o, i) => Math.min(o.count,
@@ -46,10 +49,13 @@ const QuestEngine = (() => {
         }
       }
     for (const key of ["lastEncounter", "lastQuestClaim"])
-      if (raw?.[key] && typeof raw[key].id === "string") frontier[key] = copy(raw[key]);
+      if (raw?.[key] && typeof raw[key].id === "string" &&
+          (key !== 'lastEncounter' || delivery.validWorldReceipt(raw[key])))
+        frontier[key] = copy(raw[key]);
     return frontier;
   }
   function unsupported(raw) {
+    if (raw?.lastEncounter?.deliveryVersion > 1 || Object.values(raw?.quests || {}).some(q => q?.pendingReward?.version > 1)) return true;
     return raw?.activeEncounter?.clock?.version > 1 || raw?.questVersion > 2 || ["version", "zoneVersion", "discoveryVersion", "achievementVersion"].some(key => raw?.[key] > 1);
   }
   function reconcile(state) {
@@ -96,16 +102,29 @@ const QuestEngine = (() => {
       return store.transact(state => {
         const quest = data.get(id), entry = state.frontier.quests[id];
         if (!quest || entry.status !== "completed") return { ok: false, message: "Missione non completata o ricompensa già riscossa." };
-        const rewards = copy(quest.rewards);
+        const rewards = copy(entry.pendingReward?.rewards || quest.rewards);
         // Preparation is fixed at acceptance, independent of later prototype class changes.
-        const policy = entry.lootPolicy || progression.personalPreparation();
-        rewards.lootIds = progression.personalItems(rewards.personalLoot || [], policy).concat(rewards.items || []);
+        const policy = entry.pendingReward?.lootPolicy || entry.lootPolicy || progression.personalPreparation();
+        if (!entry.pendingReward)
+          rewards.lootIds = progression.personalItems(rewards.personalLoot || [], policy).concat(rewards.items || []);
+        if (rewards.lootIds.length !== (rewards.personalLoot || []).length + (rewards.items || []).length)
+          return {ok:false,message:'Loot personale non accreditabile: ricompensa conservata.'};
         const result = progression.grantRewards(state, rewards);
+        if (result.ok === false) {
+          if (!result.pending) return result;
+          if (entry.pendingReward) return {...delivery.pending(`quest:${id}`,result.code),unchanged:true};
+          entry.pendingReward = {version:1,id:`quest:${id}`,rewards,lootPolicy:copy(policy),createdAt:now(),title:quest.title,contentUnlocks:copy(quest.contentUnlocks)};
+          if (!delivery.validQuestPending(entry.pendingReward,id)) return {ok:false,message:'Ricompensa non verificabile: nessun accredito applicato.'};
+          return delivery.pending(`quest:${id}`,result.code);
+        }
+        const title = entry.pendingReward?.title || quest.title;
+        const contentUnlocks = entry.pendingReward?.contentUnlocks || quest.contentUnlocks;
+        delete entry.pendingReward;
         entry.status = "claimed";
         state.frontier.achievements = [...new Set([...state.frontier.achievements, ...(rewards.achievements || [])])];
-        quest.contentUnlocks.forEach(location => state.unlockedContent.push(`world:${location}`));
-        state.frontier.lastQuestClaim = { id, title: quest.title, rewards, ...result, lootPolicy: policy, claimedAt: now() };
-        return { ok: true, message: `Ricompense riscosse · ${quest.title}`, receipt: copy(state.frontier.lastQuestClaim) };
+        contentUnlocks.forEach(location => state.unlockedContent.push(`world:${location}`));
+        state.frontier.lastQuestClaim = { id, title, rewards, ...result, lootPolicy: policy, claimedAt: now() };
+        return { ok: true, message: `Ricompense riscosse · ${title}`, receipt: copy(state.frontier.lastQuestClaim) };
       });
     }
     async function deliver(id) {

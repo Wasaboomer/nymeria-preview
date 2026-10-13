@@ -23,6 +23,7 @@ const ProgressionLifecycle = (() => {
   const questEvents = typeof module !== "undefined" && module.exports
     ? require("./quest-events.js") : QuestEvents;
   const clock = typeof module !== "undefined" && module.exports ? require("./activity-clock.js") : ActivityClock;
+  const delivery = typeof module !== "undefined" && module.exports ? require("./reward-delivery.js") : RewardDelivery;
   const copy = (value) => JSON.parse(JSON.stringify(value));
   function create({
     store,
@@ -33,6 +34,7 @@ const ProgressionLifecycle = (() => {
     random = Math.random,
     testMode = false,
     catalogue,
+    rewardAdmission = () => ({ok:true}),
   }) {
     function snapshot() {
       const gear = {
@@ -257,6 +259,19 @@ const ProgressionLifecycle = (() => {
     }
     // Shared transactional reward API; callers must enforce their own once-only claim.
     function grantRewards(state, reward) {
+      const planned = delivery.plan(state, reward, catalogue);
+      if (!planned.ok) return planned;
+      if (planned.produces.length) {
+        let admission;
+        try { admission = rewardAdmission(copy(state), copy(planned)); }
+        catch { admission = {ok:false,code:'admission-unavailable'}; }
+        if (admission && typeof admission.then === 'function') {
+          Promise.resolve(admission).catch(() => {}); // Unsupported async check cannot leak a rejection or authorize a write.
+          admission = {ok:false,code:'admission-unavailable'};
+        }
+        if (admission?.ok !== true)
+          return {ok:false,pending:true,code:admission?.code || 'admission-unavailable'};
+      }
       return { ...applyRewards(state, reward), loot: grantLoot(state, reward) };
     }
     function claim(id) {
@@ -268,8 +283,12 @@ const ProgressionLifecycle = (() => {
             message: "Ricompense già riscosse o report non disponibile.",
           };
         const reward = report.rewards;
-        const progress = applyRewards(state, reward);
-        const loot = grantLoot(state, reward);
+        if (report.lootPolicy?.version !== 1)
+          return {ok:false,code:'unsupported-preparation',message:'Preparazione della ricompensa non supportata: report conservato, nessun accredito.'};
+        const progress = grantRewards(state, reward);
+        if (progress.ok === false)
+          return progress.pending ? {...delivery.pending(id,progress.code),unchanged:true} : progress;
+        const loot = progress.loot;
         if (report.success) questEvents.dispatch(state, { type: "completeExpedition", target: report.activityId });
         const { previousLevel, resultingLevel, levelUps } = progress;
         state.lastClaim = {
